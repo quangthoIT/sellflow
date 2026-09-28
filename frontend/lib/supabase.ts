@@ -30,6 +30,9 @@ function createLocalQueryBuilder(table: string) {
     _eq: {} as Record<string, any>,
     _in: {} as Record<string, any[]>,
     _order: null as { col: string; asc: boolean } | null,
+    _isUpdate: false,
+    _updatePayload: null as any,
+    _isDelete: false,
     
     select(fields?: string) {
       builder._select = fields || "*";
@@ -64,6 +67,15 @@ function createLocalQueryBuilder(table: string) {
       const items = isArray ? payload : [payload];
       return (async () => {
         try {
+          if (table === "app_settings") {
+            if (typeof window !== "undefined") {
+              const current = getCachedSettings();
+              const merged = { ...current, ...items[0] };
+              localStorage.setItem("sellflow_app_settings", JSON.stringify(merged));
+              clearSettingsCache();
+            }
+            return { data: isArray ? items : items[0], error: null };
+          }
           if (!endpoint) return { data: payload, error: null };
           const results = [];
           for (const item of items) {
@@ -85,7 +97,9 @@ function createLocalQueryBuilder(table: string) {
       return builder.insert(payload);
     },
     update(payload: any) {
-      return builder.insert(payload);
+      builder._isUpdate = true;
+      builder._updatePayload = payload;
+      return builder;
     },
     delete() {
       builder._isDelete = true;
@@ -93,6 +107,20 @@ function createLocalQueryBuilder(table: string) {
     },
     then<TResult1 = any>(resolve?: ((value: { data: any; error: any; count?: number | null }) => TResult1 | PromiseLike<TResult1>) | null, reject?: any): Promise<TResult1> {
       const resPromise = (async () => {
+        if (table === "app_settings") {
+          if (builder._isUpdate && builder._updatePayload) {
+            const current = getCachedSettings();
+            const merged = { ...current, ...builder._updatePayload };
+            if (typeof window !== "undefined") {
+              localStorage.setItem("sellflow_app_settings", JSON.stringify(merged));
+              clearSettingsCache();
+            }
+            return { data: merged, error: null, count: 1 };
+          }
+          const s = await loadSettings();
+          return { data: [s], error: null, count: 1 };
+        }
+
         if (!endpoint) return { data: [], error: null, count: 0 };
         try {
           if (builder._isDelete) {
@@ -103,6 +131,19 @@ function createLocalQueryBuilder(table: string) {
               return { data, error: null, count: 1 };
             }
           }
+
+          if (builder._isUpdate && builder._updatePayload) {
+            const idVal = builder._eq.id || builder._eq.quote_id || builder._eq.contract_id || builder._updatePayload.id;
+            const payloadWithId = idVal ? { ...builder._updatePayload, id: idVal } : builder._updatePayload;
+            const res = await fetch(`${API_BASE}${endpoint}${idVal ? `/${idVal}` : ""}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payloadWithId),
+            });
+            const data = await res.json();
+            return { data: data.product || data.customer || data.quote || data.contract || data.payment || data, error: null, count: 1 };
+          }
+
           const res = await fetch(`${API_BASE}${endpoint}`);
           const data = await res.json();
           let list = Array.isArray(data) ? data : [];
@@ -153,9 +194,43 @@ function createLocalQueryBuilder(table: string) {
 
 export const supabase: any = {
   from: (table: string) => createLocalQueryBuilder(table),
+  storage: {
+    from(bucket: string) {
+      return {
+        async upload(path: string, file: File, _options?: any) {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const dataUrl = (e.target?.result as string) || "";
+              try {
+                if (typeof window !== "undefined") {
+                  localStorage.setItem(`storage_${bucket}_${path}`, dataUrl);
+                  localStorage.setItem(`storage_${bucket}_latest`, dataUrl);
+                }
+              } catch (err) {
+                // localstorage size exceeded fallback
+              }
+              resolve({ data: { path }, error: null });
+            };
+            reader.onerror = () => {
+              resolve({ data: null, error: { message: "Không thể đọc tệp hình ảnh" } });
+            };
+            reader.readAsDataURL(file);
+          });
+        },
+        getPublicUrl(path: string) {
+          let url = "";
+          if (typeof window !== "undefined") {
+            url = localStorage.getItem(`storage_${bucket}_${path}`) || localStorage.getItem(`storage_${bucket}_latest`) || "";
+          }
+          return { data: { publicUrl: url } };
+        }
+      };
+    }
+  },
   auth: {
     async getSession() {
-      const sess = localStorage.getItem("sellflow_session");
+      const sess = typeof window !== "undefined" ? localStorage.getItem("sellflow_session") : null;
       if (sess) {
         try {
           return { data: { session: JSON.parse(sess) }, error: null };
@@ -174,14 +249,18 @@ export const supabase: any = {
           access_token: "token-" + Date.now(),
           user: { id: "u1", email: email || "admin@sellflow.com", name: "System Admin" },
         };
-        localStorage.setItem("sellflow_session", JSON.stringify(session));
+        if (typeof window !== "undefined") {
+          localStorage.setItem("sellflow_session", JSON.stringify(session));
+        }
         return { data: { session }, error: null };
       }
       return { data: null, error: { message: "Invalid credentials" } };
     },
     async signOut() {
-      localStorage.removeItem("sellflow_session");
-      localStorage.removeItem("sellflow_logged_in");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("sellflow_session");
+        localStorage.removeItem("sellflow_logged_in");
+      }
       return { error: null };
     },
     async updateUser(_data: any) {
@@ -387,10 +466,21 @@ let cachedSettings: AppSettings | null = null;
 let settingsPromise: Promise<AppSettings> | null = null;
 
 export async function loadSettings(): Promise<AppSettings> {
+  if (typeof window !== "undefined") {
+    const raw = localStorage.getItem("sellflow_app_settings");
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        cachedSettings = { ...DEFAULT_SETTINGS, ...parsed };
+        return cachedSettings as AppSettings;
+      } catch {
+        // fallback
+      }
+    }
+  }
   if (cachedSettings) return cachedSettings;
-  if (settingsPromise) return settingsPromise;
   cachedSettings = DEFAULT_SETTINGS;
-  return cachedSettings;
+  return cachedSettings as AppSettings;
 }
 
 export function getCachedSettings(): AppSettings {

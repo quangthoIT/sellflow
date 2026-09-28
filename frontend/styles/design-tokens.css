@@ -99,8 +99,8 @@
   --warning: #fbbf24;
   --warning-foreground: #0f172a;
 
-  --border: #1e293b;
-  --input: #334155;
+  --border: #334155;
+  --input: #475569;
   --ring: #3b82f6;
 
   --chart-1: #3b82f6;
@@ -119,7 +119,7 @@
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #93c5fd;
-  --sidebar-border: #1e293b;
+  --sidebar-border: #334155;
   --sidebar-ring: #3b82f6;
 }
 

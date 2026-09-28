@@ -519,15 +519,25 @@ function ContractPreview({ contractId, customers, templates }: {
     </tbody>
   </table>`;
 
+  const settings = getCachedSettings();
   let html = template?.content ?? "<p>Chưa chọn mẫu</p>";
   const replacements: Record<string, string> = {
     SO_TAI_LIEU: contract.id,
     NGAY: formatDate(contract.date),
+    TEN_CONG_TY: settings?.company_name || "",
+    DIA_CHI_CONG_TY: settings?.company_address || "",
+    SDT_CONG_TY: settings?.company_phone || "",
+    EMAIL_CONG_TY: settings?.company_email || "",
+    MST_CONG_TY: settings?.company_tax || "",
+    LOGO_CONG_TY: settings?.logo_url ? `<img src="${settings.logo_url}" alt="Logo" style="height:48px;max-width:150px;object-fit:contain;" />` : "",
     TEN_KHACH_HANG: customer?.name ?? "",
     DIA_CHI_KHACH_HANG: customer?.address ?? "",
     MST_KHACH_HANG: customer?.tax ?? "",
     BANG_SAN_PHAM: productTable,
     TONG_TIEN: formatVND(total),
+    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong>${settings?.company_name || "CÔNG TY BÁN HÀNG"}</strong></div>`,
+    CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+    CON_DAU: `<div style="display:inline-block; border:2px dashed #ef4444; border-radius:50%; padding:10px 16px; color:#ef4444; font-weight:bold; font-size:12px; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
   };
   for (const [k, v] of Object.entries(replacements)) {
     html = html.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
