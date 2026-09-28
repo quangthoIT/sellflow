@@ -1,0 +1,23 @@
+{
+  "name": "sellflow-worker",
+  "version": "1.0.0",
+  "description": "Background Worker Service for PDF processing, email dispatching and async tasks",
+  "main": "src/worker.ts",
+  "scripts": {
+    "dev": "tsx watch src/worker.ts",
+    "build": "tsc",
+    "start": "node dist/worker.js"
+  },
+  "dependencies": {
+    "bullmq": "^5.41.0",
+    "dotenv": "^16.4.7",
+    "ioredis": "^5.5.0",
+    "nodemailer": "^6.10.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@types/nodemailer": "^6.4.17",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

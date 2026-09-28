@@ -1,0 +1,27 @@
+{
+  "name": "sellflow-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo root for SellFlow System (Frontend, Backend, Worker, Storage, Docs)",
+  "scripts": {
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:worker": "npm --prefix worker run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build",
+    "build:worker": "npm --prefix worker run build",
+    "db:push": "npm --prefix backend run prisma:push",
+    "db:seed": "npm --prefix backend run prisma:seed",
+    "db:generate": "npm --prefix backend run prisma:generate",
+    "docker:up": "docker-compose up -d --build",
+    "docker:down": "docker-compose down"
+  },
+  "keywords": [
+    "sellflow",
+    "nextjs",
+    "fastify",
+    "prisma",
+    "postgresql",
+    "redis"
+  ]
+}

@@ -1,0 +1,215 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  SALES
+  ACCOUNTANT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(SALES)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Product {
+  id                    String                  @id
+  name                  String
+  category              String                  @default("")
+  unit                  String                  @default("cái")
+  cost                  BigInt                  @default(0)
+  price                 BigInt                  @default(0)
+  stock                 Int                     @default(0)
+  minStock              Int                     @default(0) @map("min_stock")
+  description           String                  @default("")
+  status                String                  @default("Đang bán")
+  createdAt             DateTime                @default(now()) @map("created_at")
+  quoteItems            QuoteItem[]
+  contractItems         ContractItem[]
+  inventoryTransactions InventoryTransaction[]
+
+  @@map("products")
+}
+
+model Customer {
+  id             String     @id
+  name           String
+  phone          String     @default("")
+  email          String     @default("")
+  tax            String     @default("")
+  address        String     @default("")
+  representative String     @default("")
+  note           String     @default("")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  quotes         Quote[]
+  contracts      Contract[]
+
+  @@map("customers")
+}
+
+model Quote {
+  id         String      @id
+  customerId String?     @map("customer_id")
+  customer   Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  date       DateTime    @default(now()) @db.Date
+  status     String      @default("Nháp")
+  discount   BigInt      @default(0)
+  vatPct     Float       @default(0) @map("vat_pct")
+  shipping   BigInt      @default(0)
+  templateId String?     @map("template_id")
+  notes      String      @default("")
+  validUntil DateTime?   @map("valid_until") @db.Date
+  createdAt  DateTime    @default(now()) @map("created_at")
+  items      QuoteItem[]
+  contracts  Contract[]
+
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          String   @id @default(uuid())
+  quoteId     String   @map("quote_id")
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  productId   String?  @map("product_id")
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String   @default("") @map("product_name")
+  qty         Int      @default(1)
+  price       BigInt   @default(0)
+  discount    BigInt   @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("quote_items")
+}
+
+model Contract {
+  id           String         @id
+  quoteId      String?        @map("quote_id")
+  quote        Quote?         @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  customerId   String?        @map("customer_id")
+  customer     Customer?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  date         DateTime       @default(now()) @db.Date
+  status       String         @default("Nháp")
+  templateId   String?        @map("template_id")
+  stockApplied Boolean        @default(false) @map("stock_applied")
+  notes        String         @default("")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  items        ContractItem[]
+  payments     Payment[]
+
+  @@map("contracts")
+}
+
+model ContractItem {
+  id          String   @id @default(uuid())
+  contractId  String   @map("contract_id")
+  contract    Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  productId   String?  @map("product_id")
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String   @default("") @map("product_name")
+  qty         Int      @default(1)
+  price       BigInt   @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("contract_items")
+}
+
+model InventoryTransaction {
+  id        String   @id
+  date      DateTime @default(now()) @db.Date
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      String
+  qty       Int
+  ref       String   @default("")
+  note      String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("inventory_transactions")
+}
+
+model Payment {
+  id         String   @id
+  contractId String   @map("contract_id")
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  date       DateTime @default(now()) @db.Date
+  amount     BigInt   @default(0)
+  method     String   @default("Chuyển khoản")
+  note       String   @default("")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("payments")
+}
+
+model Template {
+  id        String   @id
+  type      String   @default("quote")
+  name      String
+  isDefault Boolean  @default(false) @map("is_default")
+  paper     String   @default("A4")
+  locked    Boolean  @default(false)
+  content   String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("templates")
+}
+
+model EmailSetting {
+  id         String   @id @default("default")
+  senderName String   @default("Sales Department") @map("sender_name")
+  senderEmail String  @default("sales@company.com") @map("sender_email")
+  smtpHost   String   @default("smtp.gmail.com") @map("smtp_host")
+  smtpPort   Int      @default(587) @map("smtp_port")
+  autoSend   Boolean  @default(false) @map("auto_send")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("email_settings")
+}
+
+model EmailLog {
+  id        String   @id @default(uuid())
+  recipient String
+  subject   String
+  status    String   @default("pending")
+  errorMsg  String?  @map("error_msg")
+  sentAt    DateTime @default(now()) @map("sent_at")
+
+  @@map("email_logs")
+}
+
+model AppSetting {
+  id              Int      @id @default(1)
+  companyName     String   @default("Hộ Kinh Doanh Demo") @map("company_name")
+  companyAddress  String   @default("") @map("company_address")
+  companyPhone    String   @default("") @map("company_phone")
+  companyEmail    String   @default("") @map("company_email")
+  companyTax      String   @default("") @map("company_tax")
+  logoUrl         String   @default("") @map("logo_url")
+  quotePrefix     String   @default("BG") @map("quote_prefix")
+  contractPrefix  String   @default("HD") @map("contract_prefix")
+  paymentPrefix   String   @default("TT") @map("payment_prefix")
+  customerPrefix  String   @default("KH") @map("customer_prefix")
+  productPrefix   String   @default("SP") @map("product_prefix")
+  inventoryPrefix String   @default("NK") @map("inventory_prefix")
+  emailPrefix     String   @default("EM") @map("email_prefix")
+  idFormat        String   @default("{PREFIX}-{YEAR}-{SEQ}") @map("id_format")
+  currency        String   @default("VND")
+  vatDefault      Float    @default(10) @map("vat_default")
+  quoteValidDays  Int      @default(15) @map("quote_valid_days")
+  lowStockAlert   Boolean  @default(true) @map("low_stock_alert")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("app_settings")
+}

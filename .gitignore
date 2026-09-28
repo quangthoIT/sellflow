@@ -1,0 +1,55 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Next.js
+.next/
+out/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environmental variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Local Storage / Uploaded Files & Generated Documents
+storage/contracts/*.pdf
+storage/quotations/*.pdf
+storage/templates/*.pdf
+!storage/*/.gitkeep
+
+# Assets & Media Files (Uploaded Logos, Stamps, Dynamic Images)
+storage/assets/*
+!storage/assets/.gitkeep
+frontend/public/assets/uploads/*
+!frontend/public/assets/**/.gitkeep
+
+# IDE & OS files
+.DS_Store
+*.pem
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
