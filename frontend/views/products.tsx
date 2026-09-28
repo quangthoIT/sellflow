@@ -58,16 +58,9 @@ export function ProductsPage() {
   useEffect(() => { load(); }, [load]);
 
   const categories = Array.from(
-    new Set([
-      "Thiết bị điện tử",
-      "Phần mềm",
-      "Dịch vụ",
-      "Văn phòng phẩm",
-      "Thời trang",
-      "Gia dụng",
-      "Khác",
-      ...products.map((p) => p.category).filter(Boolean),
-    ])
+    new Set(
+      products.map((p) => p.category).filter(Boolean)
+    )
   ).sort();
 
   const filtered = products.filter((p) =>
@@ -426,15 +419,15 @@ function ProductForm({ product, categories, onSave, onCancel }: {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Mã sản phẩm</Label>
+          <Label>Mã sản phẩm <span className="text-destructive">*</span></Label>
           <Input value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })} disabled={!!product} />
         </div>
         <div className="space-y-1.5">
-          <Label>Tên sản phẩm</Label>
+          <Label>Tên sản phẩm <span className="text-destructive">*</span></Label>
           <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Danh mục</Label>
+          <Label>Danh mục <span className="text-destructive">*</span></Label>
           <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
             <SelectTrigger className="w-full h-9"><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
             <SelectContent>
@@ -445,27 +438,27 @@ function ProductForm({ product, categories, onSave, onCancel }: {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Đơn vị tính</Label>
+          <Label>Đơn vị tính <span className="text-destructive">*</span></Label>
           <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Giá vốn (đ)</Label>
+          <Label>Giá vốn (đ) <span className="text-destructive">*</span></Label>
           <Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: +e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Giá bán (đ)</Label>
+          <Label>Giá bán (đ) <span className="text-destructive">*</span></Label>
           <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: +e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Tồn kho</Label>
+          <Label>Tồn kho <span className="text-destructive">*</span></Label>
           <Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: +e.target.value })} disabled={!!product} />
         </div>
         <div className="space-y-1.5">
-          <Label>Tồn tối thiểu</Label>
+          <Label>Tồn tối thiểu <span className="text-destructive">*</span></Label>
           <Input type="number" value={form.min_stock} onChange={(e) => setForm({ ...form, min_stock: +e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Trạng thái</Label>
+          <Label>Trạng thái <span className="text-destructive">*</span></Label>
           <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -481,7 +474,14 @@ function ProductForm({ product, categories, onSave, onCancel }: {
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>Hủy</Button>
-        <Button onClick={() => onSave(form)} disabled={!form.id || !form.name}>
+        <Button onClick={() => {
+          if (!form.id.trim()) { toast.error("Vui lòng nhập Mã sản phẩm"); return; }
+          if (!form.name.trim()) { toast.error("Vui lòng nhập Tên sản phẩm"); return; }
+          if (!form.category.trim()) { toast.error("Vui lòng chọn Danh mục"); return; }
+          if (!form.unit.trim()) { toast.error("Vui lòng nhập Đơn vị tính"); return; }
+          if (!form.status.trim()) { toast.error("Vui lòng chọn Trạng thái"); return; }
+          onSave(form);
+        }} disabled={!form.id || !form.name || !form.category || !form.unit || !form.status}>
           {product ? "Cập nhật" : "Tạo sản phẩm"}
         </Button>
       </DialogFooter>

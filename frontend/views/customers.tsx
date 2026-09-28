@@ -405,7 +405,7 @@ function CustomerForm({ customer, onSave, onCancel }: {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Mã khách hàng</Label>
+          <Label>Mã khách hàng <span className="text-destructive">*</span></Label>
           {customer ? (
             <Input value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })} disabled />
           ) : (
@@ -418,28 +418,28 @@ function CustomerForm({ customer, onSave, onCancel }: {
           )}
         </div>
         <div className="space-y-1.5">
-          <Label>Tên khách hàng / công ty</Label>
+          <Label>Tên khách hàng / công ty <span className="text-destructive">*</span></Label>
           <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Số điện thoại</Label>
+          <Label>Số điện thoại <span className="text-destructive">*</span></Label>
           <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Email</Label>
+          <Label>Email <span className="text-destructive">*</span></Label>
           <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Mã số thuế</Label>
+          <Label>Mã số thuế <span className="text-destructive">*</span></Label>
           <Input value={form.tax} onChange={(e) => setForm({ ...form, tax: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Người đại diện</Label>
+          <Label>Người đại diện <span className="text-destructive">*</span></Label>
           <Input value={form.representative} onChange={(e) => setForm({ ...form, representative: e.target.value })} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Địa chỉ</Label>
+        <Label>Địa chỉ <span className="text-destructive">*</span></Label>
         <Textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} rows={2} />
       </div>
       <div className="space-y-1.5">
@@ -448,7 +448,16 @@ function CustomerForm({ customer, onSave, onCancel }: {
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>Hủy</Button>
-        <Button onClick={() => onSave(form)} disabled={!form.id || !form.name}>
+        <Button onClick={() => {
+          if (!form.id.trim()) { toast.error("Vui lòng nhập Mã khách hàng"); return; }
+          if (!form.name.trim()) { toast.error("Vui lòng nhập Tên khách hàng"); return; }
+          if (!form.phone.trim()) { toast.error("Vui lòng nhập Số điện thoại"); return; }
+          if (!form.email.trim()) { toast.error("Vui lòng nhập Email"); return; }
+          if (!form.tax.trim()) { toast.error("Vui lòng nhập Mã số thuế"); return; }
+          if (!form.representative.trim()) { toast.error("Vui lòng nhập Người đại diện"); return; }
+          if (!form.address.trim()) { toast.error("Vui lòng nhập Địa chỉ"); return; }
+          onSave(form);
+        }} disabled={!form.id || !form.name || !form.phone || !form.email || !form.tax || !form.representative || !form.address}>
           {customer ? "Cập nhật" : "Thêm khách hàng"}
         </Button>
       </DialogFooter>
