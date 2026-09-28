@@ -104,13 +104,37 @@ export function ProductsPage() {
   };
 
   const handleSave = async (p: Partial<Product>) => {
+    if (!p.id?.trim()) {
+      toast.error("Mã sản phẩm không được để trống!");
+      return;
+    }
+    if (!p.name?.trim()) {
+      toast.error("Tên sản phẩm không được để trống!");
+      return;
+    }
+
     if (editing) {
       const { error } = await supabase.from("products").update(p).eq("id", editing.id);
       if (error) { toast.error("Lỗi cập nhật sản phẩm"); return; }
       toast.success("Đã cập nhật sản phẩm");
     } else {
+      const isDuplicate = products.some(
+        (existing) => existing.id.trim().toLowerCase() === p.id!.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        toast.error(`Mã sản phẩm "${p.id}" đã tồn tại trên hệ thống! Vui lòng dùng mã khác.`);
+        return;
+      }
+
       const { error } = await supabase.from("products").insert(p);
-      if (error) { toast.error("Lỗi tạo sản phẩm"); return; }
+      if (error) {
+        if (error.code === "23505" || error.message?.includes("duplicate") || error.message?.includes("exists")) {
+          toast.error(`Mã sản phẩm "${p.id}" đã tồn tại!`);
+        } else {
+          toast.error("Lỗi tạo sản phẩm");
+        }
+        return;
+      }
       toast.success("Đã tạo sản phẩm mới");
     }
     setShowForm(false);
@@ -373,6 +397,30 @@ function ProductForm({ product, categories, onSave, onCancel }: {
     description: product?.description ?? "",
     status: product?.status ?? "Đang bán",
   });
+
+  useEffect(() => {
+    if (!product) {
+      (async () => {
+        const s = await loadSettings();
+        const { count } = await supabase.from("products").select("*", { count: "exact", head: true });
+        const generatedId = genId(s.product_prefix, s.id_format.includes("{NUM}") ? s.id_format : "{PREFIX}-{NUM}", (count ?? 0) + 1);
+        setForm((prev) => prev.id ? prev : { ...prev, id: generatedId });
+      })();
+    } else {
+      setForm({
+        id: product.id,
+        name: product.name ?? "",
+        category: product.category ?? (categories[0] || ""),
+        unit: product.unit ?? "cái",
+        cost: product.cost ?? 0,
+        price: product.price ?? 0,
+        stock: product.stock ?? 0,
+        min_stock: product.min_stock ?? 0,
+        description: product.description ?? "",
+        status: product.status ?? "Đang bán",
+      });
+    }
+  }, [product, categories]);
 
   return (
     <div className="space-y-4">

@@ -62,21 +62,38 @@ export function CustomersPage() {
   const result = sortData(filterData(filtered, colFilters), (sortKey as any) ?? "name", sortDir);
 
   const handleSave = async (c: Partial<Customer>) => {
+    if (!c.id?.trim()) {
+      toast.error("Mã khách hàng không được để trống!");
+      return;
+    }
+    if (!c.name?.trim()) {
+      toast.error("Tên khách hàng không được để trống!");
+      return;
+    }
+
     if (editing) {
       const { error } = await supabase.from("customers").update(c).eq("id", editing.id);
-      if (error) { toast.error("Lỗi cập nhật"); return; }
+      if (error) { toast.error("Lỗi cập nhật khách hàng"); return; }
       toast.success("Đã cập nhật khách hàng");
     } else {
-      let id = c.id;
-      if (!id) {
-        const s = getCachedSettings();
-        const { count } = await supabase.from("customers").select("*", { count: "exact", head: true });
-        const pattern = s.id_format.includes("{NUM}") ? s.id_format : "{PREFIX}{NUM}";
-        id = genId(s.customer_prefix, pattern, (count ?? 0) + 1);
+      const isDuplicate = customers.some(
+        (existing) => existing.id.trim().toLowerCase() === c.id!.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        toast.error(`Mã khách hàng "${c.id}" đã tồn tại trên hệ thống! Vui lòng dùng mã khác.`);
+        return;
       }
-      const { error } = await supabase.from("customers").insert({ ...c, id });
-      if (error) { toast.error("Lỗi tạo khách hàng"); return; }
-      toast.success("Đã thêm khách hàng");
+
+      const { error } = await supabase.from("customers").insert(c);
+      if (error) {
+        if (error.code === "23505" || error.message?.includes("duplicate") || error.message?.includes("exists")) {
+          toast.error(`Mã khách hàng "${c.id}" đã tồn tại!`);
+        } else {
+          toast.error("Lỗi tạo khách hàng");
+        }
+        return;
+      }
+      toast.success("Đã thêm khách hàng mới");
     }
     setShowForm(false);
     setEditing(null);
@@ -366,10 +383,21 @@ function CustomerForm({ customer, onSave, onCancel }: {
       (async () => {
         const s = await loadSettings();
         const { count } = await supabase.from("customers").select("*", { count: "exact", head: true });
-        const generatedId = genId(s.customer_prefix, "{PREFIX}{NUM}", (count ?? 0) + 1);
+        const generatedId = genId(s.customer_prefix, s.id_format.includes("{NUM}") ? s.id_format : "{PREFIX}-{NUM}", (count ?? 0) + 1);
         setAutoId(generatedId);
-        setForm((prev) => prev.id ? prev : { ...prev, id: generatedId });
+        setForm((prev) => ({ ...prev, id: generatedId }));
       })();
+    } else {
+      setForm({
+        id: customer.id,
+        name: customer.name ?? "",
+        phone: customer.phone ?? "",
+        email: customer.email ?? "",
+        tax: customer.tax ?? "",
+        address: customer.address ?? "",
+        representative: customer.representative ?? "",
+        note: customer.note ?? "",
+      });
     }
   }, [customer]);
 
