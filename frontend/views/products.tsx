@@ -151,9 +151,7 @@ export function ProductsPage() {
       id: txId, product_id: productId, type: "Nhập kho", qty, ref: txId, note,
     });
     if (txErr) { toast.error("Lỗi ghi giao dịch kho"); return; }
-    const { error: pErr } = await supabase
-      .from("products").update({ stock: product.stock + qty }).eq("id", productId);
-    if (pErr) { toast.error("Lỗi cập nhật tồn kho"); return; }
+    // Backend inventory route already handles stock increment atomically
     toast.success(`Đã nhập ${qty} vào kho`);
     setShowInventory(null);
     load();

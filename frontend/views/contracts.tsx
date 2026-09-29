@@ -130,13 +130,9 @@ export function ContractsPage() {
     const cItems = (items ?? []) as ContractItem[];
     for (const it of cItems) {
       if (!it.product_id) continue;
-      const { data: prod } = await supabase.from("products").select("*").eq("id", it.product_id).maybeSingle();
-      if (!prod) continue;
-      const newStock = (prod as Product).stock - it.qty;
-      await supabase.from("products").update({ stock: newStock }).eq("id", it.product_id);
       const txId = genId(`${s.inventory_prefix}-XK`, s.id_format);
       await supabase.from("inventory_transactions").insert({
-        id: txId, product_id: it.product_id, type: "Hợp đồng", qty: -it.qty, ref: contract.id, note: `Xuất kho theo ${contract.id}`,
+        id: txId, product_id: it.product_id, type: "Hợp đồng", qty: it.qty, ref: contract.id, note: `Xuất kho theo ${contract.id}`,
       });
     }
     await supabase.from("contracts").update({ stock_applied: true }).eq("id", contract.id);
@@ -149,10 +145,6 @@ export function ContractsPage() {
     const cItems = (items ?? []) as ContractItem[];
     for (const it of cItems) {
       if (!it.product_id) continue;
-      const { data: prod } = await supabase.from("products").select("*").eq("id", it.product_id).maybeSingle();
-      if (!prod) continue;
-      const newStock = (prod as Product).stock + it.qty;
-      await supabase.from("products").update({ stock: newStock }).eq("id", it.product_id);
       const txId = genId(`${s.inventory_prefix}-HK`, s.id_format);
       await supabase.from("inventory_transactions").insert({
         id: txId, product_id: it.product_id, type: "Hoàn kho", qty: it.qty, ref: contract.id, note: `Hoàn kho do hủy ${contract.id}`,

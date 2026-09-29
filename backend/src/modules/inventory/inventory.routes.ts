@@ -28,9 +28,24 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
         },
       });
 
-      // Update stock
+      // Update stock based on transaction type
       if (productId) {
-        const stockChange = data.type === 'Nhập kho' ? Number(data.qty) : -Number(data.qty);
+        let stockChange = 0;
+        const absQty = Math.abs(Number(data.qty));
+        switch (data.type) {
+          case 'Nhập kho':
+          case 'Hoàn kho':
+            stockChange = absQty;
+            break;
+          case 'Xuất kho':
+          case 'Hợp đồng':
+            stockChange = -absQty;
+            break;
+          default:
+            // 'Điều chỉnh' or others: use qty sign as-is
+            stockChange = Number(data.qty);
+            break;
+        }
         await db.product.update({
           where: { id: productId },
           data: { stock: { increment: stockChange } },
