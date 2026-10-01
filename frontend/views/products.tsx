@@ -24,9 +24,29 @@ import { ActionTooltip } from "@/components/action-tooltip";
 
 import { fetchReservedStockMap } from "@/lib/inventory";
 
+function getSavedCategories(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("sellflow_product_categories");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCategoriesList(list: string[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("sellflow_product_categories", JSON.stringify(list));
+  } catch {
+    // fallback
+  }
+}
+
 export function ProductsPage() {
   const { params } = useNav();
   const [products, setProducts] = useState<Product[]>([]);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [reservedStockMap, setReservedStockMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -52,15 +72,17 @@ export function ProductsPage() {
     ]);
     setProducts((pRes.data ?? []) as Product[]);
     setReservedStockMap(rMap);
+    setCustomCategories(getSavedCategories());
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   const categories = Array.from(
-    new Set(
-      products.map((p) => p.category).filter(Boolean)
-    )
+    new Set([
+      ...customCategories,
+      ...products.map((p) => p.category).filter(Boolean),
+    ])
   ).sort();
 
   const filtered = products.filter((p) =>
@@ -130,6 +152,16 @@ export function ProductsPage() {
       }
       toast.success("Đã tạo sản phẩm mới");
     }
+    if (p.category?.trim()) {
+      const cat = p.category.trim();
+      const currentCats = getSavedCategories();
+      if (!currentCats.includes(cat)) {
+        const updated = Array.from(new Set([...currentCats, cat]));
+        saveCategoriesList(updated);
+        setCustomCategories(updated);
+      }
+    }
+
     setShowForm(false);
     setEditing(null);
     load();
@@ -376,6 +408,7 @@ function ProductForm({ product, categories, onSave, onCancel }: {
   onSave: (p: Partial<Product>) => void;
   onCancel: () => void;
 }) {
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [form, setForm] = useState({
     id: product?.id ?? "",
     name: product?.name ?? "",
@@ -398,6 +431,8 @@ function ProductForm({ product, categories, onSave, onCancel }: {
         setForm((prev) => prev.id ? prev : { ...prev, id: generatedId });
       })();
     } else {
+      const isCustom = !categories.includes(product.category ?? "");
+      setIsCustomCategory(isCustom && !!product.category);
       setForm({
         id: product.id,
         name: product.name ?? "",
@@ -425,15 +460,39 @@ function ProductForm({ product, categories, onSave, onCancel }: {
           <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Danh mục <span className="text-destructive">*</span></Label>
-          <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-            <SelectTrigger className="w-full h-9"><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center justify-between">
+            <Label>Danh mục <span className="text-destructive">*</span></Label>
+            {categories.length > 0 && (
+              <button
+                type="button"
+                className="text-[11px] text-primary hover:underline font-medium"
+                onClick={() => {
+                  setIsCustomCategory(!isCustomCategory);
+                  if (isCustomCategory && categories.length > 0 && !categories.includes(form.category)) {
+                    setForm({ ...form, category: categories[0] });
+                  }
+                }}
+              >
+                {isCustomCategory ? "Chọn từ danh sách" : "+ Nhập danh mục mới"}
+              </button>
+            )}
+          </div>
+          {categories.length === 0 || isCustomCategory ? (
+            <Input
+              placeholder="Nhập tên danh mục..."
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+            />
+          ) : (
+            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+              <SelectTrigger className="w-full h-9"><SelectValue placeholder="Chọn danh mục" /></SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Đơn vị tính <span className="text-destructive">*</span></Label>
@@ -475,7 +534,7 @@ function ProductForm({ product, categories, onSave, onCancel }: {
         <Button onClick={() => {
           if (!form.id.trim()) { toast.error("Vui lòng nhập Mã sản phẩm"); return; }
           if (!form.name.trim()) { toast.error("Vui lòng nhập Tên sản phẩm"); return; }
-          if (!form.category.trim()) { toast.error("Vui lòng chọn Danh mục"); return; }
+          if (!form.category.trim()) { toast.error("Vui lòng chọn hoặc nhập Danh mục"); return; }
           if (!form.unit.trim()) { toast.error("Vui lòng nhập Đơn vị tính"); return; }
           if (!form.status.trim()) { toast.error("Vui lòng chọn Trạng thái"); return; }
           onSave(form);
@@ -542,6 +601,9 @@ function CategoryManagerDialog({
       toast.error("Danh mục này đã tồn tại!");
       return;
     }
+    const currentSaved = getSavedCategories();
+    const updated = Array.from(new Set([...currentSaved, name]));
+    saveCategoriesList(updated);
     toast.success(`Đã thêm danh mục "${name}"`);
     setNewCategory("");
     onCategoryUpdated();
@@ -553,13 +615,21 @@ function CategoryManagerDialog({
       setEditingCat(null);
       return;
     }
+
+    // 1. Update localStorage
+    const currentSaved = getSavedCategories();
+    const updated = currentSaved.map((c) => (c === oldName ? newName : c));
+    if (!updated.includes(newName)) updated.push(newName);
+    saveCategoriesList(Array.from(new Set(updated)));
+
+    // 2. Update products in DB
     const { error } = await db
       .from("products")
       .update({ category: newName })
       .eq("category", oldName);
 
     if (error) {
-      toast.error("Lỗi đổi tên danh mục");
+      toast.error("Lỗi đổi tên danh mục trên sản phẩm");
       return;
     }
     toast.success(`Đã đổi tên danh mục "${oldName}" thành "${newName}"`);
@@ -575,6 +645,12 @@ function CategoryManagerDialog({
 
     if (!window.confirm(confirmMsg)) return;
 
+    // 1. Update localStorage
+    const currentSaved = getSavedCategories();
+    const updated = currentSaved.filter((c) => c !== catName);
+    saveCategoriesList(updated);
+
+    // 2. Update products in DB if any
     if (count > 0) {
       await db.from("products").update({ category: "" }).eq("category", catName);
     }
