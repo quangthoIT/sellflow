@@ -236,6 +236,14 @@ function createLocalQueryBuilder(table: string) {
               date: item.date ? (typeof item.date === 'string' ? item.date.split('T')[0] : new Date(item.date).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
               created_at: item.createdAt || item.created_at || new Date().toISOString(),
             }));
+          } else if (table === "templates") {
+            list = list.map((item: any) => ({
+              ...item,
+              is_default: Boolean(item.isDefault ?? item.is_default ?? false),
+              isDefault: Boolean(item.isDefault ?? item.is_default ?? false),
+              locked: Boolean(item.locked ?? false),
+              created_at: item.createdAt || item.created_at || new Date().toISOString(),
+            }));
           }
           Object.keys(builder._eq).forEach(key => {
             const val = builder._eq[key];
