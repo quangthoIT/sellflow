@@ -11,11 +11,13 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Save, Mail, CheckCircle, XCircle, Send, Server, ShieldCheck } from "lucide-react";
+import { Save, Mail, CheckCircle, XCircle, Send, Server, ShieldCheck, HelpCircle, ExternalLink, KeyRound, BookOpen, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { TableSkeleton } from "@/components/loading";
 import { SortableHead, sortData, filterData, type SortDir } from "@/components/sortable-head";
+import { ActionTooltip } from "@/components/action-tooltip";
 
 const defaultEmailSettings: EmailSettings = {
   id: 1,
@@ -47,6 +49,7 @@ export function EmailPage() {
   const [smtpPassword, setSmtpPassword] = useState("");
   const [testEmailInput, setTestEmailInput] = useState("");
   const [testing, setTesting] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,14 +206,26 @@ export function EmailPage() {
           {/* Section 1: Server SMTP Settings */}
           <Card className="shadow-2xs">
             <CardHeader>
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <Server className="size-4.5" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <Server className="size-4.5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Máy chủ gửi thư SMTP</CardTitle>
+                    <CardDescription className="text-xs">Cấu hình thông số kết nối máy chủ gửi mail của hệ thống</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-base">Máy chủ gửi thư SMTP</CardTitle>
-                  <CardDescription className="text-xs">Cấu hình thông số kết nối máy chủ gửi mail của hệ thống</CardDescription>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowGuide(true)}
+                  className="h-8 text-xs gap-1.5 border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300 font-medium w-full sm:w-auto"
+                >
+                  <HelpCircle className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  Hướng dẫn lấy thông tin (3 bước)
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -234,7 +249,16 @@ export function EmailPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium">Mật khẩu ứng dụng (App Password)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium">Mật khẩu ứng dụng (App Password)</Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowGuide(true)}
+                      className="text-[11px] text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5 font-medium"
+                    >
+                      <HelpCircle className="size-3" /> Cách lấy?
+                    </button>
+                  </div>
                   <Input
                     type="password"
                     value={smtpPassword}
@@ -384,6 +408,108 @@ export function EmailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Step-by-Step Configuration Guide Dialog */}
+      <Dialog open={showGuide} onOpenChange={setShowGuide}>
+        <DialogContent className="sm:max-w-xl max-w-xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5 mb-1">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <BookOpen className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-foreground">Hướng dẫn cấu hình gửi Email qua Gmail</DialogTitle>
+                <DialogDescription className="text-xs">Dành cho người mới - Chỉ cần thực hiện 1 lần duy nhất trong 2 phút</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3.5 py-2 text-xs">
+            {/* Step 1 */}
+            <div className="flex gap-3 p-3.5 rounded-xl border bg-slate-50 dark:bg-slate-900">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs">
+                1
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <div className="font-semibold text-sm text-foreground">Bật Xác minh 2 bước trên Google Account</div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Để bảo vệ tài khoản, Google yêu cầu tài khoản Gmail gửi thư phải bật <strong>Xác minh 2 bước (2-Step Verification)</strong> trước khi cho phép tạo mật khẩu ứng dụng.
+                </p>
+                <a
+                  href="https://myaccount.google.com/security"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium hover:underline pt-0.5"
+                >
+                  <ExternalLink className="size-3" /> Mở trang Bảo mật Google Account
+                </a>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex gap-3 p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 dark:bg-blue-950/20 dark:border-blue-900/60">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs">
+                2
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <div className="font-semibold text-sm text-foreground">Tạo Mật khẩu ứng dụng (App Password)</div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Truy cập trang tạo mật khẩu ứng dụng chuyên dụng của Google:
+                </p>
+                <div className="bg-white dark:bg-slate-950 p-2.5 rounded-md border font-mono text-[11px] text-slate-700 dark:text-slate-300 space-y-1">
+                  <div>1. Đặt tên ứng dụng: <strong>SellFlow</strong></div>
+                  <div>2. Nhấn nút <strong>Tạo (Create)</strong></div>
+                  <div>3. Google sẽ cấp cho bạn một chuỗi <strong>16 ký tự màu vàng</strong> (ví dụ: <code className="bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-1 py-0.5 rounded font-bold">abcd efgh ijkl mnop</code>). Hãy sao chép chuỗi này.</div>
+                </div>
+                <a
+                  href="https://myaccount.google.com/apppasswords"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-semibold hover:underline pt-1"
+                >
+                  <KeyRound className="size-3.5" /> Mở trang tạo Google App Password
+                </a>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex gap-3 p-3.5 rounded-xl border bg-slate-50 dark:bg-slate-900">
+              <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white font-bold text-xs">
+                3
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <div className="font-semibold text-sm text-foreground">Điền thông tin vào SellFlow & Lưu</div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Quay lại tab <strong>Cấu hình email</strong> và điền các trường:
+                </p>
+                <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+                  <li><strong>SMTP Host:</strong> <code className="text-foreground font-mono">smtp.gmail.com</code> (đã điền sẵn)</li>
+                  <li><strong>SMTP Port:</strong> <code className="text-foreground font-mono">587</code> (đã điền sẵn)</li>
+                  <li><strong>Email người gửi:</strong> Nhập địa chỉ Gmail của bạn</li>
+                  <li><strong>Mật khẩu ứng dụng:</strong> Dán 16 ký tự vừa sao chép ở Bước 2</li>
+                </ul>
+                <p className="text-muted-foreground pt-1">
+                  Sau đó bấm <strong>Lưu cấu hình email</strong>. Bạn có thể nhập email vào ô thử nghiệm bên dưới để kiểm tra gửi ngay.
+                </p>
+              </div>
+            </div>
+
+            {/* Security Note */}
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900/40 flex items-start gap-2.5 text-[11px] text-amber-900 dark:text-amber-200">
+              <AlertCircle className="size-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                <strong>Lưu ý quan trọng:</strong> Mật khẩu ứng dụng là mật khẩu bảo mật riêng biệt Google cấp cho phần mềm. Tuyệt đối <strong>KHÔNG</strong> dùng mật khẩu đăng nhập chính của tài khoản Gmail.
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="border-t pt-3">
+            <Button className="w-full sm:w-auto text-xs" onClick={() => setShowGuide(false)}>
+              Đã hiểu, đóng hướng dẫn
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
