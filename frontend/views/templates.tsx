@@ -331,16 +331,6 @@ export function TemplatesPage() {
                       <ActionTooltip label="Xem trước mẫu">
                         <Button size="sm" variant="ghost" onClick={() => setPreview(t)}><Eye className="size-3.5" /></Button>
                       </ActionTooltip>
-                      <ActionTooltip label="Tải PDF mẫu (A4)">
-                        <Button size="sm" variant="ghost" onClick={() => downloadPdf(`Mau-${t.type === "quote" ? "Bao-gia" : "Hop-dong"}-${t.id}`, renderTemplatePreview(t, settings))}>
-                          <Download className="size-3.5" />
-                        </Button>
-                      </ActionTooltip>
-                      <ActionTooltip label="Tải Word mẫu (.doc)">
-                        <Button size="sm" variant="ghost" onClick={() => downloadWord(`Mau-${t.type === "quote" ? "Bao-gia" : "Hop-dong"}-${t.id}`, renderTemplatePreview(t, settings))}>
-                          <FileType className="size-3.5" />
-                        </Button>
-                      </ActionTooltip>
                       <ActionTooltip label={t.locked ? "Khóa mẫu (Không thể sửa)" : "Chỉnh sửa mẫu"}>
                         <span>
                           <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setShowForm(true); }} disabled={t.locked}>
