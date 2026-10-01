@@ -64,13 +64,86 @@ const TEMPLATE_TYPES = [
 ];
 
 const VARIABLES = [
-  "SO_TAI_LIEU", "NGAY", "TEN_KHACH_HANG", "DIA_CHI_KHACH_HANG", "MST_KHACH_HANG",
+  "SO_TAI_LIEU", "NGAY", "TEN_CONG_TY", "DIA_CHI_CONG_TY", "SDT_CONG_TY", "EMAIL_CONG_TY", "MST_CONG_TY", "LOGO_CONG_TY",
+  "TEN_KHACH_HANG", "DIA_CHI_KHACH_HANG", "MST_KHACH_HANG",
   "BANG_SAN_PHAM", "TAM_TINH", "VAT", "TONG_TIEN", "DA_THANH_TOAN", "CON_PHAI_THU",
-  "SO_HOP_DONG", "SO_BAO_GIA", "DIEU_KHOAN_THANH_TOAN",
+  "SO_HOP_DONG", "SO_BAO_GIA", "DIEU_KHOAN_THANH_TOAN", "GHI_CHU", "CHU_KY_BEN_BAN", "CHU_KY_KHAC_HANG", "CON_DAU",
 ];
+
+function renderTemplatePreview(template: Template, settings: AppSettings | null): string {
+  if (!template?.content) return "<p>Mẫu trống</p>";
+
+  const sampleTable = `<table style="width:100%;border-collapse:collapse;margin:12px 0;">
+    <thead><tr style="background:#f1f5f9;">
+      <th style="border:1px solid #cbd5e1;padding:8px;text-align:left;">STT</th>
+      <th style="border:1px solid #cbd5e1;padding:8px;text-align:left;">Tên sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #cbd5e1;padding:8px;text-align:right;">Số lượng</th>
+      <th style="border:1px solid #cbd5e1;padding:8px;text-align:right;">Đơn giá (đ)</th>
+      <th style="border:1px solid #cbd5e1;padding:8px;text-align:right;">Thành tiền (đ)</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid #cbd5e1;padding:8px;">1</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;">Thiết bị & Giải pháp phần mềm trọn gói</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">1</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">25,000,000</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">25,000,000</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #cbd5e1;padding:8px;">2</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;">Dịch vụ triển khai & Đào tạo hướng dẫn</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">1</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">5,000,000</td>
+        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">5,000,000</td>
+      </tr>
+    </tbody>
+  </table>`;
+
+  const samplePaymentTerms = `<div style="margin-top:8px;">
+    <p style="margin-bottom:4px;">- Đợt 1: Tạm ứng 50% ngay sau khi ký hợp đồng / xác nhận đơn hàng (<strong>16,500,000 đ</strong>).</p>
+    <p style="margin-bottom:4px;">- Đợt 2: Thanh toán 50% còn lại sau khi bàn giao & nghiệm thu đầy đủ (<strong>16,500,000 đ</strong>).</p>
+  </div>`;
+
+  const companyName = settings?.company_name || "CÔNG TY BÁN HÀNG";
+  const replacements: Record<string, string> = {
+    SO_TAI_LIEU: template.type === "quote" ? "BG-2026-001" : "HD-2026-001",
+    SO_BAO_GIA: "BG-2026-001",
+    SO_HOP_DONG: "HD-2026-001",
+    NGAY: new Date().toLocaleDateString("vi-VN"),
+    TEN_CONG_TY: companyName,
+    DIA_CHI_CONG_TY: settings?.company_address || "Tầng 5, Tòa nhà Landmark, TP. Hồ Chí Minh",
+    SDT_CONG_TY: settings?.company_phone || "0901 234 567",
+    EMAIL_CONG_TY: settings?.company_email || "contact@doanhnghiep.vn",
+    MST_CONG_TY: settings?.company_tax || "0101234567",
+    LOGO_CONG_TY: settings?.logo_url ? `<img src="${settings.logo_url}" alt="Logo" style="height:48px;max-width:150px;object-fit:contain;" />` : `<div style="font-weight:bold;color:#0f172a;font-size:16px;">${companyName}</div>`,
+    TEN_KHACH_HANG: "Công ty Cổ phần Thương mại Khách Hàng",
+    DIA_CHI_KHACH_HANG: "Số 88 Đường Nguyễn Trãi, Quận Thanh Xuân, Hà Nội",
+    MST_KHACH_HANG: "0309876543",
+    BANG_SAN_PHAM: sampleTable,
+    TAM_TINH: "30,000,000 đ",
+    VAT: "3,000,000 đ",
+    TONG_TIEN: "33,000,000 đ",
+    DA_THANH_TOAN: "16,500,000 đ",
+    CON_PHAI_THU: "16,500,000 đ",
+    DIEU_KHOAN_THANH_TOAN: samplePaymentTerms,
+    GHI_CHU: "Báo giá/Hợp đồng đã bao gồm chi phí vận chuyển và bảo hành 12 tháng tại nơi sử dụng.",
+    PAGE: "1",
+    TOTAL_PAGES: "1",
+    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong>${companyName}</strong></div>`,
+    CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>NGUYỄN VĂN A</strong></div>`,
+    CON_DAU: `<div style="display:inline-block; border:2px dashed #ef4444; border-radius:50%; padding:10px 16px; color:#ef4444; font-weight:bold; font-size:12px; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
+  };
+
+  let html = template.content;
+  for (const [k, v] of Object.entries(replacements)) {
+    html = html.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
+  }
+  return html;
+}
 
 export function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Template | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -83,8 +156,12 @@ export function TemplatesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await db.from("templates").select("*").order("type").order("name");
-    setTemplates((data ?? []) as Template[]);
+    const [tRes, s] = await Promise.all([
+      db.from("templates").select("*").order("type").order("name"),
+      loadSettings(),
+    ]);
+    setTemplates((tRes.data ?? []) as Template[]);
+    setSettings(s);
     setLoading(false);
   }, []);
 
@@ -298,7 +375,7 @@ export function TemplatesPage() {
           </DialogHeader>
           {preview && (
             <div className="rounded-lg border bg-white p-8 text-black">
-              <div dangerouslySetInnerHTML={{ __html: preview.content }} />
+              <div dangerouslySetInnerHTML={{ __html: renderTemplatePreview(preview, settings) }} />
             </div>
           )}
         </DialogContent>

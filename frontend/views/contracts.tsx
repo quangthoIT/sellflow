@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { db, type Contract, type ContractItem, type Customer, type Template, type Product, type EmailSettings, type PaymentTerms, loadSettings, getCachedSettings } from "@/lib/db";
+import { db, type Contract, type ContractItem, type Customer, type Template, type Product, type EmailSettings, type PaymentTerms, type AppSettings, loadSettings, getCachedSettings } from "@/lib/db";
 import { formatVND, formatDate, genId } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
@@ -471,10 +471,13 @@ function ContractPreview({ contractId, customers, templates }: {
 }) {
   const [contract, setContract] = useState<Contract | null>(null);
   const [items, setItems] = useState<ContractItem[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
+      const s = await loadSettings();
+      setSettings(s);
       const { data: c } = await db.from("contracts").select("*").eq("id", contractId).maybeSingle();
       const { data: its } = await db.from("contract_items").select("*").eq("contract_id", contractId);
       setContract(c as Contract);
@@ -486,13 +489,16 @@ function ContractPreview({ contractId, customers, templates }: {
   if (loading || !contract) return <div className="py-8 text-center text-muted-foreground">Đang tải...</div>;
 
   const customer = customers.find((cu) => cu.id === contract.customer_id);
-  const template = templates.find((t) => t.id === contract.template_id);
+  const template = templates.find((t) => t.id === contract.template_id)
+    || templates.find((t) => t.type === "contract" && t.is_default)
+    || templates.find((t) => t.type === "contract")
+    || templates[0];
   const total = items.reduce((s, it) => s + it.qty * it.price, 0);
 
-  const productTable = `<table style="width:100%;border-collapse:collapse">
+  const productTable = `<table style="width:100%;border-collapse:collapse;margin:10px 0;">
     <thead><tr style="background:#f5f5f5">
       <th style="border:1px solid #ddd;padding:6px;text-align:left">STT</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:left">Sản phẩm</th>
+      <th style="border:1px solid #ddd;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
       <th style="border:1px solid #ddd;padding:6px;text-align:right">SL</th>
       <th style="border:1px solid #ddd;padding:6px;text-align:right">Đơn giá</th>
       <th style="border:1px solid #ddd;padding:6px;text-align:right">Thành tiền</th>
@@ -508,12 +514,36 @@ function ContractPreview({ contractId, customers, templates }: {
     </tbody>
   </table>`;
 
-  const settings = getCachedSettings();
+  const paymentTermsHtml = contract.payment_terms && (contract.payment_terms as any).installments?.length > 0
+    ? `<div style="margin-top:10px">
+        <p style="font-size:13px;margin-bottom:6px">Phương thức: <strong>${(contract.payment_terms as any).method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#f5f5f5">
+            <th style="border:1px solid #ddd;padding:6px;text-align:left">Đợt</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:left">Ngày</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:right">Tỷ lệ (%)</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:right">Số tiền</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:left">Ghi chú</th>
+          </tr></thead>
+          <tbody>
+            ${(contract.payment_terms as any).installments.map((it: any) => `<tr>
+              <td style="border:1px solid #ddd;padding:6px">${it.label}</td>
+              <td style="border:1px solid #ddd;padding:6px">${formatDate(it.date)}</td>
+              <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.percent || 0}%</td>
+              <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.amount)}</td>
+              <td style="border:1px solid #ddd;padding:6px">${it.note || ""}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`
+    : "Chuyển khoản qua tài khoản ngân hàng của Bên A";
+
   let html = template?.content ?? "<p>Chưa chọn mẫu</p>";
   const replacements: Record<string, string> = {
     SO_TAI_LIEU: contract.id,
+    SO_HOP_DONG: contract.id,
     NGAY: formatDate(contract.date),
-    TEN_CONG_TY: settings?.company_name || "",
+    TEN_CONG_TY: settings?.company_name || "CÔNG TY BÁN HÀNG",
     DIA_CHI_CONG_TY: settings?.company_address || "",
     SDT_CONG_TY: settings?.company_phone || "",
     EMAIL_CONG_TY: settings?.company_email || "",
@@ -523,7 +553,13 @@ function ContractPreview({ contractId, customers, templates }: {
     DIA_CHI_KHACH_HANG: customer?.address ?? "",
     MST_KHACH_HANG: customer?.tax ?? "",
     BANG_SAN_PHAM: productTable,
+    TAM_TINH: formatVND(total),
+    VAT: formatVND(0),
     TONG_TIEN: formatVND(total),
+    DIEU_KHOAN_THANH_TOAN: paymentTermsHtml,
+    GHI_CHU: contract.notes || "",
+    PAGE: "1",
+    TOTAL_PAGES: "1",
     CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong>${settings?.company_name || "CÔNG TY BÁN HÀNG"}</strong></div>`,
     CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
     CON_DAU: `<div style="display:inline-block; border:2px dashed #ef4444; border-radius:50%; padding:10px 16px; color:#ef4444; font-weight:bold; font-size:12px; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,

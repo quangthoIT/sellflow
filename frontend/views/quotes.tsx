@@ -740,20 +740,23 @@ function QuotePreview({ quoteId, customers, templates }: {
   if (loading || !quote) return <div className="py-8 text-center text-muted-foreground">Đang tải...</div>;
 
   const customer = customers.find((c) => c.id === quote.customer_id);
-  const template = templates.find((t) => t.id === quote.template_id);
+  const template = templates.find((t) => t.id === quote.template_id)
+    || templates.find((t) => t.type === "quote" && t.is_default)
+    || templates.find((t) => t.type === "quote")
+    || templates[0];
   const totals = calcQuoteTotals(items, quote.discount, quote.vat_pct, quote.shipping);
 
-  const productTable = `<table style="width:100%;border-collapse:collapse">
+  const productTable = `<table style="width:100%;border-collapse:collapse;margin:10px 0;">
     <thead><tr style="background:#f5f5f5">
       <th style="border:1px solid #ddd;padding:6px;text-align:left">STT</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:left">Sản phẩm</th>
+      <th style="border:1px solid #ddd;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
       <th style="border:1px solid #ddd;padding:6px;text-align:right">SL</th>
       <th style="border:1px solid #ddd;padding:6px;text-align:right">Đơn giá</th>
       <th style="border:1px solid #ddd;padding:6px;text-align:right">Thành tiền</th>
     </tr></thead>
     <tbody>
       ${items.map((it, i) => `<tr>
-        <td style="border:1px solid #ddd;padding:6px">${i + 1}</td>
+        <td style="border:1px solid #ddd;padding:6px">${it.product_name || `Sản phẩm ${i + 1}`}</td>
         <td style="border:1px solid #ddd;padding:6px">${it.product_name}</td>
         <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.qty}</td>
         <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.price)}</td>
@@ -763,33 +766,35 @@ function QuotePreview({ quoteId, customers, templates }: {
   </table>`;
 
   const paymentTermsHtml = quote.payment_terms && quote.payment_terms.installments.length > 0
-    ? `<div style="margin-top:16px"><h4 style="font-size:14px;font-weight:bold;margin-bottom:6px">Điều khoản thanh toán</h4>
-       <p style="font-size:13px;margin-bottom:6px">Phương thức: <strong>${quote.payment_terms.method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
-       <table style="width:100%;border-collapse:collapse">
-         <thead><tr style="background:#f5f5f5">
-           <th style="border:1px solid #ddd;padding:6px;text-align:left">Đợt</th>
-           <th style="border:1px solid #ddd;padding:6px;text-align:left">Ngày</th>
-           <th style="border:1px solid #ddd;padding:6px;text-align:right">Tỷ lệ (%)</th>
-           <th style="border:1px solid #ddd;padding:6px;text-align:right">Số tiền</th>
-           <th style="border:1px solid #ddd;padding:6px;text-align:left">Ghi chú</th>
-         </tr></thead>
-         <tbody>
-           ${quote.payment_terms.installments.map((it) => `<tr>
-             <td style="border:1px solid #ddd;padding:6px">${it.label}</td>
-             <td style="border:1px solid #ddd;padding:6px">${formatDate(it.date)}</td>
-             <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.percent || 0}%</td>
-             <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.amount)}</td>
-             <td style="border:1px solid #ddd;padding:6px">${it.note || ""}</td>
-           </tr>`).join("")}
-         </tbody>
-       </table></div>`
-    : "";
+    ? `<div style="margin-top:10px">
+        <p style="font-size:13px;margin-bottom:6px">Phương thức: <strong>${quote.payment_terms.method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#f5f5f5">
+            <th style="border:1px solid #ddd;padding:6px;text-align:left">Đợt</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:left">Ngày</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:right">Tỷ lệ (%)</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:right">Số tiền</th>
+            <th style="border:1px solid #ddd;padding:6px;text-align:left">Ghi chú</th>
+          </tr></thead>
+          <tbody>
+            ${quote.payment_terms.installments.map((it) => `<tr>
+              <td style="border:1px solid #ddd;padding:6px">${it.label}</td>
+              <td style="border:1px solid #ddd;padding:6px">${formatDate(it.date)}</td>
+              <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.percent || 0}%</td>
+              <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.amount)}</td>
+              <td style="border:1px solid #ddd;padding:6px">${it.note || ""}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`
+    : "Thanh toán khi xác nhận đơn hàng";
 
   let html = template?.content ?? "<p>Chưa chọn mẫu</p>";
   const replacements: Record<string, string> = {
     SO_TAI_LIEU: quote.id,
+    SO_BAO_GIA: quote.id,
     NGAY: formatDate(quote.date),
-    TEN_CONG_TY: settings?.company_name || "",
+    TEN_CONG_TY: settings?.company_name || "CÔNG TY BÁN HÀNG",
     DIA_CHI_CONG_TY: settings?.company_address || "",
     SDT_CONG_TY: settings?.company_phone || "",
     EMAIL_CONG_TY: settings?.company_email || "",
