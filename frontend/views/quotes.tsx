@@ -255,10 +255,7 @@ export function QuotesPage() {
       <Dialog open={!!previewId} onOpenChange={(o) => !o && setPreviewId(null)}>
         <DialogContent className="sm:max-w-5xl max-w-5xl w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Xem trước báo giá</span>
-              <Button variant="ghost" size="icon" onClick={() => setPreviewId(null)}><X className="size-4" /></Button>
-            </DialogTitle>
+            <DialogTitle>Xem trước báo giá</DialogTitle>
           </DialogHeader>
           {previewId && <QuotePreview quoteId={previewId} customers={customers} templates={templates} />}
         </DialogContent>

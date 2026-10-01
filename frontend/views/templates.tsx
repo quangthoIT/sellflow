@@ -292,9 +292,8 @@ export function TemplatesPage() {
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
         <DialogContent className="sm:max-w-5xl max-w-5xl w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Xem trước: {preview?.name}</span>
-              <Button variant="ghost" size="icon" onClick={() => setPreview(null)}><X className="size-4" /></Button>
+            <DialogTitle>
+              Xem trước: {preview?.name}
             </DialogTitle>
           </DialogHeader>
           {preview && (

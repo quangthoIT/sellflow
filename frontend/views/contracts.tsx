@@ -297,10 +297,7 @@ export function ContractsPage() {
       <Dialog open={!!previewId} onOpenChange={(o) => !o && setPreviewId(null)}>
         <DialogContent className="sm:max-w-6xl max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>Xem trước hợp đồng</span>
-              <Button variant="ghost" size="icon" onClick={() => setPreviewId(null)}><X className="size-4" /></Button>
-            </DialogTitle>
+            <DialogTitle>Xem trước hợp đồng</DialogTitle>
           </DialogHeader>
           {previewId && <ContractPreview contractId={previewId} customers={customers} templates={templates} />}
         </DialogContent>
