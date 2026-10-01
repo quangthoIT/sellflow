@@ -8,7 +8,9 @@ const ENDPOINT_MAP: Record<string, string> = {
   products: "/products",
   customers: "/customers",
   quotes: "/quotations",
+  quote_items: "/quotations/items",
   contracts: "/contracts",
+  contract_items: "/contracts/items",
   payments: "/payments",
   inventory_transactions: "/inventory",
   templates: "/templates",
@@ -92,6 +94,17 @@ function createLocalQueryBuilder(table: string) {
             return { data: isArray ? items : items[0], error: null };
           }
           if (!endpoint) return { data: payload, error: null };
+          
+          if (table === "quote_items" || table === "contract_items") {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(isArray ? items : items[0]),
+            });
+            const data = await res.json();
+            return { data, error: null };
+          }
+
           const results = [];
           for (const item of items) {
             const res = await fetch(`${API_BASE}${endpoint}`, {
@@ -153,7 +166,7 @@ function createLocalQueryBuilder(table: string) {
         if (!endpoint) return { data: [], error: null, count: 0 };
         try {
           if (builder._isDelete) {
-            const idVal = builder._eq.id || builder._eq.quote_id || builder._eq.contract_id;
+            const idVal = builder._eq.id || builder._eq.quote_id || builder._eq.contract_id || builder._eq.quoteId || builder._eq.contractId;
             if (idVal) {
               const res = await fetch(`${API_BASE}${endpoint}/${idVal}`, { method: "DELETE" });
               const data = await res.json();
@@ -193,8 +206,34 @@ function createLocalQueryBuilder(table: string) {
             list = list.map((item: any) => ({
               ...item,
               customer_id: item.customerId ?? item.customer_id,
-              vat_pct: item.vatPct ?? item.vat_pct ?? 0,
-              valid_until: item.validUntil ?? item.valid_until,
+              quote_id: item.quoteId ?? item.quote_id,
+              vat_pct: Number(item.vatPct ?? item.vat_pct ?? 0),
+              discount: Number(item.discount ?? 0),
+              shipping: Number(item.shipping ?? 0),
+              template_id: item.templateId ?? item.template_id,
+              valid_until: item.validUntil ? (typeof item.validUntil === 'string' ? item.validUntil.split('T')[0] : new Date(item.validUntil).toISOString().split('T')[0]) : (item.valid_until ?? null),
+              payment_terms: item.paymentTerms ?? item.payment_terms ?? null,
+              stock_applied: Boolean(item.stockApplied ?? item.stock_applied ?? false),
+              created_at: item.createdAt || item.created_at || new Date().toISOString(),
+            }));
+          } else if (table === "quote_items" || table === "contract_items") {
+            list = list.map((item: any) => ({
+              ...item,
+              quote_id: item.quoteId ?? item.quote_id,
+              contract_id: item.contractId ?? item.contract_id,
+              product_id: item.productId ?? item.product_id,
+              product_name: item.productName ?? item.product_name ?? "",
+              qty: Number(item.qty || 1),
+              price: Number(item.price || 0),
+              discount: Number(item.discount || 0),
+              created_at: item.createdAt || item.created_at || new Date().toISOString(),
+            }));
+          } else if (table === "payments") {
+            list = list.map((item: any) => ({
+              ...item,
+              contract_id: item.contractId ?? item.contract_id,
+              amount: Number(item.amount || 0),
+              date: item.date ? (typeof item.date === 'string' ? item.date.split('T')[0] : new Date(item.date).toISOString().split('T')[0]) : new Date().toISOString().split('T')[0],
               created_at: item.createdAt || item.created_at || new Date().toISOString(),
             }));
           }
