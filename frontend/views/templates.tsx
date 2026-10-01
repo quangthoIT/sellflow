@@ -74,30 +74,44 @@ const VARIABLES = [
 function renderTemplatePreview(template: Template, settings: AppSettings | null): string {
   if (!template?.content) return "<p>Mẫu trống</p>";
 
-  const sampleTable = `<table style="width:100%;border-collapse:collapse;margin:12px 0;">
+  const sampleTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;">
     <thead><tr style="background:#f1f5f9;">
-      <th style="border:1px solid #cbd5e1;padding:8px;text-align:left;">STT</th>
-      <th style="border:1px solid #cbd5e1;padding:8px;text-align:left;">Tên sản phẩm / Dịch vụ</th>
-      <th style="border:1px solid #cbd5e1;padding:8px;text-align:right;">Số lượng</th>
-      <th style="border:1px solid #cbd5e1;padding:8px;text-align:right;">Đơn giá (đ)</th>
-      <th style="border:1px solid #cbd5e1;padding:8px;text-align:right;">Thành tiền (đ)</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">STT</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Tên sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Số lượng</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Đơn giá (đ)</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
       <tr>
-        <td style="border:1px solid #cbd5e1;padding:8px;">1</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;">Thiết bị & Giải pháp phần mềm trọn gói</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">1</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">25,000,000</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">25,000,000</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;">1</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;">Thiết bị & Giải pháp phần mềm trọn gói</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">1</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">25,000,000</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">25,000,000</td>
       </tr>
       <tr>
-        <td style="border:1px solid #cbd5e1;padding:8px;">2</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;">Dịch vụ triển khai & Đào tạo hướng dẫn</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">1</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">5,000,000</td>
-        <td style="border:1px solid #cbd5e1;padding:8px;text-align:right;">5,000,000</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;">2</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;">Dịch vụ triển khai & Đào tạo hướng dẫn</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">1</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">5,000,000</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">5,000,000</td>
       </tr>
     </tbody>
+    <tfoot>
+      <tr style="font-weight:bold;background:#f8fafc;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">30,000,000 đ</td>
+      </tr>
+      <tr style="font-weight:bold;background:#f8fafc;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thuế GTGT (10%):</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">3,000,000 đ</td>
+      </tr>
+      <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
+        <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">33,000,000 đ</td>
+      </tr>
+    </tfoot>
   </table>`;
 
   const samplePaymentTerms = `<div style="margin-top:8px;">

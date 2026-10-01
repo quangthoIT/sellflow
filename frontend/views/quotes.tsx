@@ -746,23 +746,38 @@ function QuotePreview({ quoteId, customers, templates }: {
     || templates[0];
   const totals = calcQuoteTotals(items, quote.discount, quote.vat_pct, quote.shipping);
 
-  const productTable = `<table style="width:100%;border-collapse:collapse;margin:10px 0;">
-    <thead><tr style="background:#f5f5f5">
-      <th style="border:1px solid #ddd;padding:6px;text-align:left">STT</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:right">SL</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:right">Đơn giá</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:right">Thành tiền</th>
+  const productTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;">
+    <thead><tr style="background:#f1f5f9;">
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">STT</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Số lượng</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Đơn giá (đ)</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
       ${items.map((it, i) => `<tr>
-        <td style="border:1px solid #ddd;padding:6px">${it.product_name || `Sản phẩm ${i + 1}`}</td>
-        <td style="border:1px solid #ddd;padding:6px">${it.product_name}</td>
-        <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.qty}</td>
-        <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.price)}</td>
-        <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.qty * it.price - (it.discount || 0))}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px">${i + 1}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px">${it.product_name}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${it.qty}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.price)}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.qty * it.price - (it.discount || 0))}</td>
       </tr>`).join("")}
     </tbody>
+    <tfoot>
+      <tr style="font-weight:bold;background:#f8fafc;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng (Tạm tính):</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.subtotal)}</td>
+      </tr>
+      ${totals.vat > 0 ? `
+      <tr style="font-weight:bold;background:#f8fafc;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thuế GTGT (${quote.vat_pct}%):</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.vat)}</td>
+      </tr>` : ""}
+      <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
+        <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">${formatVND(totals.total)}</td>
+      </tr>
+    </tfoot>
   </table>`;
 
   const paymentTermsHtml = quote.payment_terms && quote.payment_terms.installments.length > 0

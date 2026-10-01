@@ -495,23 +495,33 @@ function ContractPreview({ contractId, customers, templates }: {
     || templates[0];
   const total = items.reduce((s, it) => s + it.qty * it.price, 0);
 
-  const productTable = `<table style="width:100%;border-collapse:collapse;margin:10px 0;">
-    <thead><tr style="background:#f5f5f5">
-      <th style="border:1px solid #ddd;padding:6px;text-align:left">STT</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:right">SL</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:right">Đơn giá</th>
-      <th style="border:1px solid #ddd;padding:6px;text-align:right">Thành tiền</th>
+  const productTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;">
+    <thead><tr style="background:#f1f5f9;">
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">STT</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Số lượng</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Đơn giá (đ)</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
       ${items.map((it, i) => `<tr>
-        <td style="border:1px solid #ddd;padding:6px">${i + 1}</td>
-        <td style="border:1px solid #ddd;padding:6px">${it.product_name}</td>
-        <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.qty}</td>
-        <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.price)}</td>
-        <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.qty * it.price)}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px">${i + 1}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px">${it.product_name}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${it.qty}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.price)}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.qty * it.price)}</td>
       </tr>`).join("")}
     </tbody>
+    <tfoot>
+      <tr style="font-weight:bold;background:#f8fafc;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(total)}</td>
+      </tr>
+      <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
+        <td colspan="4" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
+        <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">${formatVND(total)}</td>
+      </tr>
+    </tfoot>
   </table>`;
 
   const paymentTermsHtml = contract.payment_terms && (contract.payment_terms as any).installments?.length > 0

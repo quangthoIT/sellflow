@@ -206,13 +206,8 @@ export const DEFAULT_TEMPLATES = [
     </p>
   </div>
 
-  <!-- Điểm ngắt trang sang Trang 2 -->
-  <div data-page-break="true" style="page-break-before: always; margin: 20px 0; padding: 8px 0; border-top: 2px dashed #94a3b8; text-align: center; font-size: 11px; font-weight: 600; color: #64748b; user-select: none;">
-    ✂ --- NGẮT TRANG (SANG TRANG 2) ---
-  </div>
-
   <!-- ĐIỀU 3 -->
-  <div style="margin-bottom: 12px; font-size: 11pt; padding-top: 8px;">
+  <div style="margin-bottom: 8px; font-size: 11pt;">
     <strong style="color: #0f172a;">ĐIỀU 3: THỜI GIAN VÀ ĐỊA ĐIỂM GIAO HÀNG</strong>
     <p style="margin: 3px 0 4px 0;">
       1. Thời gian giao hàng: Theo đúng thỏa thuận hoặc trong vòng 05 ngày làm việc kể từ ngày Bên B hoàn tất thủ tục đặt cọc/thanh toán.
@@ -222,8 +217,13 @@ export const DEFAULT_TEMPLATES = [
     </p>
   </div>
 
+  <!-- Điểm ngắt trang sang Trang 2 -->
+  <div data-page-break="true" style="page-break-before: always; margin: 20px 0; padding: 8px 0; border-top: 2px dashed #94a3b8; text-align: center; font-size: 11px; font-weight: 600; color: #64748b; user-select: none;">
+    ✂ --- NGẮT TRANG (SANG TRANG 2) ---
+  </div>
+
   <!-- ĐIỀU 4 -->
-  <div style="margin-bottom: 12px; font-size: 11pt;">
+  <div style="margin-bottom: 12px; font-size: 11pt; padding-top: 8px;">
     <strong style="color: #0f172a;">ĐIỀU 4: TRÁCH NHIỆM CỦA CÁC BÊN</strong>
     <p style="margin: 3px 0 4px 0;">
       - <strong>Bên A:</strong> Cung cấp hàng hóa đúng chủng loại, quy cách, chất lượng và số lượng đã thỏa thuận; bảo hành hàng hóa theo tiêu chuẩn.
