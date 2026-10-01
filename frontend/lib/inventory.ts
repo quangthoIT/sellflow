@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
 
 export interface QuotedStockInfo {
   quotedQtyMap: Record<string, number>;
@@ -52,9 +52,9 @@ export function calculateReservedStockMap(
  */
 export async function fetchReservedStockMap(excludeQuoteId?: string): Promise<Record<string, number>> {
   const [quotesRes, itemsRes, contractsRes] = await Promise.all([
-    supabase.from("quotes").select("id, status, valid_until"),
-    supabase.from("quote_items").select("quote_id, product_id, qty"),
-    supabase.from("contracts").select("quote_id"),
+    db.from("quotes").select("id, status, valid_until"),
+    db.from("quote_items").select("quote_id, product_id, qty"),
+    db.from("contracts").select("quote_id"),
   ]);
 
   return calculateReservedStockMap(

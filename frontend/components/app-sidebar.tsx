@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useNav, type Page } from "@/lib/nav";
 import { useAuth } from "@/lib/auth";
-import { loadSettings, getCachedSettings } from "@/lib/supabase";
+import { loadSettings, getCachedSettings } from "@/lib/db";
 import {
   Sidebar,
   SidebarContent,

@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Lock, User, Mail, KeyRound, Check, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
 import { toast } from "sonner";
 
 interface UserProfileDialogProps {
@@ -76,7 +76,7 @@ export function UserProfileDialog({
     try {
       if (isChangingPassword) {
         try {
-          await supabase.auth.updateUser({ password: newPassword });
+          await db.auth.updateUser({ password: newPassword });
         } catch {
           // Fallback handled
         }

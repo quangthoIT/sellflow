@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { supabase, type Template, type AppSettings, loadSettings } from "@/lib/supabase";
+import { db, type Template, type AppSettings, loadSettings } from "@/lib/db";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +83,7 @@ export function TemplatesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("templates").select("*").order("type").order("name");
+    const { data } = await db.from("templates").select("*").order("type").order("name");
     setTemplates((data ?? []) as Template[]);
     setLoading(false);
   }, []);
@@ -124,16 +124,16 @@ export function TemplatesPage() {
     if (editing) {
       if (editing.locked) { toast.error("Mẫu đã khóa, không thể sửa"); return; }
       if (t.is_default) {
-        await supabase.from("templates").update({ is_default: false }).eq("type", editing.type);
+        await db.from("templates").update({ is_default: false }).eq("type", editing.type);
       }
-      const { error } = await supabase.from("templates").update(t).eq("id", editing.id);
+      const { error } = await db.from("templates").update(t).eq("id", editing.id);
       if (error) { toast.error("Lỗi cập nhật"); return; }
       toast.success("Đã cập nhật mẫu");
     } else {
       if (t.is_default) {
-        await supabase.from("templates").update({ is_default: false }).eq("type", t.type);
+        await db.from("templates").update({ is_default: false }).eq("type", t.type);
       }
-      const { error } = await supabase.from("templates").insert(t);
+      const { error } = await db.from("templates").insert(t);
       if (error) { toast.error("Lỗi tạo mẫu"); return; }
       toast.success("Đã tạo mẫu mới");
     }
@@ -145,22 +145,22 @@ export function TemplatesPage() {
   const handleDelete = async (id: string) => {
     const t = templates.find((x) => x.id === id);
     if (t?.locked) { toast.error("Mẫu đã khóa, không thể xóa"); return; }
-    const { error } = await supabase.from("templates").delete().eq("id", id);
+    const { error } = await db.from("templates").delete().eq("id", id);
     if (error) { toast.error("Lỗi xóa"); return; }
     toast.success("Đã xóa mẫu");
     load();
   };
 
   const toggleLock = async (t: Template) => {
-    const { error } = await supabase.from("templates").update({ locked: !t.locked }).eq("id", t.id);
+    const { error } = await db.from("templates").update({ locked: !t.locked }).eq("id", t.id);
     if (error) { toast.error("Lỗi"); return; }
     toast.success(t.locked ? "Đã mở khóa mẫu" : "Đã khóa mẫu");
     load();
   };
 
   const setDefault = async (t: Template) => {
-    await supabase.from("templates").update({ is_default: false }).eq("type", t.type);
-    const { error } = await supabase.from("templates").update({ is_default: true }).eq("id", t.id);
+    await db.from("templates").update({ is_default: false }).eq("type", t.type);
+    const { error } = await db.from("templates").update({ is_default: true }).eq("id", t.id);
     if (error) { toast.error("Lỗi"); return; }
     toast.success("Đã đặt làm mẫu mặc định");
     load();

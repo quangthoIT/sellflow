@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { supabase, getCachedSettings, loadSettings, type Customer, type Quote, type Contract } from "@/lib/supabase";
+import { db, getCachedSettings, loadSettings, type Customer, type Quote, type Contract } from "@/lib/db";
 import { formatVND, formatDate, genId } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
@@ -39,7 +39,7 @@ export function CustomersPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase.from("customers").select("*").order("name");
+    const { data } = await db.from("customers").select("*").order("name");
     setCustomers((data ?? []) as Customer[]);
     setLoading(false);
   }, []);
@@ -72,7 +72,7 @@ export function CustomersPage() {
     }
 
     if (editing) {
-      const { error } = await supabase.from("customers").update(c).eq("id", editing.id);
+      const { error } = await db.from("customers").update(c).eq("id", editing.id);
       if (error) { toast.error("Lỗi cập nhật khách hàng"); return; }
       toast.success("Đã cập nhật khách hàng");
     } else {
@@ -84,7 +84,7 @@ export function CustomersPage() {
         return;
       }
 
-      const { error } = await supabase.from("customers").insert(c);
+      const { error } = await db.from("customers").insert(c);
       if (error) {
         if (error.code === "23505" || error.message?.includes("duplicate") || error.message?.includes("exists")) {
           toast.error(`Mã khách hàng "${c.id}" đã tồn tại!`);
@@ -101,7 +101,7 @@ export function CustomersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("customers").delete().eq("id", id);
+    const { error } = await db.from("customers").delete().eq("id", id);
     if (error) { toast.error("Không thể xóa (đang có báo giá/hợp đồng)"); return; }
     toast.success("Đã xóa khách hàng");
     load();
@@ -232,11 +232,11 @@ function CustomerHistory({ customer, onOpenQuote, onOpenContract }: {
   useEffect(() => {
     (async () => {
       const [q, c, qi, ci, p] = await Promise.all([
-        supabase.from("quotes").select("*").eq("customer_id", customer.id).order("date", { ascending: false }),
-        supabase.from("contracts").select("*").eq("customer_id", customer.id).order("date", { ascending: false }),
-        supabase.from("quote_items").select("quote_id, qty, price, discount"),
-        supabase.from("contract_items").select("contract_id, qty, price"),
-        supabase.from("payments").select("contract_id, amount"),
+        db.from("quotes").select("*").eq("customer_id", customer.id).order("date", { ascending: false }),
+        db.from("contracts").select("*").eq("customer_id", customer.id).order("date", { ascending: false }),
+        db.from("quote_items").select("quote_id, qty, price, discount"),
+        db.from("contract_items").select("contract_id, qty, price"),
+        db.from("payments").select("contract_id, amount"),
       ]);
       setQuotes((q.data ?? []) as Quote[]);
       setContracts((c.data ?? []) as Contract[]);
@@ -382,7 +382,7 @@ function CustomerForm({ customer, onSave, onCancel }: {
     if (!customer) {
       (async () => {
         const s = await loadSettings();
-        const { count } = await supabase.from("customers").select("*", { count: "exact", head: true });
+        const { count } = await db.from("customers").select("*", { count: "exact", head: true });
         const generatedId = genId(s.customer_prefix, s.id_format.includes("{NUM}") ? s.id_format : "{PREFIX}-{NUM}", (count ?? 0) + 1);
         setAutoId(generatedId);
         setForm((prev) => ({ ...prev, id: generatedId }));

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { db } from "@/lib/db";
 import { formatVND, formatVNDShort, formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,12 +76,12 @@ export function DashboardPage() {
     (async () => {
       setLoading(true);
       const [quotes, contracts, products, quoteItems, contractItems, payments] = await Promise.all([
-        supabase.from("quotes").select("*").order("date", { ascending: false }),
-        supabase.from("contracts").select("*").order("date", { ascending: false }),
-        supabase.from("products").select("*").order("name"),
-        supabase.from("quote_items").select("quote_id, qty, price, discount"),
-        supabase.from("contract_items").select("contract_id, product_id, qty, price"),
-        supabase.from("payments").select("contract_id, amount, date"),
+        db.from("quotes").select("*").order("date", { ascending: false }),
+        db.from("contracts").select("*").order("date", { ascending: false }),
+        db.from("products").select("*").order("name"),
+        db.from("quote_items").select("quote_id, qty, price, discount"),
+        db.from("contract_items").select("contract_id, product_id, qty, price"),
+        db.from("payments").select("contract_id, amount, date"),
       ]);
 
       setRawQuotes((quotes.data ?? []) as QuoteRow[]);

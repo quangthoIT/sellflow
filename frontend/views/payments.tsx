@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { supabase, type Contract, type Payment, type Customer, type PaymentTerms, type PaymentTerm } from "@/lib/supabase";
+import { db, type Contract, type Payment, type Customer, type PaymentTerms, type PaymentTerm, loadSettings } from "@/lib/db";
 import { formatVND, formatDate, genId } from "@/lib/format";
-import { loadSettings } from "@/lib/supabase";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,9 +43,9 @@ export function PaymentsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const [c, cu, p] = await Promise.all([
-      supabase.from("contracts").select("*").order("date", { ascending: false }),
-      supabase.from("customers").select("*").order("name"),
-      supabase.from("payments").select("*").order("date", { ascending: false }),
+      db.from("contracts").select("*").order("date", { ascending: false }),
+      db.from("customers").select("*").order("name"),
+      db.from("payments").select("*").order("date", { ascending: false }),
     ]);
     setContracts((c.data ?? []) as Contract[]);
     setCustomers((cu.data ?? []) as Customer[]);
@@ -140,7 +139,7 @@ export function PaymentsPage() {
     const contract = contracts.find((c) => c.id === contractId);
     const custId = contract?.customer_id ?? "";
     const id = genId(s.payment_prefix, s.id_format, 0, custId);
-    const { error } = await supabase.from("payments").insert({
+    const { error } = await db.from("payments").insert({
       id, contract_id: contractId, date, amount, method, note,
     });
     if (error) { toast.error("Lỗi ghi thanh toán"); return; }
@@ -150,7 +149,7 @@ export function PaymentsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("payments").delete().eq("id", id);
+    const { error } = await db.from("payments").delete().eq("id", id);
     if (error) { toast.error("Lỗi xóa"); return; }
     toast.success("Đã xóa thanh toán");
     load();
@@ -339,18 +338,18 @@ function ContractDebtRow({ contract, customerName, paid }: {
 
   useEffect(() => {
     (async () => {
-      const { data: c } = await supabase.from("contracts").select("payment_terms, quote_id").eq("id", contract.id).maybeSingle();
+      const { data: c } = await db.from("contracts").select("payment_terms, quote_id").eq("id", contract.id).maybeSingle();
       const contractTerms = (c as Pick<Contract, "payment_terms" | "quote_id"> | null)?.payment_terms ?? null;
       if (contractTerms) {
         setTerms(contractTerms);
       } else {
         const quoteId = (c as Pick<Contract, "payment_terms" | "quote_id"> | null)?.quote_id;
         const { data: quote } = quoteId
-          ? await supabase.from("quotes").select("payment_terms").eq("id", quoteId).maybeSingle()
+          ? await db.from("quotes").select("payment_terms").eq("id", quoteId).maybeSingle()
           : { data: null };
         setTerms((quote as { payment_terms: PaymentTerms | null } | null)?.payment_terms ?? null);
       }
-      const { data: its } = await supabase.from("contract_items").select("qty, price").eq("contract_id", contract.id);
+      const { data: its } = await db.from("contract_items").select("qty, price").eq("contract_id", contract.id);
       setTotal((its ?? []).reduce((s: number, it: any) => s + it.qty * it.price, 0));
     })();
   }, [contract.id]);
@@ -441,7 +440,7 @@ function PaymentForm({ contracts, customers, payments, defaultContract, onSubmit
 
   useEffect(() => {
     if (!contractId) return;
-    supabase.from("contract_items").select("qty, price").eq("contract_id", contractId).then(({ data }: any) => {
+    db.from("contract_items").select("qty, price").eq("contract_id", contractId).then(({ data }: any) => {
       setContractTotal((data ?? []).reduce((s: number, it: any) => s + it.qty * it.price, 0));
     });
   }, [contractId]);

@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { supabase, type Session } from "@/lib/supabase";
+import { db, type Session } from "@/lib/db";
 
 type AuthState = {
   session: Session | null;
@@ -23,14 +23,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data } = await db.auth.getSession();
         if (data?.session) {
           setSession(data.session);
           setLoading(false);
           return;
         }
       } catch {
-        // Ignore Supabase error
+        // Ignore auth error
       }
 
       // Check local storage session fallback
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     })();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event: any, sess: Session | null) => {
+    const { data: listener } = db.auth.onAuthStateChange((_event: any, sess: Session | null) => {
       if (sess) setSession(sess);
     });
 
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await db.auth.signInWithPassword({ email, password });
       if (data?.session) {
         setSession(data.session);
         localStorage.setItem("sellflow_logged_in", "true");
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      await db.auth.signOut();
     } catch {
       // Ignore error
     }

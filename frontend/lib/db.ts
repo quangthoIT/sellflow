@@ -1,4 +1,8 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api";
+const getApiBase = () => {
+  const raw = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
+  return raw.endsWith("/api") ? raw : `${raw}/api`;
+};
+const API_BASE = getApiBase();
 
 const ENDPOINT_MAP: Record<string, string> = {
   products: "/products",
@@ -67,12 +71,23 @@ function createLocalQueryBuilder(table: string) {
       const items = isArray ? payload : [payload];
       return (async () => {
         try {
-          if (table === "app_settings") {
+          if (table === "app_settings" || table === "email_settings") {
             if (typeof window !== "undefined") {
-              const current = getCachedSettings();
+              const key = table === "app_settings" ? "sellflow_app_settings" : "sellflow_email_settings";
+              const raw = localStorage.getItem(key);
+              const current = raw ? JSON.parse(raw) : (table === "app_settings" ? getCachedSettings() : {});
               const merged = { ...current, ...items[0] };
-              localStorage.setItem("sellflow_app_settings", JSON.stringify(merged));
-              clearSettingsCache();
+              localStorage.setItem(key, JSON.stringify(merged));
+              if (table === "app_settings") clearSettingsCache();
+            }
+            return { data: isArray ? items : items[0], error: null };
+          }
+          if (table === "email_logs") {
+            if (typeof window !== "undefined") {
+              const raw = localStorage.getItem("sellflow_email_logs");
+              const logs = raw ? JSON.parse(raw) : [];
+              const updated = [...items, ...logs];
+              localStorage.setItem("sellflow_email_logs", JSON.stringify(updated.slice(0, 100)));
             }
             return { data: isArray ? items : items[0], error: null };
           }
@@ -107,18 +122,32 @@ function createLocalQueryBuilder(table: string) {
     },
     then<TResult1 = any>(resolve?: ((value: { data: any; error: any; count?: number | null }) => TResult1 | PromiseLike<TResult1>) | null, reject?: any): Promise<TResult1> {
       const resPromise = (async () => {
-        if (table === "app_settings") {
+        if (table === "app_settings" || table === "email_settings") {
+          const key = table === "app_settings" ? "sellflow_app_settings" : "sellflow_email_settings";
           if (builder._isUpdate && builder._updatePayload) {
-            const current = getCachedSettings();
-            const merged = { ...current, ...builder._updatePayload };
+            const current = table === "app_settings" ? getCachedSettings() : {};
+            const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+            const parsed = raw ? JSON.parse(raw) : current;
+            const merged = { ...parsed, ...builder._updatePayload };
             if (typeof window !== "undefined") {
-              localStorage.setItem("sellflow_app_settings", JSON.stringify(merged));
-              clearSettingsCache();
+              localStorage.setItem(key, JSON.stringify(merged));
+              if (table === "app_settings") clearSettingsCache();
             }
             return { data: merged, error: null, count: 1 };
           }
-          const s = await loadSettings();
-          return { data: [s], error: null, count: 1 };
+          if (table === "app_settings") {
+            const s = await loadSettings();
+            return { data: [s], error: null, count: 1 };
+          }
+          const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+          const s = raw ? JSON.parse(raw) : null;
+          return { data: s ? [s] : [], error: null, count: s ? 1 : 0 };
+        }
+
+        if (table === "email_logs") {
+          const raw = typeof window !== "undefined" ? localStorage.getItem("sellflow_email_logs") : null;
+          const logs = raw ? JSON.parse(raw) : [];
+          return { data: logs, error: null, count: logs.length };
         }
 
         if (!endpoint) return { data: [], error: null, count: 0 };
@@ -192,7 +221,7 @@ function createLocalQueryBuilder(table: string) {
   return builder;
 }
 
-export const supabase: any = {
+export const db: any = {
   from: (table: string) => createLocalQueryBuilder(table),
   storage: {
     from(bucket: string) {
@@ -268,6 +297,7 @@ export const supabase: any = {
     }
   }
 };
+
 
 export type Product = {
   id: string;

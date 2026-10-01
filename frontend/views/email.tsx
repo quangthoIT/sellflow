@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { supabase, type EmailSettings, type EmailLog } from "@/lib/supabase";
+import { db, type EmailSettings, type EmailLog } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,8 +58,8 @@ export function EmailPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const [s, l] = await Promise.all([
-      supabase.from("email_settings").select("*").eq("id", 1).maybeSingle(),
-      supabase.from("email_logs").select("*").order("sent_at", { ascending: false }),
+      db.from("email_settings").select("*").eq("id", 1).maybeSingle(),
+      db.from("email_logs").select("*").order("sent_at", { ascending: false }),
     ]);
     if (s.data) {
       setSettings(s.data as EmailSettings);
@@ -99,7 +99,7 @@ export function EmailPage() {
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
-    const { error } = await supabase
+    const { error } = await db
       .from("email_settings")
       .upsert({
         id: 1,

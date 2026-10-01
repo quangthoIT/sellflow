@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { supabase, type Contract, type ContractItem, type Customer, type Template, type Product, type EmailSettings, type PaymentTerms, loadSettings, getCachedSettings } from "@/lib/supabase";
+import { db, type Contract, type ContractItem, type Customer, type Template, type Product, type EmailSettings, type PaymentTerms, loadSettings, getCachedSettings } from "@/lib/db";
 import { formatVND, formatDate, genId } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,11 +42,11 @@ export function ContractsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const [c, cu, t, ci, pa] = await Promise.all([
-      supabase.from("contracts").select("*").order("date", { ascending: false }),
-      supabase.from("customers").select("*").order("name"),
-      supabase.from("templates").select("*").eq("type", "contract").order("name"),
-      supabase.from("contract_items").select("*"),
-      supabase.from("payments").select("contract_id, amount"),
+      db.from("contracts").select("*").order("date", { ascending: false }),
+      db.from("customers").select("*").order("name"),
+      db.from("templates").select("*").eq("type", "contract").order("name"),
+      db.from("contract_items").select("*"),
+      db.from("payments").select("contract_id, amount"),
     ]);
     setContracts((c.data ?? []) as Contract[]);
     setCustomers((cu.data ?? []) as Customer[]);
@@ -118,7 +118,7 @@ export function ContractsPage() {
     if (newStatus === "Hủy" && contract.stock_applied) {
       await returnStock(contract);
     }
-    const { error } = await supabase.from("contracts").update({ status: newStatus }).eq("id", contract.id);
+    const { error } = await db.from("contracts").update({ status: newStatus }).eq("id", contract.id);
     if (error) { toast.error("Lỗi cập nhật"); return; }
     toast.success("Đã cập nhật trạng thái");
     load();
@@ -126,31 +126,31 @@ export function ContractsPage() {
 
   const applyStock = async (contract: Contract) => {
     const s = await loadSettings();
-    const { data: items } = await supabase.from("contract_items").select("*").eq("contract_id", contract.id);
+    const { data: items } = await db.from("contract_items").select("*").eq("contract_id", contract.id);
     const cItems = (items ?? []) as ContractItem[];
     for (const it of cItems) {
       if (!it.product_id) continue;
       const txId = genId(`${s.inventory_prefix}-XK`, s.id_format);
-      await supabase.from("inventory_transactions").insert({
+      await db.from("inventory_transactions").insert({
         id: txId, product_id: it.product_id, type: "Hợp đồng", qty: it.qty, ref: contract.id, note: `Xuất kho theo ${contract.id}`,
       });
     }
-    await supabase.from("contracts").update({ stock_applied: true }).eq("id", contract.id);
+    await db.from("contracts").update({ stock_applied: true }).eq("id", contract.id);
     toast.success("Đã trừ kho theo hợp đồng");
   };
 
   const returnStock = async (contract: Contract) => {
     const s = await loadSettings();
-    const { data: items } = await supabase.from("contract_items").select("*").eq("contract_id", contract.id);
+    const { data: items } = await db.from("contract_items").select("*").eq("contract_id", contract.id);
     const cItems = (items ?? []) as ContractItem[];
     for (const it of cItems) {
       if (!it.product_id) continue;
       const txId = genId(`${s.inventory_prefix}-HK`, s.id_format);
-      await supabase.from("inventory_transactions").insert({
+      await db.from("inventory_transactions").insert({
         id: txId, product_id: it.product_id, type: "Hoàn kho", qty: it.qty, ref: contract.id, note: `Hoàn kho do hủy ${contract.id}`,
       });
     }
-    await supabase.from("contracts").update({ stock_applied: false }).eq("id", contract.id);
+    await db.from("contracts").update({ stock_applied: false }).eq("id", contract.id);
     toast.success("Đã hoàn kho");
   };
 
@@ -160,26 +160,26 @@ export function ContractsPage() {
       toast.error("Hợp đồng đã trừ kho, không thể xóa. Hãy hủy hợp đồng để hoàn kho trước.");
       return;
     }
-    await supabase.from("contract_items").delete().eq("contract_id", id);
-    await supabase.from("payments").delete().eq("contract_id", id);
-    const { error } = await supabase.from("contracts").delete().eq("id", id);
+    await db.from("contract_items").delete().eq("contract_id", id);
+    await db.from("payments").delete().eq("contract_id", id);
+    const { error } = await db.from("contracts").delete().eq("id", id);
     if (error) { toast.error("Lỗi xóa"); return; }
     toast.success("Đã xóa hợp đồng");
     load();
   };
 
   const sendEmail = async (contract: Contract) => {
-    const { data: settings } = await supabase.from("email_settings").select("*").eq("id", 1).maybeSingle();
+    const { data: settings } = await db.from("email_settings").select("*").eq("id", 1).maybeSingle();
     const s = settings as EmailSettings | null;
     if (!s) { toast.error("Chưa cấu hình email"); return; }
 
     const customer = customers.find((c) => c.id === contract.customer_id);
     if (!customer?.email) { toast.error("Khách hàng chưa có email"); return; }
 
-    const { data: items } = await supabase.from("contract_items").select("*").eq("contract_id", contract.id);
+    const { data: items } = await db.from("contract_items").select("*").eq("contract_id", contract.id);
     const cItems = (items ?? []) as ContractItem[];
     const total = cItems.reduce((sum, it) => sum + it.qty * it.price, 0);
-    const { data: pays } = await supabase.from("payments").select("amount").eq("contract_id", contract.id);
+    const { data: pays } = await db.from("payments").select("amount").eq("contract_id", contract.id);
     const paid = (pays ?? []).reduce((s: number, p: any) => s + p.amount, 0);
     const remaining = total - paid;
 
@@ -199,7 +199,7 @@ export function ContractsPage() {
 
     const appCfg = getCachedSettings();
     const logId = genId(appCfg.email_prefix, appCfg.id_format);
-    await supabase.from("email_logs").insert({
+    await db.from("email_logs").insert({
       id: logId,
       contract_id: contract.id,
       customer_id: customer.id,
@@ -334,7 +334,7 @@ function ContractRow({ contract, customerName, total, paid, onStatusChange, onPr
   const [terms, setTerms] = useState<PaymentTerms | null>(null);
 
   useEffect(() => {
-    supabase.from("contracts").select("payment_terms").eq("id", contract.id).maybeSingle().then(({ data }: any) => {
+    db.from("contracts").select("payment_terms").eq("id", contract.id).maybeSingle().then(({ data }: any) => {
       setTerms((data as Contract | null)?.payment_terms ?? null);
     });
   }, [contract.id]);
@@ -424,7 +424,7 @@ function ContractEditForm({ contractId, templates, onSaved, onCancel }: {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("contracts").select("*").eq("id", contractId).maybeSingle().then(({ data }: any) => {
+    db.from("contracts").select("*").eq("id", contractId).maybeSingle().then(({ data }: any) => {
       if (data) {
         setTemplateId((data as Contract).template_id ?? "");
         setNotes((data as Contract).notes);
@@ -434,7 +434,7 @@ function ContractEditForm({ contractId, templates, onSaved, onCancel }: {
   }, [contractId]);
 
   const handleSave = async () => {
-    await supabase.from("contracts").update({
+    await db.from("contracts").update({
       template_id: templateId || null,
       notes,
     }).eq("id", contractId);
@@ -478,8 +478,8 @@ function ContractPreview({ contractId, customers, templates }: {
 
   useEffect(() => {
     (async () => {
-      const { data: c } = await supabase.from("contracts").select("*").eq("id", contractId).maybeSingle();
-      const { data: its } = await supabase.from("contract_items").select("*").eq("contract_id", contractId);
+      const { data: c } = await db.from("contracts").select("*").eq("id", contractId).maybeSingle();
+      const { data: its } = await db.from("contract_items").select("*").eq("contract_id", contractId);
       setContract(c as Contract);
       setItems((its ?? []) as ContractItem[]);
       setLoading(false);

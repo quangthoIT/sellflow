@@ -11,8 +11,9 @@ async function start() {
     await fastify.register(cors, { origin: '*' });
     await fastify.register(jwt, { secret: config.jwtSecret });
 
-    // API routes prefix
+    // Register API routes under both /api and / for compatibility with various reverse proxies / frontend configs
     await fastify.register(appRoutes, { prefix: '/api' });
+    await fastify.register(appRoutes, { prefix: '/' });
 
     // Health check endpoint
     fastify.get('/health', async () => {

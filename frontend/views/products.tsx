@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { supabase, type Product, type InventoryTx, loadSettings } from "@/lib/supabase";
+import { db, type Product, type InventoryTx, loadSettings } from "@/lib/db";
 import { formatVND, formatDate, genId } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,7 +47,7 @@ export function ProductsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const [pRes, rMap] = await Promise.all([
-      supabase.from("products").select("*").order("name"),
+      db.from("products").select("*").order("name"),
       fetchReservedStockMap(),
     ]);
     setProducts((pRes.data ?? []) as Product[]);
@@ -86,7 +86,7 @@ export function ProductsPage() {
   const paginatedResult = result.slice((page - 1) * pageSize, page * pageSize);
 
   const openHistory = async (productId: string) => {
-    const { data } = await supabase
+    const { data } = await db
       .from("inventory_transactions")
       .select("*")
       .eq("product_id", productId)
@@ -107,7 +107,7 @@ export function ProductsPage() {
     }
 
     if (editing) {
-      const { error } = await supabase.from("products").update(p).eq("id", editing.id);
+      const { error } = await db.from("products").update(p).eq("id", editing.id);
       if (error) { toast.error("Lỗi cập nhật sản phẩm"); return; }
       toast.success("Đã cập nhật sản phẩm");
     } else {
@@ -119,7 +119,7 @@ export function ProductsPage() {
         return;
       }
 
-      const { error } = await supabase.from("products").insert(p);
+      const { error } = await db.from("products").insert(p);
       if (error) {
         if (error.code === "23505" || error.message?.includes("duplicate") || error.message?.includes("exists")) {
           toast.error(`Mã sản phẩm "${p.id}" đã tồn tại!`);
@@ -136,7 +136,7 @@ export function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    const { error } = await db.from("products").delete().eq("id", id);
     if (error) { toast.error("Không thể xóa sản phẩm (có thể đang được sử dụng)"); return; }
     toast.success("Đã xóa sản phẩm");
     load();
@@ -147,7 +147,7 @@ export function ProductsPage() {
     if (!product) return;
     const s = await loadSettings();
     const txId = genId(s.inventory_prefix, s.id_format);
-    const { error: txErr } = await supabase.from("inventory_transactions").insert({
+    const { error: txErr } = await db.from("inventory_transactions").insert({
       id: txId, product_id: productId, type: "Nhập kho", qty, ref: txId, note,
     });
     if (txErr) { toast.error("Lỗi ghi giao dịch kho"); return; }
@@ -393,7 +393,7 @@ function ProductForm({ product, categories, onSave, onCancel }: {
     if (!product) {
       (async () => {
         const s = await loadSettings();
-        const { count } = await supabase.from("products").select("*", { count: "exact", head: true });
+        const { count } = await db.from("products").select("*", { count: "exact", head: true });
         const generatedId = genId(s.product_prefix, s.id_format.includes("{NUM}") ? s.id_format : "{PREFIX}-{NUM}", (count ?? 0) + 1);
         setForm((prev) => prev.id ? prev : { ...prev, id: generatedId });
       })();
@@ -553,7 +553,7 @@ function CategoryManagerDialog({
       setEditingCat(null);
       return;
     }
-    const { error } = await supabase
+    const { error } = await db
       .from("products")
       .update({ category: newName })
       .eq("category", oldName);
@@ -576,7 +576,7 @@ function CategoryManagerDialog({
     if (!window.confirm(confirmMsg)) return;
 
     if (count > 0) {
-      await supabase.from("products").update({ category: "" }).eq("category", catName);
+      await db.from("products").update({ category: "" }).eq("category", catName);
     }
     toast.success(`Đã xóa danh mục "${catName}"`);
     onCategoryUpdated();

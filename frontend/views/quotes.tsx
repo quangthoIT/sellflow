@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { supabase, type Product, type Customer, type Quote, type QuoteItem, type Template, type PaymentTerms, type PaymentTerm, loadSettings, getCachedSettings } from "@/lib/supabase";
+import { db, type Product, type Customer, type Quote, type QuoteItem, type Template, type PaymentTerms, type PaymentTerm, loadSettings, getCachedSettings } from "@/lib/db";
 import { formatVND, formatDate, genId, calcQuoteTotals } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,11 +45,11 @@ export function QuotesPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const [q, c, p, t, qi] = await Promise.all([
-      supabase.from("quotes").select("*").order("date", { ascending: false }),
-      supabase.from("customers").select("*").order("name"),
-      supabase.from("products").select("*").order("name"),
-      supabase.from("templates").select("*").eq("type", "quote").order("name"),
-      supabase.from("quote_items").select("*"),
+      db.from("quotes").select("*").order("date", { ascending: false }),
+      db.from("customers").select("*").order("name"),
+      db.from("products").select("*").order("name"),
+      db.from("templates").select("*").eq("type", "quote").order("name"),
+      db.from("quote_items").select("*"),
     ]);
     setQuotes((q.data ?? []) as Quote[]);
     setCustomers((c.data ?? []) as Customer[]);
@@ -111,15 +111,15 @@ export function QuotesPage() {
   })();
 
   const handleDelete = async (id: string) => {
-    await supabase.from("quote_items").delete().eq("quote_id", id);
-    const { error } = await supabase.from("quotes").delete().eq("id", id);
+    await db.from("quote_items").delete().eq("quote_id", id);
+    const { error } = await db.from("quotes").delete().eq("id", id);
     if (error) { toast.error("Lỗi xóa báo giá"); return; }
     toast.success("Đã xóa báo giá");
     load();
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    const { error } = await supabase.from("quotes").update({ status }).eq("id", id);
+    const { error } = await db.from("quotes").update({ status }).eq("id", id);
     if (error) { toast.error("Lỗi cập nhật"); return; }
     toast.success("Đã cập nhật trạng thái");
     load();
@@ -129,11 +129,11 @@ export function QuotesPage() {
     const s = await loadSettings();
     const quote = quotes.find((q) => q.id === quoteId);
     if (!quote) return;
-    const { data: items } = await supabase.from("quote_items").select("*").eq("quote_id", quoteId);
+    const { data: items } = await db.from("quote_items").select("*").eq("quote_id", quoteId);
     const contractId = genId(s.contract_prefix, s.id_format, 0, quote.customer_id ?? "");
     const contractTemplate = templates.find((t) => t.type === "contract" && t.is_default);
 
-    const { error: cErr } = await supabase.from("contracts").insert({
+    const { error: cErr } = await db.from("contracts").insert({
       id: contractId,
       quote_id: quoteId,
       customer_id: quote.customer_id,
@@ -153,7 +153,7 @@ export function QuotesPage() {
       price: it.price,
     }));
     if (cItems.length > 0) {
-      await supabase.from("contract_items").insert(cItems);
+      await db.from("contract_items").insert(cItems);
     }
 
     toast.success(`Đã tạo hợp đồng ${contractId}`);
@@ -339,7 +339,7 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
       setReservedStockMap(rMap);
 
       if (quoteId) {
-        const { data: q } = await supabase.from("quotes").select("*").eq("id", quoteId).maybeSingle();
+        const { data: q } = await db.from("quotes").select("*").eq("id", quoteId).maybeSingle();
         if (q) {
           setQuote(q as Quote);
           setCustomerId((q as Quote).customer_id ?? "");
@@ -352,7 +352,7 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
           setStatus((q as Quote).status);
           setPaymentTerms((q as Quote).payment_terms ?? null);
         }
-        const { data: its } = await supabase.from("quote_items").select("*").eq("quote_id", quoteId);
+        const { data: its } = await db.from("quote_items").select("*").eq("quote_id", quoteId);
         setItems((its ?? []) as QuoteItem[]);
       } else {
         const s = await loadSettings();
@@ -466,14 +466,14 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
     };
 
     if (quote) {
-      await supabase.from("quotes").update(qData).eq("id", id);
+      await db.from("quotes").update(qData).eq("id", id);
     } else {
-      await supabase.from("quotes").insert(qData);
+      await db.from("quotes").insert(qData);
     }
 
-    await supabase.from("quote_items").delete().eq("quote_id", id);
+    await db.from("quote_items").delete().eq("quote_id", id);
     if (items.length > 0) {
-      await supabase.from("quote_items").insert(
+      await db.from("quote_items").insert(
         items.map((it) => ({
           quote_id: id,
           product_id: it.product_id,
@@ -732,8 +732,8 @@ function QuotePreview({ quoteId, customers, templates }: {
     (async () => {
       const s = await loadSettings();
       setSettings(s);
-      const { data: q } = await supabase.from("quotes").select("*").eq("id", quoteId).maybeSingle();
-      const { data: its } = await supabase.from("quote_items").select("*").eq("quote_id", quoteId);
+      const { data: q } = await db.from("quotes").select("*").eq("id", quoteId).maybeSingle();
+      const { data: its } = await db.from("quote_items").select("*").eq("quote_id", quoteId);
       setQuote(q as Quote);
       setItems((its ?? []) as QuoteItem[]);
       setLoading(false);

@@ -1,4 +1,4 @@
-import { supabase, loadSettings, getCachedSettings, type Product, type Customer } from "@/lib/supabase";
+import { db, loadSettings, getCachedSettings, type Product, type Customer } from "@/lib/db";
 import { genId, calcQuoteTotals, formatVND } from "@/lib/format";
 
 export type AIResult = {
@@ -180,7 +180,7 @@ export async function executeAICommand(input: string): Promise<AIResult> {
       };
 
     case "check_stock": {
-      const { data } = await supabase.from("products").select("*").order("name");
+      const { data } = await db.from("products").select("*").order("name");
       const products = (data ?? []) as Product[];
       const lowStock = products.filter((p) => p.stock <= p.min_stock);
       return {
@@ -193,9 +193,9 @@ export async function executeAICommand(input: string): Promise<AIResult> {
     }
 
     case "check_debt": {
-      const { data: contracts } = await supabase.from("contracts").select("*").in("status", ["Đã ký", "Đang thực hiện", "Hoàn thành"]);
-      const { data: payments } = await supabase.from("payments").select("*");
-      const { data: customers } = await supabase.from("customers").select("*");
+      const { data: contracts } = await db.from("contracts").select("*").in("status", ["Đã ký", "Đang thực hiện", "Hoàn thành"]);
+      const { data: payments } = await db.from("payments").select("*");
+      const { data: customers } = await db.from("customers").select("*");
       const customerList = (customers ?? []) as Customer[];
       const contractList = (contracts ?? []) as { id: string; customer_id: string | null }[];
       const paymentList = (payments ?? []) as { contract_id: string; amount: number }[];
@@ -212,7 +212,7 @@ export async function executeAICommand(input: string): Promise<AIResult> {
       const details: string[] = [];
       let totalDebt = 0;
       for (const c of targetContracts) {
-        const { data: items } = await supabase.from("contract_items").select("*").eq("contract_id", c.id);
+        const { data: items } = await db.from("contract_items").select("*").eq("contract_id", c.id);
         const total = (items ?? []).reduce((s: number, it: any) => s + it.qty * it.price, 0);
         const paid = paymentList.filter((p) => p.contract_id === c.id).reduce((s, p) => s + p.amount, 0);
         const debt = Math.max(0, total - paid);
@@ -239,7 +239,7 @@ export async function executeAICommand(input: string): Promise<AIResult> {
       }
       const s = getCachedSettings();
       const id = genId(s.customer_prefix, s.id_format);
-      const { error } = await supabase.from("customers").insert({
+      const { error } = await db.from("customers").insert({
         id, name, phone: "", email: "", tax: "", address: "", representative: "", note: "",
       });
       if (error) {
@@ -261,11 +261,11 @@ export async function executeAICommand(input: string): Promise<AIResult> {
         };
       }
 
-      const { data: products } = await supabase.from("products").select("*").order("name");
+      const { data: products } = await db.from("products").select("*").order("name");
       const allProducts = (products ?? []) as Product[];
-      const { data: customers } = await supabase.from("customers").select("*").order("name");
+      const { data: customers } = await db.from("customers").select("*").order("name");
       const allCustomers = (customers ?? []) as Customer[];
-      const { data: templates } = await supabase.from("templates").select("*").eq("type", "quote").order("name");
+      const { data: templates } = await db.from("templates").select("*").eq("type", "quote").order("name");
 
       let customer: Customer | null = null;
       if (parsed.customerName) {
@@ -313,7 +313,7 @@ export async function executeAICommand(input: string): Promise<AIResult> {
         0, s.vat_default, 0,
       );
 
-      const { error: qErr } = await supabase.from("quotes").insert({
+      const { error: qErr } = await db.from("quotes").insert({
         id: quoteId,
         customer_id: customer?.id ?? null,
         date: new Date().toISOString().split("T")[0],
@@ -335,7 +335,7 @@ export async function executeAICommand(input: string): Promise<AIResult> {
       }
 
       if (quoteItems.length > 0) {
-        await supabase.from("quote_items").insert(quoteItems);
+        await db.from("quote_items").insert(quoteItems);
       }
 
       const details = [

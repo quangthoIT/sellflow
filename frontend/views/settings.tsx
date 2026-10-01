@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
-import { supabase, loadSettings, clearSettingsCache, type AppSettings } from "@/lib/supabase";
+import { db, loadSettings, clearSettingsCache, type AppSettings } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,13 +55,13 @@ export function SettingsPage() {
     setUploading(true);
     const ext = file.name.split(".").pop() || "png";
     const path = `logo-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from("logos").upload(path, file, { upsert: true });
+    const { error: upErr } = await db.storage.from("logos").upload(path, file, { upsert: true });
     if (upErr) {
       toast.error("Lỗi tải lên logo");
       setUploading(false);
       return;
     }
-    const { data: urlData } = supabase.storage.from("logos").getPublicUrl(path);
+    const { data: urlData } = db.storage.from("logos").getPublicUrl(path);
     update("logo_url", urlData.publicUrl);
     setUploading(false);
     toast.success("Đã tải lên logo");
@@ -83,7 +83,7 @@ export function SettingsPage() {
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
-    const { error } = await supabase.from("app_settings").upsert({
+    const { error } = await db.from("app_settings").upsert({
       id: 1,
       quote_prefix: settings.quote_prefix,
       contract_prefix: settings.contract_prefix,
