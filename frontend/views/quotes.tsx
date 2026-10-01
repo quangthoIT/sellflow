@@ -813,10 +813,12 @@ function QuotePreview({ quoteId, customers, templates }: {
     TOTAL_PAGES: "1",
     CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong>${settings?.company_name || "CÔNG TY BÁN HÀNG"}</strong></div>`,
     CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+    CHU_KY_KHACH_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+    CHU_KY_BEN_MUA: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN MUA</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
     CON_DAU: `<div style="display:inline-block; border:2px dashed #ef4444; border-radius:50%; padding:10px 16px; color:#ef4444; font-weight:bold; font-size:12px; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
   };
   for (const [k, v] of Object.entries(replacements)) {
-    html = html.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
+    html = html.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, "gi"), v);
   }
 
   return (

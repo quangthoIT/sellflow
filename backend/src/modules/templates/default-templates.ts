@@ -99,10 +99,16 @@ export const DEFAULT_TEMPLATES = [
   <table style="width: 100%; border-collapse: collapse; margin-top: 30px; page-break-inside: avoid;">
     <tr>
       <td style="width: 50%; text-align: center; vertical-align: top;">
-        {{CHU_KY_KHAC_HANG}}
+        <strong style="color: #0f172a; text-transform: uppercase;">ĐẠI DIỆN KHÁCH HÀNG</strong><br/>
+        <em style="font-size: 11pt; color: #475569;">(Ký, ghi rõ họ tên)</em>
+        <br/><br/><br/><br/><br/>
+        <strong style="color: #0f172a; font-size: 12pt;">{{TEN_KHACH_HANG}}</strong>
       </td>
       <td style="width: 50%; text-align: center; vertical-align: top;">
-        {{CHU_KY_BEN_BAN}}
+        <strong style="color: #0f172a; text-transform: uppercase;">ĐẠI DIỆN BÊN BÁN</strong><br/>
+        <em style="font-size: 11pt; color: #475569;">(Ký, ghi rõ họ tên & đóng dấu)</em>
+        <br/><br/><br/><br/><br/>
+        <strong style="color: #0f172a; font-size: 12pt;">{{TEN_CONG_TY}}</strong>
       </td>
     </tr>
   </table>
@@ -237,10 +243,16 @@ export const DEFAULT_TEMPLATES = [
   <table style="width: 100%; border-collapse: collapse; margin-top: 30px; page-break-inside: avoid;">
     <tr>
       <td style="width: 50%; text-align: center; vertical-align: top;">
-        {{CHU_KY_KHAC_HANG}}
+        <strong style="color: #0f172a; text-transform: uppercase;">ĐẠI DIỆN BÊN B (BÊN MUA)</strong><br/>
+        <em style="font-size: 11pt; color: #475569;">(Ký, ghi rõ họ tên)</em>
+        <br/><br/><br/><br/><br/>
+        <strong style="color: #0f172a; font-size: 12pt;">{{TEN_KHACH_HANG}}</strong>
       </td>
       <td style="width: 50%; text-align: center; vertical-align: top;">
-        {{CHU_KY_BEN_BAN}}
+        <strong style="color: #0f172a; text-transform: uppercase;">ĐẠI DIỆN BÊN A (BÊN BÁN)</strong><br/>
+        <em style="font-size: 11pt; color: #475569;">(Ký, ghi rõ họ tên & đóng dấu)</em>
+        <br/><br/><br/><br/><br/>
+        <strong style="color: #0f172a; font-size: 12pt;">{{TEN_CONG_TY}}</strong>
       </td>
     </tr>
   </table>
