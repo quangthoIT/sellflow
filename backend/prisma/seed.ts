@@ -243,6 +243,11 @@ async function main() {
     </p>
   </div>
 
+  <!-- Điểm ngắt trang sang Trang 2 -->
+  <div data-page-break="true" style="page-break-before: always; margin: 28px 0; padding: 10px 0; border-top: 2px dashed #94a3b8; text-align: center; font-size: 11px; font-weight: 600; color: #64748b; user-select: none;">
+    ✂ --- NGẮT TRANG (SANG TRANG 2) ---
+  </div>
+
   <!-- ĐIỀU 3 -->
   <div style="margin-bottom: 16px; font-size: 11.5pt;">
     <strong style="color: #0f172a;">ĐIỀU 3: THỜI GIAN VÀ ĐỊA ĐIỂM GIAO HÀNG</strong>

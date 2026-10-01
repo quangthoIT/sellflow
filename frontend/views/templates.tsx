@@ -506,8 +506,8 @@ function TemplateForm({ template, onSave, onCancel }: {
 
   const insertPageBreak = () => {
     const pageBreakHtml = `
-      <div style="page-break-before: always; border-top: 2px dashed #94a3b8; margin: 24px 0 16px 0; padding-top: 4px; text-align: center; color: #94a3b8; font-size: 11px; font-weight: 600; user-select: none;">
-        ✂ --- NGẮT TRANG A4 (PAGE BREAK) ---
+      <div data-page-break="true" style="page-break-before: always; margin: 28px -18mm; padding: 10px 18mm; background: #f1f5f9; border-top: 2px dashed #94a3b8; border-bottom: 2px dashed #94a3b8; text-align: center; font-size: 11px; font-weight: 600; color: #475569; user-select: none;">
+        ✂ --- NGẮT TRANG A4 (SANG TRANG MỚI) ---
       </div><p><br/></p>
     `;
     execCmd("insertHTML", pageBreakHtml);
@@ -1081,11 +1081,14 @@ function TemplateForm({ template, onSave, onCancel }: {
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <Label className="text-xs font-medium text-muted-foreground">Khung soạn thảo văn bản (Khổ giấy A4)</Label>
-          <span className="text-[11px] text-muted-foreground">Kích thước chuẩn: 210mm x 297mm</span>
+          <span className="text-[11px] text-muted-foreground">Kích thước chuẩn: 210mm x 297mm (Tự động mở rộng trang)</span>
         </div>
 
-        <div className="overflow-y-auto rounded-lg border bg-slate-200/70 dark:bg-slate-950 p-6 md:p-8 max-h-[550px] min-h-[450px] flex justify-center shadow-inner">
+        <div className="overflow-y-auto rounded-lg border bg-slate-200/80 dark:bg-slate-950 p-6 md:p-8 max-h-[620px] min-h-[480px] flex flex-col items-center shadow-inner">
           <style>{`
+            .tpl-a4-canvas {
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06) !important;
+            }
             .tpl-a4-canvas ul {
               list-style-type: disc !important;
               padding-left: 1.75rem !important;
@@ -1101,6 +1104,21 @@ function TemplateForm({ template, onSave, onCancel }: {
             .tpl-a4-canvas li {
               margin-bottom: 0.25rem !important;
             }
+            .tpl-a4-canvas [data-page-break="true"],
+            .tpl-a4-canvas [style*="page-break-before"] {
+              display: block !important;
+              page-break-before: always !important;
+              margin: 32px -18mm 32px -18mm !important;
+              padding: 10px 18mm !important;
+              background: #f1f5f9 !important;
+              border-top: 2px dashed #94a3b8 !important;
+              border-bottom: 2px dashed #94a3b8 !important;
+              text-align: center !important;
+              font-size: 11px !important;
+              font-weight: 600 !important;
+              color: #475569 !important;
+              user-select: none !important;
+            }
           `}</style>
           <div
             ref={editorRef}
@@ -1110,15 +1128,17 @@ function TemplateForm({ template, onSave, onCancel }: {
             onMouseUp={saveSelection}
             onSelect={saveSelection}
             onBlur={saveSelection}
-            className="tpl-a4-canvas bg-white text-black outline-none shadow-2xl border border-slate-300 rounded-xs transition-shadow focus:ring-2 focus:ring-blue-500/20"
+            className="tpl-a4-canvas bg-white text-black outline-none border border-slate-300 rounded-sm shrink-0 transition-shadow focus:ring-2 focus:ring-blue-500/30"
             style={{
               width: "210mm",
               minHeight: "297mm",
+              height: "auto",
               padding: "20mm 18mm",
               boxSizing: "border-box",
               fontFamily: "Arial, sans-serif",
               fontSize: "14px",
               lineHeight: "1.6",
+              margin: "0 auto 24px auto",
             }}
           />
         </div>

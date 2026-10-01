@@ -6,7 +6,7 @@ export const DEFAULT_TEMPLATES = [
     isDefault: true,
     paper: 'A4',
     locked: false,
-    content: `<div style="font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.4; color: #111; max-width: 800px; margin: 0 auto; padding: 24px 32px;">
+    content: `<div style="font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.4; color: #111; max-width: 800px; margin: 0 auto; padding: 12px 16px;">
   <!-- Header: Công ty & Logo -->
   <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
     <tr>
@@ -121,7 +121,7 @@ export const DEFAULT_TEMPLATES = [
     isDefault: true,
     paper: 'A4',
     locked: false,
-    content: `<div style="font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.5; color: #111; max-width: 800px; margin: 0 auto; padding: 24px 32px;">
+    content: `<div style="font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.5; color: #111; max-width: 800px; margin: 0 auto; padding: 12px 16px;">
   <!-- Quốc hiệu & Tiêu ngữ chuẩn Việt Nam -->
   <div style="text-align: center; margin-bottom: 24px;">
     <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -204,6 +204,11 @@ export const DEFAULT_TEMPLATES = [
     <p style="margin: 4px 0 6px 0;">
       2. Phương thức thanh toán: Chuyển khoản qua tài khoản ngân hàng của Bên A hoặc tiền mặt.
     </p>
+  </div>
+
+  <!-- Điểm ngắt trang sang Trang 2 -->
+  <div data-page-break="true" style="page-break-before: always; margin: 28px 0; padding: 10px 0; border-top: 2px dashed #94a3b8; text-align: center; font-size: 11px; font-weight: 600; color: #64748b; user-select: none;">
+    ✂ --- NGẮT TRANG (SANG TRANG 2) ---
   </div>
 
   <!-- ĐIỀU 3 -->
