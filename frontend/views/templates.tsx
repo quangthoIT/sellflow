@@ -66,9 +66,9 @@ const TEMPLATE_TYPES = [
 
 const VARIABLES = [
   "SO_TAI_LIEU", "NGAY", "TEN_CONG_TY", "DIA_CHI_CONG_TY", "SDT_CONG_TY", "EMAIL_CONG_TY", "MST_CONG_TY", "LOGO_CONG_TY",
-  "TEN_KHACH_HANG", "DIA_CHI_KHACH_HANG", "MST_KHACH_HANG",
+  "TEN_KHACH_HANG", "DIA_CHI_KHACH_HANG", "MST_KHACH_HANG", "SDT_KHACH_HANG", "EMAIL_KHACH_HANG",
   "BANG_SAN_PHAM", "TAM_TINH", "VAT", "TONG_TIEN", "DA_THANH_TOAN", "CON_PHAI_THU",
-  "SO_HOP_DONG", "SO_BAO_GIA", "DIEU_KHOAN_THANH_TOAN", "GHI_CHU", "CHU_KY_BEN_BAN", "CHU_KY_KHAC_HANG", "CON_DAU",
+  "SO_HOP_DONG", "SO_BAO_GIA", "DIEU_KHOAN_THANH_TOAN", "GHI_CHU", "CHU_KY_BEN_BAN", "CHU_KY_KHAC_HANG", "CHU_KY_KHACH_HANG", "CHU_KY_BEN_MUA", "CON_DAU",
 ];
 
 function renderTemplatePreview(template: Template, settings: AppSettings | null): string {
@@ -134,6 +134,8 @@ function renderTemplatePreview(template: Template, settings: AppSettings | null)
     TEN_KHACH_HANG: "Công ty Cổ phần Thương mại Khách Hàng",
     DIA_CHI_KHACH_HANG: "Số 88 Đường Nguyễn Trãi, Quận Thanh Xuân, Hà Nội",
     MST_KHACH_HANG: "0309876543",
+    SDT_KHACH_HANG: "0988 123 456",
+    EMAIL_KHACH_HANG: "khachhang@congtyabc.com",
     BANG_SAN_PHAM: sampleTable,
     TAM_TINH: "30,000,000 đ",
     VAT: "3,000,000 đ",
@@ -835,6 +837,8 @@ function TemplateForm({ template, onSave, onCancel }: {
     { key: "TEN_KHACH_HANG", label: "Tên khách hàng" },
     { key: "DIA_CHI_KHACH_HANG", label: "Địa chỉ KH" },
     { key: "MST_KHACH_HANG", label: "Mã số thuế KH" },
+    { key: "SDT_KHACH_HANG", label: "SĐT KH" },
+    { key: "EMAIL_KHACH_HANG", label: "Email KH" },
     { key: "BANG_SAN_PHAM", label: "Bảng sản phẩm" },
     { key: "DIEU_KHOAN_THANH_TOAN", label: "Đ/K thanh toán" },
     { key: "TAM_TINH", label: "Tạm tính" },
