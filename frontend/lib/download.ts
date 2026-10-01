@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 function slugify(s: string): string {
   return s
     .normalize("NFD")
@@ -24,6 +26,7 @@ function cleanHtmlForExport(rawHtml: string, target: "pdf" | "word"): string {
         el.replaceWith(br);
       } else {
         const div = doc.createElement("div");
+        div.className = "html2pdf__page-break";
         div.setAttribute(
           "style",
           "page-break-before: always; break-before: page; height: 0; line-height: 0; font-size: 0; margin: 0; padding: 0; border: none; background: transparent; color: transparent; visibility: hidden; overflow: hidden;"
@@ -40,46 +43,65 @@ function cleanHtmlForExport(rawHtml: string, target: "pdf" | "word"): string {
     }
     return rawHtml.replace(
       /<div[^>]*data-page-break[^>]*>[\s\S]*?<\/div>/gi,
-      '<div style="page-break-before: always; break-before: page; height: 0; line-height: 0; font-size: 0; margin: 0; padding: 0; border: none; visibility: hidden;"></div>'
+      '<div class="html2pdf__page-break" style="page-break-before: always; break-before: page; height: 0; line-height: 0; font-size: 0; margin: 0; padding: 0; border: none; visibility: hidden;"></div>'
     );
   }
 }
 
-export function downloadPdf(title: string, html: string) {
-  const win = window.open("", "_blank");
-  if (!win) {
-    alert("Vui lòng cho phép cửa sổ pop-up để tải PDF.");
-    return;
-  }
-  const cleanHtml = cleanHtmlForExport(html, "pdf");
-  win.document.write(`<!DOCTYPE html>
+export async function downloadPdf(title: string, html: string) {
+  if (typeof window === "undefined") return;
+  const toastId = toast.loading("Đang khởi tạo và tải file PDF...");
+  try {
+    // Dynamically import html2pdf.js to avoid SSR bundling issues
+    // @ts-ignore
+    const html2pdfModule = await import("html2pdf.js");
+    const html2pdf = html2pdfModule.default || html2pdfModule;
+
+    const cleanHtml = cleanHtmlForExport(html, "pdf");
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.style.top = "-9999px";
+    container.style.width = "794px"; // Standard A4 width in px at 96 DPI (210mm)
+    container.style.background = "#ffffff";
+    container.style.color = "#000000";
+    container.style.fontFamily = "'Times New Roman', Times, serif";
+    container.style.padding = "20px 24px";
+    container.style.boxSizing = "border-box";
+    container.innerHTML = cleanHtml;
+    document.body.appendChild(container);
+
+    const opt = {
+      margin: [10, 10, 10, 10], // mm margins
+      filename: `${slugify(title)}.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"], before: [".html2pdf__page-break", '[data-page-break="true"]', '[data-page-break]'] },
+    };
+
+    // @ts-ignore
+    await html2pdf().set(opt).from(container).save();
+    document.body.removeChild(container);
+    toast.success("Đã tải xong file PDF!", { id: toastId });
+  } catch (err) {
+    console.error("Direct PDF generation fallback:", err);
+    toast.error("Đang mở hộp thoại in / xuất PDF...", { id: toastId });
+    // Fallback if browser security or web-worker blocks canvas
+    const win = window.open("", "_blank");
+    if (win) {
+      const cleanHtml = cleanHtmlForExport(html, "pdf");
+      win.document.write(`<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="utf-8">
 <title>${title}</title>
 <style>
-  @page { size: A4 portrait; margin: 15mm 15mm 15mm 15mm; }
-  html, body { margin: 0; padding: 0; color: #000; background: #fff; box-sizing: border-box; }
-  * { box-sizing: border-box; }
+  @page { size: A4 portrait; margin: 12mm; }
+  html, body { margin: 0; padding: 0; color: #000; background: #fff; }
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    [data-page-break="true"], [data-page-break], .page-break-indicator {
-      display: block !important;
-      page-break-before: always !important;
-      break-before: page !important;
-      height: 0 !important;
-      min-height: 0 !important;
-      max-height: 0 !important;
-      line-height: 0 !important;
-      font-size: 0 !important;
-      color: transparent !important;
-      border: none !important;
-      background: transparent !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      visibility: hidden !important;
-      overflow: hidden !important;
-    }
+    .html2pdf__page-break, [data-page-break="true"] { page-break-before: always !important; display: block !important; height: 0 !important; visibility: hidden !important; }
   }
 </style>
 </head>
@@ -88,7 +110,9 @@ export function downloadPdf(title: string, html: string) {
   window.onload = function() { setTimeout(function() { window.print(); }, 300); };
 </script>
 </body></html>`);
-  win.document.close();
+      win.document.close();
+    }
+  }
 }
 
 export function downloadWord(title: string, html: string) {
