@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Lock, Unlock, Eye, Star, X, Upload, AlignJustify, FileType, Undo, Redo, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Table as TableIcon, Minus, Sparkles, Rows3, Columns3, Combine, Split, Layers, Baseline, Image as ImageIcon, Eraser, Scissors, Palette, PanelTop } from "lucide-react";
+import { Plus, Pencil, Trash2, Lock, Unlock, Eye, Star, X, Upload, AlignJustify, FileType, Undo, Redo, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Table as TableIcon, Minus, Sparkles, Rows3, Columns3, Combine, Split, Layers, Baseline, Image as ImageIcon, Eraser, Scissors, Palette, PanelTop, Download } from "lucide-react";
 import { toast } from "sonner";
+import { downloadPdf, downloadWord } from "@/lib/download";
 import { EmptyState } from "@/components/empty-state";
 import { TableSkeleton } from "@/components/loading";
 import { SortableHead, sortData, filterData, type SortDir } from "@/components/sortable-head";
@@ -314,6 +315,16 @@ export function TemplatesPage() {
                       <ActionTooltip label="Xem trước mẫu">
                         <Button size="sm" variant="ghost" onClick={() => setPreview(t)}><Eye className="size-3.5" /></Button>
                       </ActionTooltip>
+                      <ActionTooltip label="Tải PDF mẫu (A4)">
+                        <Button size="sm" variant="ghost" onClick={() => downloadPdf(`Mau-${t.type === "quote" ? "Bao-gia" : "Hop-dong"}-${t.id}`, renderTemplatePreview(t, settings))}>
+                          <Download className="size-3.5" />
+                        </Button>
+                      </ActionTooltip>
+                      <ActionTooltip label="Tải Word mẫu (.doc)">
+                        <Button size="sm" variant="ghost" onClick={() => downloadWord(`Mau-${t.type === "quote" ? "Bao-gia" : "Hop-dong"}-${t.id}`, renderTemplatePreview(t, settings))}>
+                          <FileType className="size-3.5" />
+                        </Button>
+                      </ActionTooltip>
                       <ActionTooltip label={t.locked ? "Khóa mẫu (Không thể sửa)" : "Chỉnh sửa mẫu"}>
                         <span>
                           <Button size="sm" variant="ghost" onClick={() => { setEditing(t); setShowForm(true); }} disabled={t.locked}>
@@ -375,11 +386,29 @@ export function TemplatesPage() {
               Xem trước: {preview?.name}
             </DialogTitle>
           </DialogHeader>
-          {preview && (
-            <div className="rounded-lg border bg-white p-8 text-black">
-              <div dangerouslySetInnerHTML={{ __html: renderTemplatePreview(preview, settings) }} />
-            </div>
-          )}
+          {preview && (() => {
+            const previewHtml = renderTemplatePreview(preview, settings);
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2 print:hidden">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{preview.type === "quote" ? "Mẫu Báo giá" : "Mẫu Hợp đồng"}</Badge>
+                    {preview.is_default && <Badge className="gap-1"><Star className="size-3" /> Mặc định</Badge>}
+                    <span className="text-sm text-muted-foreground">Khổ giấy: {preview.paper || "A4"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => downloadPdf(`Mau-${preview.type === "quote" ? "Bao-gia" : "Hop-dong"}-${preview.id}`, previewHtml)}>
+                      <Download className="size-3.5" /> PDF
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => downloadWord(`Mau-${preview.type === "quote" ? "Bao-gia" : "Hop-dong"}-${preview.id}`, previewHtml)}>
+                      <FileType className="size-3.5" /> Word
+                    </Button>
+                  </div>
+                </div>
+                <div className="rounded-lg border bg-white p-8 text-black" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
@@ -726,6 +755,18 @@ function TemplateForm({ template, onSave, onCancel }: {
       ...form,
       content: finalContent,
     });
+  };
+
+  const handleExportTestPdf = () => {
+    const finalContent = editorRef.current?.innerHTML || "";
+    const html = renderTemplatePreview({ ...form, content: finalContent } as Template, appSettings);
+    downloadPdf(`Mau-${form.type === "quote" ? "Bao-gia" : "Hop-dong"}-${form.id || "sample"}`, html);
+  };
+
+  const handleExportTestWord = () => {
+    const finalContent = editorRef.current?.innerHTML || "";
+    const html = renderTemplatePreview({ ...form, content: finalContent } as Template, appSettings);
+    downloadWord(`Mau-${form.type === "quote" ? "Bao-gia" : "Hop-dong"}-${form.id || "sample"}`, html);
   };
 
   const insertHeaderFooter = async () => {
@@ -1155,11 +1196,21 @@ function TemplateForm({ template, onSave, onCancel }: {
         <Label htmlFor="is_default" className="text-xs font-medium cursor-pointer">Đặt làm mẫu mặc định cho loại tài liệu này</Label>
       </div>
 
-      <DialogFooter className="pt-2 border-t">
-        <Button variant="outline" className="h-9 text-xs" onClick={onCancel}>Hủy</Button>
-        <Button className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-5" onClick={handleFinalSave} disabled={!form.id || !form.name}>
-          {template ? "Cập nhật mẫu" : "Tạo mẫu mới"}
-        </Button>
+      <DialogFooter className="pt-2 border-t flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button type="button" size="sm" variant="outline" className="h-9 text-xs gap-1.5" onClick={handleExportTestPdf}>
+            <Download className="size-3.5 text-red-600" /> Xuất thử PDF
+          </Button>
+          <Button type="button" size="sm" variant="outline" className="h-9 text-xs gap-1.5" onClick={handleExportTestWord}>
+            <FileType className="size-3.5 text-blue-600" /> Xuất thử Word
+          </Button>
+        </div>
+        <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
+          <Button variant="outline" className="h-9 text-xs" onClick={onCancel}>Hủy</Button>
+          <Button className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-5" onClick={handleFinalSave} disabled={!form.id || !form.name}>
+            {template ? "Cập nhật mẫu" : "Tạo mẫu mới"}
+          </Button>
+        </div>
       </DialogFooter>
     </div>
   );
