@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -30,9 +30,16 @@ export function AppHeader() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [customName, setCustomName] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sellflow_admin_name");
+      if (saved) setCustomName(saved);
+    }
+  }, []);
+
   const title = pageTitles[pathname] ?? "Tổng quan";
-  const userEmail = session?.user?.email ?? "admin@sellflow.com";
-  const displayName = customName || session?.user?.user_metadata?.name || "SellFlow Admin";
+  const userEmail = session?.user?.email ?? "admin@sellflow.vn";
+  const displayName = customName || session?.user?.user_metadata?.name || "Quản trị viên";
 
   return (
     <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background px-4">

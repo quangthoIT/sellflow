@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Lock, User, Mail, KeyRound, Check, Loader2 } from "lucide-react";
+import { Lock, User, Mail, KeyRound, Check, Loader2, Eye, EyeOff } from "lucide-react";
 import { db } from "@/lib/db";
 import { toast } from "sonner";
 
@@ -36,6 +36,9 @@ export function UserProfileDialog({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -44,6 +47,9 @@ export function UserProfileDialog({
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     }
     onOpenChange(newOpen);
   };
@@ -61,10 +67,28 @@ export function UserProfileDialog({
         toast.error("Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu");
         return;
       }
+
+      // Xác thực mật khẩu hiện tại
+      const storedPassword =
+        typeof window !== "undefined"
+          ? localStorage.getItem("sellflow_admin_password") || "admin123"
+          : "admin123";
+
+      if (currentPassword !== storedPassword) {
+        toast.error("Mật khẩu hiện tại không chính xác!");
+        return;
+      }
+
       if (newPassword.length < 6) {
         toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
         return;
       }
+
+      if (newPassword === currentPassword) {
+        toast.error("Mật khẩu mới không được trùng với mật khẩu hiện tại");
+        return;
+      }
+
       if (newPassword !== confirmPassword) {
         toast.error("Mật khẩu xác nhận không trùng khớp");
         return;
@@ -74,13 +98,20 @@ export function UserProfileDialog({
     setIsLoading(true);
 
     try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("sellflow_admin_name", name.trim());
+      }
+
       if (isChangingPassword) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("sellflow_admin_password", newPassword);
+        }
         try {
           await db.auth.updateUser({ password: newPassword });
         } catch {
           // Fallback handled
         }
-        toast.success("Đổi mật khẩu thành công! Mật khẩu mới đã được cập nhật.");
+        toast.success("Đổi mật khẩu thành công! Mật khẩu mới đã có hiệu lực.");
       } else {
         toast.success("Cập nhật thông tin tài khoản thành công!");
       }
@@ -164,30 +195,44 @@ export function UserProfileDialog({
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   id="current-password"
-                  type="password"
+                  type={showCurrentPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="pl-9 h-9 text-xs sm:text-sm rounded-lg"
+                  className="pl-9 pr-9 h-9 text-xs sm:text-sm rounded-lg"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showCurrentPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
             </div>
 
             {/* Mật khẩu mới */}
             <div className="space-y-1.5">
               <Label htmlFor="new-password" className="text-xs font-semibold">
-                Mật khẩu mới
+                Mật khẩu mới (tối thiểu 6 ký tự)
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   id="new-password"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="pl-9 h-9 text-xs sm:text-sm rounded-lg"
+                  className="pl-9 pr-9 h-9 text-xs sm:text-sm rounded-lg"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
             </div>
 
@@ -200,12 +245,19 @@ export function UserProfileDialog({
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   id="confirm-password"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-9 h-9 text-xs sm:text-sm rounded-lg"
+                  className="pl-9 pr-9 h-9 text-xs sm:text-sm rounded-lg"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
             </div>
           </div>

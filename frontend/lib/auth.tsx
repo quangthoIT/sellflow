@@ -66,32 +66,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { data, error } = await db.auth.signInWithPassword({ email, password });
-      if (data?.session) {
-        setSession(data.session);
-        localStorage.setItem("sellflow_logged_in", "true");
-        window.location.href = "/dashboard";
-        return { error: null };
-      }
-    } catch {
-      // Ignore
+    const validPassword =
+      typeof window !== "undefined"
+        ? localStorage.getItem("sellflow_admin_password") || "admin123"
+        : "admin123";
+
+    if (password !== validPassword) {
+      return { error: "Mật khẩu không chính xác. Vui lòng kiểm tra lại!" };
     }
 
-    // Local authentication fallback for admin demo or custom user
-    if ((email === "admin@sellflow.vn" || email.trim().length > 0) && password.trim().length > 0) {
-      const mockSess = {
-        access_token: "mock-token-" + Date.now(),
-        user: { id: "user-" + Date.now(), email },
-      } as unknown as Session;
-      setSession(mockSess);
-      localStorage.setItem("sellflow_session", JSON.stringify(mockSess));
+    const savedName =
+      typeof window !== "undefined"
+        ? localStorage.getItem("sellflow_admin_name") || "Quản trị viên"
+        : "Quản trị viên";
+
+    const sessionData: Session = {
+      access_token: "token-" + Date.now(),
+      user: {
+        id: "admin-1",
+        email: email || "admin@sellflow.vn",
+        name: savedName,
+        user_metadata: { name: savedName },
+      },
+    };
+
+    setSession(sessionData);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
       localStorage.setItem("sellflow_logged_in", "true");
-      window.location.href = "/dashboard";
-      return { error: null };
     }
-
-    return { error: "Mật khẩu hoặc email không chính xác" };
+    window.location.href = "/dashboard";
+    return { error: null };
   };
 
   const signOut = async () => {

@@ -112,6 +112,9 @@ export function LoginPage() {
     setResetLoading(true);
     setTimeout(() => {
       setResetLoading(false);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("sellflow_admin_password", newPassword);
+      }
       setPassword(newPassword);
       setEmail(resetEmail);
       setShowForgotModal(false);
