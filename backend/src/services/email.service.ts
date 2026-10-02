@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { config } from '../config/index.js';
 
 export interface SmtpOptions {
   host?: string;
@@ -16,12 +17,12 @@ export class EmailService {
     attachments: { filename: string; content?: any; path?: string }[] = [],
     smtpOptions?: SmtpOptions
   ): Promise<boolean> {
-    const host = smtpOptions?.host?.trim() || process.env.SMTP_HOST || 'smtp.gmail.com';
-    const port = smtpOptions?.port ? Number(smtpOptions.port) : Number(process.env.SMTP_PORT || 587);
-    const user = smtpOptions?.user?.trim() || process.env.SMTP_USER;
-    const rawPass = smtpOptions?.pass || process.env.SMTP_PASS;
+    const host = smtpOptions?.host?.trim() || config.smtp.host || process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = smtpOptions?.port ? Number(smtpOptions.port) : (config.smtp.port || Number(process.env.SMTP_PORT || 587));
+    const user = smtpOptions?.user?.trim() || config.smtp.user || process.env.SMTP_USER || process.env.USER;
+    const rawPass = smtpOptions?.pass || config.smtp.pass || process.env.SMTP_PASS || process.env.PASS;
     const pass = rawPass ? rawPass.replace(/\s+/g, '') : undefined;
-    const senderName = smtpOptions?.senderName?.trim() || 'SellFlow Support';
+    const senderName = smtpOptions?.senderName?.trim() || config.smtp.senderName || process.env.SMTP_SENDER_NAME || 'SellFlow Support';
 
     console.log(`[EmailService] Preparing email dispatch to: ${to}, Sender: ${user}, Subject: "${subject}"`);
 
