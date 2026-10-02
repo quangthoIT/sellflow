@@ -49,8 +49,8 @@ export function AppHeader() {
         <h1 className="text-sm font-semibold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2.5 sm:gap-3">
-        {/* 1. Chuyển ngữ (EN / VN border button) */}
-        <LanguageToggle />
+        {/* 1. Chuyển ngữ (EN / VN border button) - Tạm ẩn theo yêu cầu */}
+        {/* <LanguageToggle /> */}
 
         {/* 2. Chuyển màu giao diện (Sun/Moon border button) */}
         <ModeToggle />
