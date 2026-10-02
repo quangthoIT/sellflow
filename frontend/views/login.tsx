@@ -9,8 +9,8 @@ import { toast } from "sonner";
 
 export function LoginPage() {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("admin@sellflow.vn");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -117,7 +117,7 @@ export function LoginPage() {
 
   // Open Forgot Password Modal
   const handleOpenForgot = () => {
-    setResetEmail(email || "admin@sellflow.vn");
+    setResetEmail(email || "");
     setResetStep("request");
     setOtpCode("");
     setServerOtp("");
@@ -285,10 +285,6 @@ export function LoginPage() {
                 )}
               </Button>
             </form>
-
-            <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
-              Tài khoản dùng thử: <span className="font-mono text-slate-700 dark:text-slate-300 font-semibold">admin@sellflow.vn</span> / <span className="font-mono text-slate-700 dark:text-slate-300 font-semibold">admin123</span>
-            </p>
           </div>
         </div>
       </div>

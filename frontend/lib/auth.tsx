@@ -66,10 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    const defaultEnvPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123";
+    const defaultEnvEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@sellflow.vn";
+
     const validPassword =
       typeof window !== "undefined"
-        ? localStorage.getItem("sellflow_admin_password") || "admin123"
-        : "admin123";
+        ? localStorage.getItem("sellflow_admin_password") || defaultEnvPassword
+        : defaultEnvPassword;
 
     if (password !== validPassword) {
       return { error: "Mật khẩu không chính xác. Vui lòng kiểm tra lại!" };
@@ -84,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       access_token: "token-" + Date.now(),
       user: {
         id: "admin-1",
-        email: email || "admin@sellflow.vn",
+        email: email || defaultEnvEmail,
         name: savedName,
         user_metadata: { name: savedName },
       },
