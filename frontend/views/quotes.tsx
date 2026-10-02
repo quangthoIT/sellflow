@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { db, type Product, type Customer, type Quote, type QuoteItem, type Template, type PaymentTerms, type PaymentTerm, loadSettings, getCachedSettings } from "@/lib/db";
 import { formatVND, formatDate, genId, calcQuoteTotals } from "@/lib/format";
 import { useNav } from "@/lib/nav";
@@ -872,7 +872,39 @@ function PaymentTermsEditor({ terms, total, onChange }: {
   const totalPercent = Math.round(terms.installments.reduce((s, it) => s + (Number(it.percent) || 0), 0) * 100) / 100;
   const totalAmount = terms.installments.reduce((s, it) => s + (Number(it.amount) || 0), 0);
   const isPercentComplete = Math.abs(totalPercent - 100) < 0.01;
-  const isAmountComplete = totalAmount === total;
+  const isAmountComplete = totalAmount === total && total > 0;
+
+  const prevTotalRef = useRef<number>(total);
+
+  // Tự động đồng bộ số tiền theo % khi tổng cộng đơn hàng thay đổi
+  useEffect(() => {
+    if (!terms) return;
+    const prevTotal = prevTotalRef.current;
+    prevTotalRef.current = total;
+
+    // Kiểm tra xem có cần cập nhật amount không (ví dụ: amount === 0 khi total > 0, hoặc total thay đổi)
+    const hasZeroAmount = terms.installments.some((it) => it.percent > 0 && it.amount === 0 && total > 0);
+    const isSingleAndMismatched = terms.installments.length === 1 && terms.installments[0].percent === 100 && terms.installments[0].amount !== total;
+    const isTotalChanged = prevTotal !== total && total > 0;
+
+    if (hasZeroAmount || isSingleAndMismatched || isTotalChanged) {
+      let remainingMoney = total;
+      const count = terms.installments.length;
+      const updated = terms.installments.map((it, i) => {
+        const isLast = i === count - 1;
+        if (count === 1 && it.percent === 100) {
+          return { ...it, amount: total };
+        }
+        const amt = isLast && isPercentComplete ? remainingMoney : Math.round((total * it.percent) / 100);
+        remainingMoney -= amt;
+        return {
+          ...it,
+          amount: Math.max(0, amt),
+        };
+      });
+      onChange({ ...terms, installments: updated });
+    }
+  }, [total]);
 
   const setMethod = (method: string) => {
     onChange({ ...terms, method });
@@ -881,21 +913,28 @@ function PaymentTermsEditor({ terms, total, onChange }: {
   const setInstallmentCount = (n: number) => {
     const current = terms.installments;
     if (n === current.length) return;
-    if (n < current.length) {
-      onChange({ ...terms, installments: current.slice(0, n) });
-    } else {
-      const newOnes: PaymentTerm[] = [];
-      for (let i = current.length; i < n; i++) {
-        newOnes.push({
-          label: `Đợt ${i + 1}`,
-          date: new Date().toISOString().split("T")[0],
-          percent: 0,
-          amount: 0,
-          note: "",
-        });
-      }
-      onChange({ ...terms, installments: [...current, ...newOnes] });
+    
+    const basePct = Math.floor((100 / n) * 100) / 100;
+    const remainderPct = Math.round((100 - basePct * n) * 100) / 100;
+
+    let remainingMoney = total;
+    const newInstallments: PaymentTerm[] = [];
+    for (let i = 0; i < n; i++) {
+      const isLast = i === n - 1;
+      const pct = isLast ? Math.round((basePct + remainderPct) * 100) / 100 : basePct;
+      const amt = isLast ? remainingMoney : Math.round((total * pct) / 100);
+      remainingMoney -= amt;
+
+      const old = current[i];
+      newInstallments.push({
+        label: old?.label || `Đợt ${i + 1}`,
+        date: old?.date || new Date().toISOString().split("T")[0],
+        percent: pct,
+        amount: Math.max(0, amt),
+        note: old?.note || "",
+      });
     }
+    onChange({ ...terms, installments: newInstallments });
   };
 
   const splitEqually = () => {
