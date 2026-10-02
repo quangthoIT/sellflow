@@ -80,9 +80,13 @@ Trong thực tế vận hành tại các doanh nghiệp vừa và nhỏ:
 
 ### 5.1. Phạm vi MVP bắt buộc (Must Have)
 
-1. **Xác thực & Người dùng cơ bản**:
-   - Đăng nhập và đăng xuất hệ thống an toàn.
-   - Quên mật khẩu: gửi mã xác thực OTP 6 chữ số ngẫu nhiên về email đã đăng ký để đổi mật khẩu mới.
+1. **Xác thực, Đăng ký Onboarding & Khởi tạo Doanh nghiệp**:
+   - **Đăng ký Onboarding 2 bước**:
+     - *Bước 1 — Tạo tài khoản*: Đăng ký email quản trị, mật khẩu (thanh đo độ mạnh mật khẩu) và xác nhận mật khẩu.
+     - *Bước 2 — Thiết lập Công ty*: Khai báo Tên doanh nghiệp, tải lên Logo, Mã số thuế, Số điện thoại và Địa chỉ trụ sở.
+     - Tự động tạo workspace, gán quyền Quản trị viên tối cao (`ADMIN`), nạp bộ mẫu tài liệu mặc định và đồng bộ thông tin sang **Cài đặt** (`app_settings`) cùng **Cấu hình Email** (`email_settings`).
+   - **Đăng nhập & Ghi nhớ phiên**: Đăng nhập bằng Email/Mật khẩu an toàn với tính năng *Ghi nhớ đăng nhập*.
+   - **Quên mật khẩu**: Gửi mã xác thực OTP 6 chữ số ngẫu nhiên về email đã đăng ký để đổi mật khẩu mới trực tiếp.
 2. **Quản lý Khách hàng**:
    - Lưu trữ danh bạ khách hàng/đối tác (Tên, Mã số thuế, Địa chỉ, Số điện thoại, Email, Người đại diện, Ghi chú).
    - Tự động sinh mã khách hàng theo quy tắc `{PREFIX}-{YEAR}-{SEQ}` (ví dụ: `KH-2026-001`).
@@ -193,7 +197,7 @@ flowchart TD
 
 | ID | Ưu tiên | Yêu cầu nghiệp vụ cốt lõi trong MVP |
 | --- | --- | --- |
-| **FR-01** | Must | Đăng nhập bằng Email/Password; Quên mật khẩu gửi mã OTP 6 số qua email thật để xác thực đổi mật khẩu mới. |
+| **FR-01** | Must | Đăng ký Onboarding 2 bước (Tạo tài khoản quản trị & Thiết lập thông tin công ty); Đăng nhập Email/Password; Quên mật khẩu gửi mã OTP 6 số qua email thật để xác thực đổi mật khẩu mới. |
 | **FR-02** | Must | Quản lý danh bạ khách hàng: thêm, sửa, xóa, tìm kiếm, lọc; tự động sinh mã khách hàng (`KH-YYYY-SEQ`). |
 | **FR-03** | Must | Quản lý sản phẩm: chọn Đơn vị tính từ danh mục chuẩn hóa; quản lý giá vốn, giá bán, tồn kho, mức tồn tối thiểu. |
 | **FR-04** | Must | Quản lý kho: lập phiếu Nhập kho / Xuất kho; cập nhật tồn kho tức thì; cảnh báo khi tồn kho ≤ tồn tối thiểu. |
@@ -274,7 +278,7 @@ flowchart TD
 | **Thanh toán** | Quản lý Thanh toán & Công nợ | Bảng theo dõi các đợt thanh toán, form ghi nhận phiếu thu tiền theo từng hợp đồng |
 | **Mẫu tài liệu** | Quản lý Mẫu Báo giá & Hợp đồng | Danh sách mẫu, trình soạn thảo trực quan, công cụ chèn biến thay thế dữ liệu |
 | **Cài đặt** | Cài đặt Doanh nghiệp & Hệ thống | Cấu hình thông tin công ty, logo, quy tắc sinh mã, cấu hình email |
-| **Xác thực** | Đăng nhập & Quên mật khẩu | Giao diện đăng nhập, form nhập email nhận OTP khôi phục mật khẩu |
+| **Xác thực** | Đăng nhập, Onboarding & Quên mật khẩu | Giao diện đăng nhập, form Onboarding 2 bước (Tạo tài khoản & Thiết lập công ty), form nhập email nhận OTP khôi phục mật khẩu |
 
 ---
 
@@ -304,6 +308,7 @@ flowchart TD
 | **AC-07** | Nhập kho và cảnh báo tồn kho | Số lượng tồn kho tăng đúng theo phiếu nhập; sản phẩm hiển thị cảnh báo khi số lượng tồn ≤ mức tồn tối thiểu. |
 | **AC-08** | Khôi phục mật khẩu qua email OTP | Nhập đúng email đã đăng ký, hệ thống gửi mã OTP xác thực; nhập đúng OTP cho phép đổi mật khẩu mới thành công. |
 | **AC-09** | Bảo mật xác thực người dùng | Người dùng chưa đăng nhập không thể truy cập các trang nghiệp vụ nội bộ. |
+| **AC-10** | Đăng ký Onboarding và Khởi tạo Doanh nghiệp | Đăng ký tài khoản qua 2 bước, hệ thống tự động gán quyền Quản trị viên tối cao, tự động đồng bộ Tên công ty & Logo sang Cài đặt, Báo giá, Hợp đồng và Cấu hình Email. |
 
 ---
 
