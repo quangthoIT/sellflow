@@ -220,14 +220,6 @@ export function EmailPage() {
       toast.error("Vui lòng nhập email nhận thử nghiệm");
       return;
     }
-    if (!settings.sender_email.trim() || settings.sender_email === "admin@sellflow.com") {
-      toast.error("Vui lòng nhập Email người gửi (địa chỉ Gmail của bạn) ở phần bên dưới");
-      return;
-    }
-    if (!smtpPassword.trim()) {
-      toast.error("Vui lòng nhập Mật khẩu ứng dụng (16 ký tự do Google cấp)");
-      return;
-    }
     setTesting(true);
     try {
       const res = await fetch("http://localhost:4000/api/emails/send-otp", {
@@ -240,7 +232,7 @@ export function EmailPage() {
             host: smtpHost.trim() || "smtp.gmail.com",
             port: Number(smtpPort.trim() || 587),
             user: settings.sender_email.trim(),
-            pass: smtpPassword.trim().replace(/\s+/g, ""),
+            pass: smtpPassword.trim(),
             senderName: settings.sender_name.trim() || "SellFlow Support",
           },
         }),
@@ -250,7 +242,7 @@ export function EmailPage() {
         toast.success(`Đã gửi email thử nghiệm thành công tới ${targetEmail}!`);
         load();
       } else {
-        toast.error(data.message || "Lỗi gửi email thử nghiệm. Vui lòng kiểm tra lại Email người gửi và Mật khẩu ứng dụng.");
+        toast.error(data.message || "Lỗi gửi email thử nghiệm. Vui lòng kiểm tra lại thông tin SMTP.");
       }
     } catch (err: any) {
       toast.error("Không thể kết nối đến máy chủ gửi email: " + (err.message || "Lỗi mạng"));
