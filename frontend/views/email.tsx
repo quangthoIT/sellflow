@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { db, type EmailSettings, type EmailLog } from "@/lib/db";
 import { formatDateTime } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,7 +17,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { EmptyState } from "@/components/empty-state";
 import { TableSkeleton } from "@/components/loading";
 import { SortableHead, sortData, filterData, type SortDir } from "@/components/sortable-head";
-import { ActionTooltip } from "@/components/action-tooltip";
 
 const defaultEmailSettings: EmailSettings = {
   id: 1,
@@ -42,6 +41,19 @@ Trân trọng,
   created_at: new Date().toISOString(),
 };
 
+interface FormState {
+  sender_name: string;
+  sender_email: string;
+  reply_to: string;
+  auto_send_signed: boolean;
+  attach_pdf: boolean;
+  subject: string;
+  body: string;
+  smtp_host: string;
+  smtp_port: string;
+  smtp_password: string;
+}
+
 export function EmailPage() {
   const [settings, setSettings] = useState<EmailSettings>(defaultEmailSettings);
   const [smtpHost, setSmtpHost] = useState("smtp.gmail.com");
@@ -50,6 +62,8 @@ export function EmailPage() {
   const [testEmailInput, setTestEmailInput] = useState("");
   const [testing, setTesting] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+
+  const [initialState, setInitialState] = useState<FormState | null>(null);
 
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,12 +78,69 @@ export function EmailPage() {
       db.from("email_settings").select("*").eq("id", 1).maybeSingle(),
       db.from("email_logs").select("*").order("sent_at", { ascending: false }),
     ]);
-    if (s.data) {
-      setSettings(s.data as EmailSettings);
+
+    let localSettings: any = {};
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("sellflow_email_settings");
+        if (raw) localSettings = JSON.parse(raw);
+      } catch (e) {}
     }
+
+    const merged = { ...defaultEmailSettings, ...(s.data || {}), ...localSettings };
+
+    const loadedSettings: EmailSettings = {
+      id: 1,
+      sender_name: merged.sender_name ?? defaultEmailSettings.sender_name,
+      sender_email: merged.sender_email ?? defaultEmailSettings.sender_email,
+      reply_to: merged.reply_to ?? defaultEmailSettings.reply_to,
+      auto_send_signed: merged.auto_send_signed ?? defaultEmailSettings.auto_send_signed,
+      attach_pdf: merged.attach_pdf ?? defaultEmailSettings.attach_pdf,
+      subject: merged.subject ?? defaultEmailSettings.subject,
+      body: merged.body ?? defaultEmailSettings.body,
+    };
+
+    const host = merged.smtp_host || "smtp.gmail.com";
+    const port = String(merged.smtp_port || "587");
+    const pass = merged.smtp_password || "";
+
+    setSettings(loadedSettings);
+    setSmtpHost(host);
+    setSmtpPort(port);
+    setSmtpPassword(pass);
+
+    setInitialState({
+      sender_name: loadedSettings.sender_name,
+      sender_email: loadedSettings.sender_email,
+      reply_to: loadedSettings.reply_to,
+      auto_send_signed: loadedSettings.auto_send_signed,
+      attach_pdf: loadedSettings.attach_pdf,
+      subject: loadedSettings.subject,
+      body: loadedSettings.body,
+      smtp_host: host,
+      smtp_port: port,
+      smtp_password: pass,
+    });
+
     setLogs((l.data ?? []) as EmailLog[]);
     setLoading(false);
   }, []);
+
+  const isDirty = useMemo(() => {
+    if (!initialState) return false;
+    return (
+      settings.sender_name !== initialState.sender_name ||
+      settings.sender_email !== initialState.sender_email ||
+      settings.reply_to !== initialState.reply_to ||
+      settings.auto_send_signed !== initialState.auto_send_signed ||
+      settings.attach_pdf !== initialState.attach_pdf ||
+      settings.subject !== initialState.subject ||
+      settings.body !== initialState.body ||
+      smtpHost !== initialState.smtp_host ||
+      smtpPort !== initialState.smtp_port ||
+      smtpPassword !== initialState.smtp_password
+    );
+  }, [settings, smtpHost, smtpPort, smtpPassword, initialState]);
 
   const colFilters = [
     { key: (l: EmailLog) => formatDateTime(l.sent_at), value: filters.sent_at ?? "" },
@@ -102,36 +173,82 @@ export function EmailPage() {
   const handleSave = async () => {
     if (!settings) return;
     setSaving(true);
-    const { error } = await db
-      .from("email_settings")
-      .upsert({
-        id: 1,
-        sender_name: settings.sender_name,
-        sender_email: settings.sender_email,
-        reply_to: settings.reply_to,
-        auto_send_signed: settings.auto_send_signed,
-        attach_pdf: settings.attach_pdf,
-        subject: settings.subject,
-        body: settings.body,
-      });
+    const payload = {
+      id: 1,
+      sender_name: settings.sender_name.trim(),
+      sender_email: settings.sender_email.trim(),
+      reply_to: settings.reply_to.trim(),
+      auto_send_signed: settings.auto_send_signed,
+      attach_pdf: settings.attach_pdf,
+      subject: settings.subject,
+      body: settings.body,
+      smtp_host: smtpHost.trim(),
+      smtp_port: smtpPort.trim(),
+      smtp_password: smtpPassword.trim(),
+    };
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sellflow_email_settings", JSON.stringify(payload));
+    }
+
+    const { error } = await db.from("email_settings").upsert(payload);
     setSaving(false);
     if (error) {
       toast.error("Lỗi lưu cấu hình: " + error.message);
       return;
     }
+
+    setInitialState({
+      sender_name: payload.sender_name,
+      sender_email: payload.sender_email,
+      reply_to: payload.reply_to,
+      auto_send_signed: payload.auto_send_signed,
+      attach_pdf: payload.attach_pdf,
+      subject: payload.subject,
+      body: payload.body,
+      smtp_host: payload.smtp_host,
+      smtp_port: payload.smtp_port,
+      smtp_password: payload.smtp_password,
+    });
+
     toast.success("Đã lưu cấu hình email thành công");
   };
 
-  const handleTestEmail = () => {
-    if (!testEmailInput.trim()) {
+  const handleTestEmail = async () => {
+    const targetEmail = testEmailInput.trim();
+    if (!targetEmail) {
       toast.error("Vui lòng nhập email nhận thử nghiệm");
       return;
     }
     setTesting(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("http://localhost:4000/api/emails/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: targetEmail,
+          otp: Math.floor(100000 + Math.random() * 900000).toString(),
+          smtpOptions: {
+            host: smtpHost.trim() || "smtp.gmail.com",
+            port: Number(smtpPort.trim() || 587),
+            user: settings.sender_email.trim(),
+            pass: smtpPassword.trim(),
+            senderName: settings.sender_name.trim() || "SellFlow Support",
+          },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(`Đã gửi email thử nghiệm thành công tới ${targetEmail}!`);
+        load();
+      } else {
+        toast.error(data.message || "Lỗi gửi email thử nghiệm. Vui lòng kiểm tra lại thông tin SMTP.");
+      }
+    } catch (err: any) {
+      toast.error("Không thể kết nối đến máy chủ gửi email: " + (err.message || "Lỗi mạng"));
+    } finally {
       setTesting(false);
-      toast.success(`Đã gửi email thử nghiệm thành công tới ${testEmailInput}!`);
-    }, 800);
+    }
   };
 
   return (
@@ -143,6 +260,7 @@ export function EmailPage() {
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Server className="size-4" /> Cấu hình email
+            {isDirty && <span className="size-2 rounded-full bg-amber-500 animate-pulse" />}
           </TabsTrigger>
         </TabsList>
 
@@ -158,43 +276,57 @@ export function EmailPage() {
                   <TableRow>
                     <SortableHead label="Thời gian" sortDir={sortKey === "sent_at" ? sortDir : null} onSort={(d) => { setSortKey("sent_at"); setSortDir(d); }} filter={{ type: "text", value: filters.sent_at ?? "", placeholder: "Lọc thời gian..." }} onFilterChange={(v) => setFilters((f) => ({ ...f, sent_at: v }))} />
                     <SortableHead label="Khách hàng" sortDir={sortKey === "customer_name" ? sortDir : null} onSort={(d) => { setSortKey("customer_name"); setSortDir(d); }} filter={{ type: "text", value: filters.customer_name ?? "", placeholder: "Lọc khách hàng..." }} onFilterChange={(v) => setFilters((f) => ({ ...f, customer_name: v }))} />
-                    <SortableHead label="Hợp đồng" sortDir={sortKey === "contract_id" ? sortDir : null} onSort={(d) => { setSortKey("contract_id"); setSortDir(d); }} filter={{ type: "text", value: filters.contract_id ?? "", placeholder: "Lọc hợp đồng..." }} onFilterChange={(v) => setFilters((f) => ({ ...f, contract_id: v }))} />
+                    <SortableHead label="Số hợp đồng" sortDir={sortKey === "contract_id" ? sortDir : null} onSort={(d) => { setSortKey("contract_id"); setSortDir(d); }} filter={{ type: "text", value: filters.contract_id ?? "", placeholder: "Lọc HĐ..." }} onFilterChange={(v) => setFilters((f) => ({ ...f, contract_id: v }))} />
                     <SortableHead label="Người nhận" sortDir={sortKey === "recipient" ? sortDir : null} onSort={(d) => { setSortKey("recipient"); setSortDir(d); }} filter={{ type: "text", value: filters.recipient ?? "", placeholder: "Lọc người nhận..." }} onFilterChange={(v) => setFilters((f) => ({ ...f, recipient: v }))} />
-                    <SortableHead label="Loại" sortDir={sortKey === "automatic" ? sortDir : null} onSort={(d) => { setSortKey("automatic"); setSortDir(d); }} filter={{ type: "select", value: filters.automatic ?? "", options: [{ label: "Tự động", value: "Tự động" }, { label: "Thủ công", value: "Thủ công" }] }} onFilterChange={(v) => setFilters((f) => ({ ...f, automatic: v }))} />
-                    <SortableHead label="Trạng thái" sortDir={sortKey === "status" ? sortDir : null} onSort={(d) => { setSortKey("status"); setSortDir(d); }} filter={{ type: "select", value: filters.status ?? "", options: [{ label: "Đã gửi", value: "Đã gửi" }, { label: "Lỗi", value: "Lỗi" }] }} onFilterChange={(v) => setFilters((f) => ({ ...f, status: v }))} />
+                    <SortableHead label="Loại" sortDir={sortKey === "automatic" ? sortDir : null} onSort={(d) => { setSortKey("automatic"); setSortDir(d); }} filter={{ type: "select", value: filters.automatic ?? "", options: [{ label: "Tất cả", value: "" }, { label: "Tự động", value: "Tự động" }, { label: "Thủ công", value: "Thủ công" }] }} onFilterChange={(v) => setFilters((f) => ({ ...f, automatic: v }))} />
+                    <SortableHead label="Trạng thái" sortDir={sortKey === "status" ? sortDir : null} onSort={(d) => { setSortKey("status"); setSortDir(d); }} filter={{ type: "select", value: filters.status ?? "", options: [{ label: "Tất cả", value: "" }, { label: "Thành công", value: "sent" }, { label: "Thất bại", value: "failed" }] }} onFilterChange={(v) => setFilters((f) => ({ ...f, status: v }))} />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loading && <TableSkeleton rows={5} columns={6} />}
-                  {!loading && sortedLogs.length === 0 && (
+                  {loading ? (
+                    <TableSkeleton rows={5} columns={6} />
+                  ) : sortedLogs.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="p-0">
                         <EmptyState
+                          icon={Mail}
                           title="Chưa có email nào được gửi"
                           description="Lịch sử gửi email báo giá và hợp đồng sẽ tự động hiển thị tại đây."
                         />
                       </TableCell>
                     </TableRow>
+                  ) : (
+                    sortedLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatDateTime(log.sent_at)}
+                        </TableCell>
+                        <TableCell className="text-xs font-medium">
+                          {log.customer_name || "—"}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {log.contract_id || "—"}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">{log.recipient}</TableCell>
+                        <TableCell>
+                          <Badge variant={log.automatic ? "default" : "secondary"} className="text-xs">
+                            {log.automatic ? "Tự động" : "Thủ công"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {log.status === "sent" ? (
+                            <Badge variant="outline" className="gap-1 text-xs border-green-300 text-green-700 bg-green-50 dark:bg-green-950/30">
+                              <CheckCircle className="size-3" /> Đã gửi
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="gap-1 text-xs border-red-300 text-red-700 bg-red-50 dark:bg-red-950/30">
+                              <XCircle className="size-3" /> Thất bại
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
-                  {sortedLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="text-sm">{formatDateTime(log.sent_at)}</TableCell>
-                      <TableCell className="font-medium">{log.customer_name || "—"}</TableCell>
-                      <TableCell className="font-mono text-xs">{log.contract_id || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{log.recipient}</TableCell>
-                      <TableCell>
-                        <Badge variant={log.automatic ? "default" : "secondary"}>
-                          {log.automatic ? "Tự động" : "Thủ công"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={log.status === "Đã gửi" ? "default" : "destructive"} className="gap-1">
-                          {log.status === "Đã gửi" ? <CheckCircle className="size-3" /> : <XCircle className="size-3" />}
-                          {log.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
                 </TableBody>
               </Table>
             </CardContent>
@@ -282,7 +414,7 @@ export function EmailPage() {
                     className="gap-2 h-9 text-xs w-full sm:w-auto shrink-0"
                   >
                     <Send className="size-3.5" />
-                    {testing ? "Đang kết nối..." : "Gửi thử nghiệm"}
+                    {testing ? "Đang gửi..." : "Gửi thử nghiệm"}
                   </Button>
                 </div>
               </div>
@@ -389,10 +521,24 @@ export function EmailPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2">
-                <Button onClick={handleSave} disabled={saving} className="gap-2 shadow-xs">
+              <div className="flex items-center justify-between pt-2 border-t mt-4">
+                <div className="text-xs text-muted-foreground">
+                  {isDirty ? (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                      <span className="size-2 rounded-full bg-amber-500 animate-ping inline-block" />
+                      Có thay đổi chưa lưu
+                    </span>
+                  ) : (
+                    <span>Cấu hình hiện tại đã được lưu</span>
+                  )}
+                </div>
+                <Button
+                  onClick={handleSave}
+                  disabled={!isDirty || saving}
+                  className="gap-2 shadow-xs transition-all"
+                >
                   <Save className="size-4" />
-                  {saving ? "Đang lưu..." : "Lưu cấu hình email"}
+                  {saving ? "Đang lưu..." : isDirty ? "Lưu cấu hình email" : "Đã lưu"}
                 </Button>
               </div>
             </CardContent>
