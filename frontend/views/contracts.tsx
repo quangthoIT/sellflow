@@ -538,7 +538,7 @@ function ContractPreview({ contractId, customers, templates, products = [] }: {
     ? `<div style="margin-top:10px;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
         <p style="font-size:12pt;margin-bottom:6px;color:#000000;">Phương thức: <strong>${(contract.payment_terms as any).method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
         <table style="width:100%;border-collapse:collapse;font-size:12pt;color:#000000;">
-          <thead><tr style="background:#f5f5f5;font-weight:bold;">
+          <thead><tr style="background:#f1f5f9;font-weight:bold;">
             <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Đợt</th>
             <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Ngày</th>
             <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tỷ lệ (%)</th>

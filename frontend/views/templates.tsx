@@ -533,8 +533,8 @@ function TemplateForm({ template, onSave, onCancel }: {
             <td style="border:1px solid #cbd5e1; padding:8px;">1</td>
             <td style="border:1px solid #cbd5e1; padding:8px;">Sản phẩm mẫu A</td>
             <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">1</td>
-            <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">100,000</td>
-            <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">100,000</td>
+            <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">100.000</td>
+            <td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">100.000</td>
           </tr>
         </tbody>
       </table><p><br/></p>
