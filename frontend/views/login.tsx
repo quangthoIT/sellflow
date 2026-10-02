@@ -20,6 +20,8 @@ export function LoginPage() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetStep, setResetStep] = useState<"request" | "verify">("request");
   const [otpCode, setOtpCode] = useState("");
+  const [serverOtp, setServerOtp] = useState("");
+  const [otpExpiresAt, setOtpExpiresAt] = useState<number>(0);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
@@ -66,11 +68,27 @@ export function LoginPage() {
     }
   };
 
+  const generateAndSendOtp = (targetEmail: string) => {
+    // Sinh mã OTP ngẫu nhiên 6 chữ số
+    const generated = Math.floor(100000 + Math.random() * 900000).toString();
+    setServerOtp(generated);
+    setOtpExpiresAt(Date.now() + 5 * 60 * 1000); // Hết hạn trong 5 phút
+    setCooldown(60);
+
+    // Lưu log gửi email và hiển thị thông báo
+    toast.success(`Mã OTP xác thực của bạn là: ${generated}`, {
+      duration: 15000,
+      description: `Mã OTP đã được gửi đến ${targetEmail}. Mã có hiệu lực trong 5 phút.`,
+    });
+    return generated;
+  };
+
   // Open Forgot Password Modal
   const handleOpenForgot = () => {
     setResetEmail(email || "admin@sellflow.vn");
     setResetStep("request");
     setOtpCode("");
+    setServerOtp("");
     setNewPassword("");
     setConfirmPassword("");
     setShowForgotModal(true);
@@ -79,31 +97,43 @@ export function LoginPage() {
   // Request Reset OTP Link
   const handleSendResetCode = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetEmail) {
-      toast.error("Vui lòng nhập địa chỉ email");
+    if (!resetEmail || !resetEmail.includes("@")) {
+      toast.error("Vui lòng nhập địa chỉ email hợp lệ");
       return;
     }
     setResetLoading(true);
 
     setTimeout(() => {
       setResetLoading(false);
+      generateAndSendOtp(resetEmail);
       setResetStep("verify");
-      setCooldown(60);
-      toast.success(`Đã gửi mã xác thực khôi phục đến email: ${resetEmail}`);
-    }, 800);
+    }, 600);
   };
 
   // Submit New Password Reset
   const handleConfirmReset = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpCode || otpCode.trim().length < 4) {
-      toast.error("Vui lòng nhập mã OTP xác thực hợp lệ (ví dụ: 123456)");
+
+    if (!otpCode || otpCode.trim().length !== 6) {
+      toast.error("Vui lòng nhập đủ mã OTP 6 chữ số");
       return;
     }
+
+    if (Date.now() > otpExpiresAt) {
+      toast.error("Mã OTP đã hết hạn! Vui lòng nhấn 'Gửi lại mã' để nhận mã mới.");
+      return;
+    }
+
+    if (otpCode.trim() !== serverOtp) {
+      toast.error("Mã OTP xác thực không chính xác! Vui lòng kiểm tra lại.");
+      return;
+    }
+
     if (!newPassword || newPassword.length < 6) {
       toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
+
     if (newPassword !== confirmPassword) {
       toast.error("Xác nhận mật khẩu mới không trùng khớp");
       return;
@@ -118,8 +148,8 @@ export function LoginPage() {
       setPassword(newPassword);
       setEmail(resetEmail);
       setShowForgotModal(false);
-      toast.success("Đặt lại mật khẩu thành công! Bạn có thể sử dụng mật khẩu mới để đăng nhập.");
-    }, 1000);
+      toast.success("Đặt lại mật khẩu thành công! Mật khẩu mới đã được cập nhật.");
+    }, 600);
   };
 
   return (
@@ -276,15 +306,44 @@ export function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleConfirmReset} className="space-y-3.5 pt-1">
+              {/* Alert thông báo OTP */}
+              <div className="p-3 rounded-xl border border-blue-200 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-900 text-xs space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <KeyRound className="size-3.5 text-blue-600 dark:text-blue-400" />
+                    Mã xác thực OTP:
+                  </span>
+                  {serverOtp && (
+                    <button
+                      type="button"
+                      onClick={() => setOtpCode(serverOtp)}
+                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 underline hover:opacity-80"
+                    >
+                      Tự động điền mã
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-blue-700 dark:text-blue-300">
+                    Mã đã gửi đến <strong className="font-mono">{resetEmail}</strong>:
+                  </span>
+                  <span className="font-mono font-bold text-sm tracking-widest text-blue-700 dark:text-blue-300 bg-white dark:bg-blue-900/60 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                    {serverOtp || "------"}
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Mã OTP xác thực (6 chữ số) *</label>
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Nhập mã OTP (6 chữ số) *
+                  </label>
                   {cooldown > 0 ? (
                     <span className="text-[11px] text-muted-foreground font-mono">Gửi lại sau {cooldown}s</span>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => { setCooldown(60); toast.success("Đã gửi lại mã OTP khôi phục"); }}
+                      onClick={() => generateAndSendOtp(resetEmail)}
                       className="text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
                     >
                       Gửi lại mã
@@ -295,27 +354,31 @@ export function LoginPage() {
                   type="text"
                   maxLength={6}
                   value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="Ví dụ: 123456"
-                  className="h-10 text-xs font-mono tracking-widest text-center rounded-xl"
+                  className="h-10 text-xs font-mono tracking-widest text-center rounded-xl font-bold"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Mật khẩu mới *</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Mật khẩu mới (tối thiểu 6 ký tự) *
+                </label>
                 <Input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Tối thiểu 6 ký tự"
+                  placeholder="Nhập mật khẩu mới"
                   className="h-10 text-xs rounded-xl"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Xác nhận mật khẩu mới *</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Xác nhận mật khẩu mới *
+                </label>
                 <Input
                   type="password"
                   value={confirmPassword}
@@ -330,7 +393,11 @@ export function LoginPage() {
                 <Button type="button" variant="outline" className="h-9 text-xs" onClick={() => setResetStep("request")}>
                   Quay lại
                 </Button>
-                <Button type="submit" disabled={resetLoading} className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5">
+                <Button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white gap-1.5 font-semibold"
+                >
                   {resetLoading ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
                   <span>Xác nhận đổi mật khẩu</span>
                 </Button>
