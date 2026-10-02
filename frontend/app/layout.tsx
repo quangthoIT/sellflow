@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { AppShell } from '@/components/app-shell';
 import { I18nProvider } from '@/components/i18n-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="light" storageKey="theme">
           <I18nProvider>
             <AppShell>{children}</AppShell>
+            <Toaster position="top-right" richColors closeButton />
           </I18nProvider>
         </ThemeProvider>
       </body>
