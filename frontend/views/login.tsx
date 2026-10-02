@@ -19,7 +19,6 @@ import {
   Phone,
   MapPin,
   FileText,
-  Upload,
   Image as ImageIcon,
   Check,
   ArrowLeft,
@@ -91,7 +90,7 @@ export function LoginPage() {
 
   // Calculate password strength
   const getPasswordStrength = (pass: string) => {
-    if (!pass) return { score: 0, label: "", color: "bg-slate-200" };
+    if (!pass) return { score: 0, label: "", color: "bg-slate-200", text: "" };
     let score = 0;
     if (pass.length >= 6) score += 1;
     if (pass.length >= 8) score += 1;
@@ -223,7 +222,7 @@ export function LoginPage() {
 
       // 3. Automatically sign in as admin and redirect
       await signIn(regEmail.trim(), regPassword);
-      toast.success("🎉 Thiết lập workspace công ty thành công!", {
+      toast.success("Thiết lập workspace công ty thành công!", {
         description: `Chào mừng bạn đến với SellFlow - ${companyName.trim()}`,
       });
     } catch (err: any) {
