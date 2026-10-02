@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
-  User,
   Lock,
   Eye,
   EyeOff,
@@ -23,6 +22,7 @@ import {
   Check,
   ArrowLeft,
   X,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -344,83 +344,114 @@ export function LoginPage() {
     }, 600);
   };
 
+  // Left Banner Dynamic Content Configuration
+  const bannerContent = {
+    login: {
+      tag: "HỆ THỐNG QUẢN LÝ BÁN HÀNG",
+      title: "CHÀO MỪNG",
+      subtitle: "ĐẾN VỚI HỆ THỐNG CỦA CHÚNG TÔI",
+      desc: "Hệ thống quản trị bán hàng, báo giá, hợp đồng & tài chính tối ưu cho doanh nghiệp SMEs.",
+    },
+    register_step1: {
+      tag: "BƯỚC 1 / 2 — TẠO TÀI KHOẢN",
+      title: "BƯỚC 1",
+      subtitle: "KHỞI TẠO QUẢN TRỊ VIÊN",
+      desc: "Tạo tài khoản quản trị tối cao để bắt đầu thiết lập và vận hành doanh nghiệp trên hệ thống.",
+    },
+    register_step2: {
+      tag: "BƯỚC 2 / 2 — THÔNG TIN CÔNG TY",
+      title: "BƯỚC 2",
+      subtitle: "THIẾT LẬP DOANH NGHIỆP",
+      desc: "Cập nhật thông tin công ty & logo để tự động đồng bộ lên các mẫu báo giá, hợp đồng và hóa đơn.",
+    },
+  }[viewMode];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950 p-4 sm:p-6 md:p-10">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950 p-3 sm:p-5 md:p-8">
       {/* Outer Banner Card Container */}
       <div
-        className="w-full max-w-6xl rounded-[32px] sm:rounded-[40px] overflow-hidden shadow-2xl shadow-blue-500/25 bg-cover bg-center p-6 sm:p-10 md:p-14 lg:p-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative"
+        className="w-full max-w-5xl rounded-[28px] sm:rounded-[36px] overflow-hidden shadow-2xl shadow-blue-500/20 bg-cover bg-center p-5 sm:p-8 md:p-10 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative transition-all"
         style={{ backgroundImage: "url('/assets/images/bg.png')" }}
       >
-        {/* Left Side: Welcome Text Banner */}
-        <div className="lg:col-span-5 text-white space-y-4 pr-0 lg:pr-2">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-            CHÀO MỪNG
+        {/* Left Side: Dynamic Informational Banner */}
+        <div className="lg:col-span-5 text-white space-y-3 pr-0 lg:pr-2 transition-all">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white/90 text-[11px] font-semibold tracking-wider uppercase border border-white/20">
+            <Sparkles className="size-3 text-blue-200" />
+            {bannerContent.tag}
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight uppercase drop-shadow-sm">
+            {bannerContent.title}
           </h1>
-          <h2 className="text-sm sm:text-base md:text-lg font-semibold tracking-wider opacity-95">
-            ĐẾN VỚI HỆ THỐNG CỦA CHÚNG TÔI
+
+          <h2 className="text-sm sm:text-base md:text-lg font-bold tracking-wide text-blue-100 opacity-95 uppercase">
+            {bannerContent.subtitle}
           </h2>
-          <p className="text-xs sm:text-sm md:text-base opacity-85 leading-relaxed max-w-md">
-            Hệ thống quản lý bán hàng, báo giá, hợp đồng & tài chính tối ưu cho doanh nghiệp SMEs.
+
+          <p className="text-xs sm:text-sm text-white/85 leading-relaxed max-w-sm font-normal">
+            {bannerContent.desc}
           </p>
         </div>
 
-        {/* Right Side: Interactive White Card (Login / Onboarding Steps) */}
+        {/* Right Side: Interactive White Card */}
         <div className="lg:col-span-7 w-full">
-          <div className="bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 md:p-10 shadow-2xl text-slate-800 dark:text-slate-100 border border-white/20 transition-all">
+          <div className="bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[28px] p-5 sm:p-7 md:p-8 shadow-2xl text-slate-800 dark:text-slate-100 border border-white/20 transition-all">
             
             {/* SCREEN 1: ĐĂNG NHẬP */}
             {viewMode === "login" && (
               <div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-[#083874] dark:text-blue-400 mb-1.5 tracking-tight">
-                  Đăng nhập
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-6 font-normal">
-                  Vui lòng nhập thông tin tài khoản để tiếp tục
-                </p>
+                <div className="mb-4">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#083874] dark:text-blue-400 tracking-tight">
+                    Đăng nhập tài khoản
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-normal">
+                    Nhập thông tin đăng nhập để tiếp tục làm việc
+                  </p>
+                </div>
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                   {/* Email Field */}
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <Input
                       type="text"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@sellflow.vn"
-                      className="pl-12 pr-4 h-12 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
+                      placeholder="Email hoặc Tên đăng nhập"
+                      className="pl-10 pr-3 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
                       required
                     />
                   </div>
 
                   {/* Password Field */}
                   <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Mật khẩu"
-                      className="pl-12 pr-12 h-12 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
+                      className="pl-10 pr-10 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
                       tabIndex={-1}
                     >
-                      {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                      {showPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
                     </button>
                   </div>
 
                   {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between text-xs sm:text-sm pt-0.5">
+                  <div className="flex items-center justify-between text-xs pt-0.5">
                     <label className="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400 font-medium select-none">
                       <input
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 size-4 cursor-pointer"
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 size-3.5 cursor-pointer"
                       />
                       <span>Ghi nhớ đăng nhập</span>
                     </label>
@@ -437,11 +468,11 @@ export function LoginPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-12 bg-[#0062cc] hover:bg-[#0051ab] text-white font-bold text-base rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
+                    className="w-full h-10.5 bg-[#0062cc] hover:bg-[#0051ab] text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.99] flex items-center justify-center gap-2 mt-1"
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="size-5 animate-spin" /> Đang đăng nhập...
+                        <Loader2 className="size-4.5 animate-spin" /> Đang đăng nhập...
                       </>
                     ) : (
                       "Đăng nhập"
@@ -450,7 +481,7 @@ export function LoginPage() {
                 </form>
 
                 {/* Divider: Chưa có tài khoản? */}
-                <div className="relative my-5">
+                <div className="relative my-4">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t border-slate-200 dark:border-slate-800" />
                   </div>
@@ -466,7 +497,7 @@ export function LoginPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setViewMode("register_step1")}
-                  className="w-full h-11 border-blue-200 hover:border-blue-400 dark:border-slate-700 text-[#0062cc] dark:text-blue-400 hover:bg-blue-50/60 dark:hover:bg-slate-800 font-semibold text-sm rounded-xl gap-2 transition-all shadow-2xs"
+                  className="w-full h-10 border-blue-200 hover:border-blue-400 dark:border-slate-700 text-[#0062cc] dark:text-blue-400 hover:bg-blue-50/60 dark:hover:bg-slate-800 font-semibold text-xs sm:text-sm rounded-xl gap-2 transition-all shadow-2xs"
                 >
                   <UserPlus className="size-4" />
                   Tạo tài khoản mới
@@ -478,90 +509,83 @@ export function LoginPage() {
             {viewMode === "register_step1" && (
               <div>
                 {/* Stepper Header */}
-                <div className="flex items-center justify-between max-w-xs mx-auto mb-6 relative">
+                <div className="flex items-center justify-between max-w-[260px] mx-auto mb-4 relative">
                   <div className="flex items-center flex-1">
                     <div className="flex flex-col items-center gap-1">
-                      <div className="size-7 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                      <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         1
                       </div>
-                      <span className="text-[11px] font-semibold text-[#0062cc] dark:text-blue-400">
-                        Tạo tài khoản
+                      <span className="text-[11px] font-bold text-[#0062cc] dark:text-blue-400">
+                        Tài khoản
                       </span>
                     </div>
 
-                    <div className="flex-1 h-[2px] mx-2 -mt-4 bg-slate-200 dark:bg-slate-800" />
+                    <div className="flex-1 h-[2px] mx-2 -mt-3.5 bg-slate-200 dark:bg-slate-800" />
 
                     <div className="flex flex-col items-center gap-1">
-                      <div className="size-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs font-bold">
+                      <div className="size-6.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs font-bold">
                         2
                       </div>
                       <span className="text-[11px] font-medium text-slate-400">
-                        Thông tin công ty
+                        Công ty
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <h2 className="text-2xl font-extrabold text-[#083874] dark:text-blue-400 mb-1 tracking-tight">
-                  Tạo tài khoản
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-5 font-normal">
-                  Nhập thông tin để tạo tài khoản quản trị viên.
-                </p>
-
-                <form onSubmit={handleStep1Submit} className="space-y-4">
+                <form onSubmit={handleStep1Submit} className="space-y-3">
                   {/* Email Field */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       Email đăng ký <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 pointer-events-none" />
+                      <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                       <Input
                         type="email"
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
                         placeholder="admin@sellflow.vn"
-                        className="pl-11 h-11 text-sm rounded-xl"
+                        className="pl-10 h-10 text-xs rounded-xl"
                         required
                       />
                     </div>
                   </div>
 
                   {/* Password Field */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       Mật khẩu <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 pointer-events-none" />
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                       <Input
                         type={showRegPassword ? "text" : "password"}
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="pl-11 pr-11 h-11 text-sm rounded-xl"
+                        className="pl-10 pr-10 h-10 text-xs rounded-xl"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowRegPassword(!showRegPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
                         tabIndex={-1}
                       >
-                        {showRegPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
+                        {showRegPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </div>
 
                     {/* Password Strength Bar */}
                     {regPassword && (
-                      <div className="pt-1 space-y-1">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-1 flex-1 max-w-[200px]">
+                      <div className="pt-0.5 space-y-0.5">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <div className="flex items-center gap-1 flex-1 max-w-[160px]">
                             {[1, 2, 3, 4].map((step) => (
                               <div
                                 key={step}
-                                className={`h-1.5 flex-1 rounded-full transition-all ${
+                                className={`h-1 flex-1 rounded-full transition-all ${
                                   step <= strength.score ? strength.color : "bg-slate-200 dark:bg-slate-800"
                                 }`}
                               />
@@ -574,27 +598,27 @@ export function LoginPage() {
                   </div>
 
                   {/* Confirm Password Field */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       Xác nhận mật khẩu <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 pointer-events-none" />
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                       <Input
                         type={showRegConfirmPassword ? "text" : "password"}
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="pl-11 pr-11 h-11 text-sm rounded-xl"
+                        className="pl-10 pr-10 h-10 text-xs rounded-xl"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
                         tabIndex={-1}
                       >
-                        {showRegConfirmPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
+                        {showRegConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </div>
                   </div>
@@ -602,14 +626,14 @@ export function LoginPage() {
                   {/* Continue Button */}
                   <Button
                     type="submit"
-                    className="w-full h-11 bg-[#0062cc] hover:bg-[#0051ab] text-white font-bold text-sm rounded-xl transition-all shadow-md mt-2 flex items-center justify-center gap-1.5"
+                    className="w-full h-10.5 bg-[#0062cc] hover:bg-[#0051ab] text-white font-bold text-sm rounded-xl transition-all shadow-md mt-1 flex items-center justify-center gap-1.5"
                   >
                     <span>Tiếp tục</span>
                     <ArrowRight className="size-4" />
                   </Button>
 
                   {/* Back to Login Link */}
-                  <div className="text-center pt-2">
+                  <div className="text-center pt-1">
                     <button
                       type="button"
                       onClick={() => setViewMode("login")}
@@ -626,57 +650,50 @@ export function LoginPage() {
             {viewMode === "register_step2" && (
               <div>
                 {/* Stepper Header */}
-                <div className="flex items-center justify-between max-w-xs mx-auto mb-5 relative">
+                <div className="flex items-center justify-between max-w-[260px] mx-auto mb-3.5 relative">
                   <div className="flex items-center flex-1">
                     <div className="flex flex-col items-center gap-1">
-                      <div className="size-7 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                        <Check className="size-4 stroke-[3]" />
+                      <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                        <Check className="size-3.5 stroke-[3]" />
                       </div>
                       <span className="text-[11px] font-semibold text-[#0062cc] dark:text-blue-400">
-                        Tạo tài khoản
+                        Tài khoản
                       </span>
                     </div>
 
-                    <div className="flex-1 h-[2px] mx-2 -mt-4 bg-[#0062cc]" />
+                    <div className="flex-1 h-[2px] mx-2 -mt-3.5 bg-[#0062cc]" />
 
                     <div className="flex flex-col items-center gap-1">
-                      <div className="size-7 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                      <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         2
                       </div>
-                      <span className="text-[11px] font-semibold text-[#0062cc] dark:text-blue-400">
-                        Thông tin công ty
+                      <span className="text-[11px] font-bold text-[#0062cc] dark:text-blue-400">
+                        Công ty
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <h2 className="text-2xl font-extrabold text-[#083874] dark:text-blue-400 mb-1 tracking-tight">
-                  Thông tin công ty
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mb-4 font-normal">
-                  Thiết lập thông tin công ty để hoàn tất đăng ký.
-                </p>
-
-                <form onSubmit={handleCompleteOnboarding} className="space-y-3.5">
+                <form onSubmit={handleCompleteOnboarding} className="space-y-2.5">
                   {/* Company Name Field */}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                       Tên công ty <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 pointer-events-none" />
+                      <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                       <Input
                         type="text"
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Công ty TNHH SellFlow"
-                        className="pl-11 h-10 text-sm rounded-xl"
+                        className="pl-10 h-9.5 text-xs rounded-xl"
                         required
                       />
                     </div>
                   </div>
 
-                  {/* Company Logo Field */}
+                  {/* Company Logo Field (Inline Compact) */}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       Logo công ty (không bắt buộc)
@@ -690,74 +707,71 @@ export function LoginPage() {
                     />
 
                     {logoUrl ? (
-                      <div className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
+                      <div className="flex items-center gap-2.5 p-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950">
                         <img
                           src={logoUrl}
                           alt="Logo Preview"
-                          className="size-10 object-contain rounded-lg border bg-white"
+                          className="size-7 object-contain rounded border bg-white"
                         />
-                        <div className="flex-1 text-xs text-slate-600 dark:text-slate-400 truncate">
-                          Logo đã được chọn
+                        <div className="flex-1 text-[11px] text-slate-600 dark:text-slate-400 truncate">
+                          Đã chọn logo công ty
                         </div>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => setLogoUrl("")}
-                          className="h-7 w-7 p-0 text-slate-400 hover:text-red-500"
+                          className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
                         >
-                          <X className="size-4" />
+                          <X className="size-3.5" />
                         </Button>
                       </div>
                     ) : (
                       <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-600 rounded-xl p-3 text-center cursor-pointer transition-colors bg-slate-50/50 dark:bg-slate-950/50"
+                        className="border border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-xl px-3 py-1.5 text-center cursor-pointer transition-colors bg-slate-50/60 dark:bg-slate-950/60 flex items-center justify-between"
                       >
-                        <div className="flex items-center justify-center gap-2 text-xs text-slate-600 dark:text-slate-400">
-                          <ImageIcon className="size-5 text-slate-400" />
-                          <span>Kéo thả ảnh vào đây hoặc</span>
-                          <span className="font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-xs">
-                            Chọn ảnh
-                          </span>
+                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                          <ImageIcon className="size-4 text-slate-400" />
+                          <span className="text-[11px]">Tải ảnh logo (JPG, PNG &lt; 2MB)</span>
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          Hỗ trợ định dạng: JPG, PNG. Kích thước tối đa 2MB.
-                        </p>
+                        <span className="font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded text-[11px]">
+                          Chọn tệp
+                        </span>
                       </div>
                     )}
                   </div>
 
                   {/* Tax Code & Phone Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Mã số thuế (không bắt buộc)
+                        Mã số thuế
                       </label>
                       <div className="relative">
-                        <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
+                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
                         <Input
                           type="text"
                           value={companyTax}
                           onChange={(e) => setCompanyTax(e.target.value)}
-                          placeholder="Nhập mã số thuế"
-                          className="pl-10 h-10 text-xs rounded-xl"
+                          placeholder="Mã số thuế"
+                          className="pl-8.5 h-9 text-xs rounded-xl"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        Số điện thoại (không bắt buộc)
+                        Số điện thoại
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
                         <Input
                           type="text"
                           value={companyPhone}
                           onChange={(e) => setCompanyPhone(e.target.value)}
-                          placeholder="Nhập số điện thoại"
-                          className="pl-10 h-10 text-xs rounded-xl"
+                          placeholder="Số hotline"
+                          className="pl-8.5 h-9 text-xs rounded-xl"
                         />
                       </div>
                     </div>
@@ -766,16 +780,16 @@ export function LoginPage() {
                   {/* Company Address Field */}
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Địa chỉ (không bắt buộc)
+                      Địa chỉ công ty
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
                       <Input
                         type="text"
                         value={companyAddress}
                         onChange={(e) => setCompanyAddress(e.target.value)}
-                        placeholder="Nhập địa chỉ công ty"
-                        className="pl-10 h-10 text-xs rounded-xl"
+                        placeholder="Địa chỉ trụ sở chính"
+                        className="pl-8.5 h-9 text-xs rounded-xl"
                       />
                     </div>
                   </div>
@@ -784,7 +798,7 @@ export function LoginPage() {
                   <Button
                     type="submit"
                     disabled={regLoading}
-                    className="w-full h-11 bg-[#0062cc] hover:bg-[#0051ab] text-white font-bold text-sm rounded-xl transition-all shadow-md mt-2 flex items-center justify-center gap-2"
+                    className="w-full h-10.5 bg-[#0062cc] hover:bg-[#0051ab] text-white font-bold text-sm rounded-xl transition-all shadow-md mt-1 flex items-center justify-center gap-2"
                   >
                     {regLoading ? (
                       <>
@@ -796,13 +810,13 @@ export function LoginPage() {
                   </Button>
 
                   {/* Back to Step 1 */}
-                  <div className="text-center pt-1.5">
+                  <div className="text-center pt-1">
                     <button
                       type="button"
                       onClick={() => setViewMode("register_step1")}
                       className="text-xs font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 inline-flex items-center gap-1 transition-colors"
                     >
-                      <ArrowLeft className="size-3.5" /> Quay lại
+                      <ArrowLeft className="size-3.5" /> Quay lại bước 1
                     </button>
                   </div>
                 </form>
