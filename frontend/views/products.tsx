@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { db, type Product, type InventoryTx, loadSettings } from "@/lib/db";
 import { formatVND, formatDate, genId } from "@/lib/format";
 import { useNav } from "@/lib/nav";
@@ -83,6 +83,10 @@ export function ProductsPage() {
       ...customCategories,
       ...products.map((p) => p.category).filter(Boolean),
     ])
+  ).sort();
+
+  const units = Array.from(
+    new Set(products.map((p) => p.unit).filter(Boolean))
   ).sort();
 
   const filtered = products.filter((p) =>
@@ -215,6 +219,7 @@ export function ProductsPage() {
               <ProductForm
                 product={editing}
                 categories={categories}
+                units={units}
                 onSave={handleSave}
                 onCancel={() => { setShowForm(false); setEditing(null); }}
               />
@@ -402,13 +407,62 @@ export function ProductsPage() {
   );
 }
 
-function ProductForm({ product, categories, onSave, onCancel }: {
+const STANDARD_UNITS = [
+  "cái",
+  "chiếc",
+  "bộ",
+  "hộp",
+  "thùng",
+  "gói",
+  "bình",
+  "cặp",
+  "cuộn",
+  "cây",
+  "thanh",
+  "bao",
+  "tấm",
+  "túi",
+  "chai",
+  "lọ",
+  "cuốn",
+  "tập",
+  "kg",
+  "g",
+  "mét",
+  "m²",
+  "m³",
+  "lít",
+  "tấn",
+  "gói dịch vụ",
+  "trọn gói",
+  "tháng",
+  "năm",
+  "lượt",
+  "giờ",
+  "ngày",
+];
+
+function ProductForm({ product, categories, units, onSave, onCancel }: {
   product: Product | null;
   categories: string[];
+  units?: string[];
   onSave: (p: Partial<Product>) => void;
   onCancel: () => void;
 }) {
   const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const availableUnits = useMemo(() => {
+    const list = [...STANDARD_UNITS];
+    if (units) {
+      for (const u of units) {
+        if (u && !list.includes(u)) list.push(u);
+      }
+    }
+    if (product?.unit && !list.includes(product.unit)) {
+      list.push(product.unit);
+    }
+    return list;
+  }, [units, product]);
+
   const [form, setForm] = useState({
     id: product?.id ?? "",
     name: product?.name ?? "",
@@ -496,7 +550,16 @@ function ProductForm({ product, categories, onSave, onCancel }: {
         </div>
         <div className="space-y-1.5">
           <Label>Đơn vị tính <span className="text-destructive">*</span></Label>
-          <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
+          <Select value={form.unit} onValueChange={(v) => setForm({ ...form, unit: v })}>
+            <SelectTrigger className="w-full h-9">
+              <SelectValue placeholder="Chọn đơn vị tính" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {availableUnits.map((u) => (
+                <SelectItem key={u} value={u}>{u}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <Label>Giá vốn (đ) <span className="text-destructive">*</span></Label>
@@ -535,7 +598,7 @@ function ProductForm({ product, categories, onSave, onCancel }: {
           if (!form.id.trim()) { toast.error("Vui lòng nhập Mã sản phẩm"); return; }
           if (!form.name.trim()) { toast.error("Vui lòng nhập Tên sản phẩm"); return; }
           if (!form.category.trim()) { toast.error("Vui lòng chọn hoặc nhập Danh mục"); return; }
-          if (!form.unit.trim()) { toast.error("Vui lòng nhập Đơn vị tính"); return; }
+          if (!form.unit.trim()) { toast.error("Vui lòng chọn Đơn vị tính"); return; }
           if (!form.status.trim()) { toast.error("Vui lòng chọn Trạng thái"); return; }
           onSave(form);
         }} disabled={!form.id || !form.name || !form.category || !form.unit || !form.status}>

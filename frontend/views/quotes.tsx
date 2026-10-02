@@ -258,7 +258,7 @@ export function QuotesPage() {
           <DialogHeader>
             <DialogTitle>Xem trước báo giá</DialogTitle>
           </DialogHeader>
-          {previewId && <QuotePreview quoteId={previewId} customers={customers} templates={templates} />}
+          {previewId && <QuotePreview quoteId={previewId} customers={customers} templates={templates} products={products} />}
         </DialogContent>
       </Dialog>
     </div>
@@ -595,6 +595,7 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
               <TableRow>
                 <TableHead className="w-12 text-center text-xs">#</TableHead>
                 <TableHead className="text-xs">Sản phẩm</TableHead>
+                <TableHead className="w-20 text-center text-xs">ĐVT</TableHead>
                 <TableHead className="w-20 text-right text-xs">SL</TableHead>
                 <TableHead className="w-32 text-right text-xs">Đơn giá (đ)</TableHead>
                 <TableHead className="w-28 text-right text-xs">Giảm giá (đ)</TableHead>
@@ -605,7 +606,7 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
             <TableBody>
               {items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center">
+                  <TableCell colSpan={8} className="py-8 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <div className="size-11 rounded-full bg-muted/60 flex items-center justify-center mb-2">
                         <Package className="size-5.5 text-muted-foreground/60" />
@@ -616,32 +617,41 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
                   </TableCell>
                 </TableRow>
               ) : (
-                items.map((it, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell className="text-center font-mono text-xs text-muted-foreground">{idx + 1}</TableCell>
-                    <TableCell className="font-medium text-xs">{it.product_name}</TableCell>
-                    <TableCell className="text-right">
-                      <Input type="number" className="h-8 w-16 text-right text-xs ml-auto" value={it.qty}
-                        onChange={(e) => updateItem(idx, "qty", Math.max(1, +e.target.value))} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Input type="number" className="h-8 w-28 text-right text-xs ml-auto" value={it.price}
-                        onChange={(e) => updateItem(idx, "price", +e.target.value)} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Input type="number" className="h-8 w-24 text-right text-xs ml-auto" value={it.discount}
-                        onChange={(e) => updateItem(idx, "discount", +e.target.value)} />
-                    </TableCell>
-                    <TableCell className="text-right font-medium text-xs">
-                      {formatVND(it.qty * it.price - (it.discount || 0))}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => removeItem(idx)}>
-                        <Trash2 className="size-3.5 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                items.map((it, idx) => {
+                  const prod = products.find((p) => p.id === it.product_id);
+                  const unit = prod?.unit || "cái";
+                  return (
+                    <TableRow key={idx}>
+                      <TableCell className="text-center font-mono text-xs text-muted-foreground">{idx + 1}</TableCell>
+                      <TableCell className="font-medium text-xs">{it.product_name}</TableCell>
+                      <TableCell className="text-center text-xs text-muted-foreground font-medium">
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded bg-muted text-[11px]">
+                          {unit}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input type="number" className="h-8 w-16 text-right text-xs ml-auto" value={it.qty}
+                          onChange={(e) => updateItem(idx, "qty", Math.max(1, +e.target.value))} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input type="number" className="h-8 w-28 text-right text-xs ml-auto" value={it.price}
+                          onChange={(e) => updateItem(idx, "price", +e.target.value)} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input type="number" className="h-8 w-24 text-right text-xs ml-auto" value={it.discount}
+                          onChange={(e) => updateItem(idx, "discount", +e.target.value)} />
+                      </TableCell>
+                      <TableCell className="text-right font-medium text-xs">
+                        {formatVND(it.qty * it.price - (it.discount || 0))}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => removeItem(idx)}>
+                          <Trash2 className="size-3.5 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -716,10 +726,11 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
   );
 }
 
-function QuotePreview({ quoteId, customers, templates }: {
+function QuotePreview({ quoteId, customers, templates, products = [] }: {
   quoteId: string;
   customers: Customer[];
   templates: Template[];
+  products?: Product[];
 }) {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [items, setItems] = useState<QuoteItem[]>([]);
@@ -751,31 +762,37 @@ function QuotePreview({ quoteId, customers, templates }: {
     <thead><tr style="background:#f1f5f9;">
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">STT</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:center">ĐVT</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Số lượng</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Đơn giá (đ)</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
-      ${items.map((it, i) => `<tr>
-        <td style="border:1px solid #cbd5e1;padding:6px">${i + 1}</td>
+      ${items.map((it, i) => {
+        const prod = products.find((p) => p.id === it.product_id);
+        const unit = prod?.unit || "cái";
+        return `<tr>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center">${i + 1}</td>
         <td style="border:1px solid #cbd5e1;padding:6px">${it.product_name}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center">${unit}</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${it.qty}</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.price)}</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.qty * it.price - (it.discount || 0))}</td>
-      </tr>`).join("")}
+      </tr>`;
+      }).join("")}
     </tbody>
     <tfoot>
       <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng (Tạm tính):</td>
+        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng (Tạm tính):</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.subtotal)}</td>
       </tr>
       ${totals.vat > 0 ? `
       <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thuế GTGT (${quote.vat_pct}%):</td>
+        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thuế GTGT (${quote.vat_pct}%):</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.vat)}</td>
       </tr>` : ""}
       <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
-        <td colspan="4" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
+        <td colspan="5" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
         <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">${formatVND(totals.total)}</td>
       </tr>
     </tfoot>

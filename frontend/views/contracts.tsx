@@ -32,6 +32,7 @@ export function ContractsPage() {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const [allItems, setAllItems] = useState<ContractItem[]>([]);
   const [allPayments, setAllPayments] = useState<{ contract_id: string; amount: number }[]>([]);
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -41,18 +42,20 @@ export function ContractsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [c, cu, t, ci, pa] = await Promise.all([
+    const [c, cu, t, ci, pa, pr] = await Promise.all([
       db.from("contracts").select("*").order("date", { ascending: false }),
       db.from("customers").select("*").order("name"),
       db.from("templates").select("*").eq("type", "contract").order("name"),
       db.from("contract_items").select("*"),
       db.from("payments").select("contract_id, amount"),
+      db.from("products").select("*"),
     ]);
     setContracts((c.data ?? []) as Contract[]);
     setCustomers((cu.data ?? []) as Customer[]);
     setTemplates((t.data ?? []) as Template[]);
     setAllItems((ci.data ?? []) as ContractItem[]);
     setAllPayments((pa.data ?? []) as { contract_id: string; amount: number }[]);
+    setProducts((pr.data ?? []) as Product[]);
     setLoading(false);
   }, []);
 
@@ -299,7 +302,7 @@ export function ContractsPage() {
           <DialogHeader>
             <DialogTitle>Xem trước hợp đồng</DialogTitle>
           </DialogHeader>
-          {previewId && <ContractPreview contractId={previewId} customers={customers} templates={templates} />}
+          {previewId && <ContractPreview contractId={previewId} customers={customers} templates={templates} products={products} />}
         </DialogContent>
       </Dialog>
 
@@ -464,10 +467,11 @@ function ContractEditForm({ contractId, templates, onSaved, onCancel }: {
   );
 }
 
-function ContractPreview({ contractId, customers, templates }: {
+function ContractPreview({ contractId, customers, templates, products = [] }: {
   contractId: string;
   customers: Customer[];
   templates: Template[];
+  products?: Product[];
 }) {
   const [contract, setContract] = useState<Contract | null>(null);
   const [items, setItems] = useState<ContractItem[]>([]);
@@ -499,26 +503,32 @@ function ContractPreview({ contractId, customers, templates }: {
     <thead><tr style="background:#f1f5f9;">
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">STT</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #cbd5e1;padding:6px;text-align:center">ĐVT</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Số lượng</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Đơn giá (đ)</th>
       <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
-      ${items.map((it, i) => `<tr>
-        <td style="border:1px solid #cbd5e1;padding:6px">${i + 1}</td>
+      ${items.map((it, i) => {
+        const prod = products.find((p) => p.id === it.product_id);
+        const unit = prod?.unit || "cái";
+        return `<tr>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center">${i + 1}</td>
         <td style="border:1px solid #cbd5e1;padding:6px">${it.product_name}</td>
+        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center">${unit}</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${it.qty}</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.price)}</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.qty * it.price)}</td>
-      </tr>`).join("")}
+      </tr>`;
+      }).join("")}
     </tbody>
     <tfoot>
       <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="4" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
+        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(total)}</td>
       </tr>
       <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
-        <td colspan="4" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
+        <td colspan="5" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
         <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">${formatVND(total)}</td>
       </tr>
     </tfoot>
