@@ -62,6 +62,7 @@ export function EmailPage() {
   const [testEmailInput, setTestEmailInput] = useState("");
   const [testing, setTesting] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [showUsageGuide, setShowUsageGuide] = useState(false);
 
   const [initialState, setInitialState] = useState<FormState | null>(null);
 
@@ -424,123 +425,30 @@ export function EmailPage() {
           {/* Section 2: Sender Info & Templates */}
           <Card className="shadow-2xs">
             <CardHeader>
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <Mail className="size-4.5" />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <Mail className="size-4.5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Mẫu Email & Tự động hóa</CardTitle>
+                    <CardDescription className="text-xs">Thiết lập tiêu đề, nội dung mẫu và quy tắc tự động gửi</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-base">Mẫu Email & Tự động hóa</CardTitle>
-                  <CardDescription className="text-xs">Thiết lập tiêu đề, nội dung mẫu và quy tắc tự động gửi</CardDescription>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUsageGuide(true)}
+                  className="h-8 text-xs gap-1.5 border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300 font-medium w-full sm:w-auto"
+                >
+                  <BookOpen className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  Hướng dẫn điền & sử dụng
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Hướng dẫn điền thông tin & Hướng dẫn sử dụng */}
-              <div className="rounded-xl border border-blue-200/80 bg-blue-50/40 dark:bg-blue-950/20 dark:border-blue-900/60 p-4 space-y-3.5">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
-                    <BookOpen className="size-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground">Hướng dẫn điền thông tin & Hướng dẫn sử dụng</h4>
-                    <p className="text-xs text-muted-foreground">Tài liệu hướng dẫn nhanh cho quản trị viên thiết lập hệ thống gửi email</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* 🔴 2 Thông tin BẮT BUỘC phải điền */}
-                  <div className="p-3 rounded-lg border border-red-200/80 bg-red-50/50 dark:bg-red-950/25 dark:border-red-900/40 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-red-700 dark:text-red-400">
-                      <span className="size-2 rounded-full bg-red-500 inline-block shrink-0"></span>
-                      2 Thông tin BẮT BUỘC phải điền:
-                    </div>
-                    <ul className="space-y-2 text-xs text-foreground/90">
-                      <li className="space-y-0.5">
-                        <div className="font-semibold text-red-900 dark:text-red-300">1. Mật khẩu ứng dụng (App Password):</div>
-                        <p className="text-muted-foreground text-[11px] leading-relaxed">
-                          (Tại mục <em>Máy chủ gửi thư SMTP</em>): Dán chuỗi <strong>16 ký tự</strong> do Google cấp (ví dụ: <code className="bg-red-100/80 dark:bg-red-950 px-1 py-0.5 rounded font-mono text-[11px] font-bold text-red-800 dark:text-red-300">abcd efgh ijkl mnop</code>).
-                        </p>
-                      </li>
-                      <li className="space-y-0.5">
-                        <div className="font-semibold text-red-900 dark:text-red-300">2. Email người gửi:</div>
-                        <p className="text-muted-foreground text-[11px] leading-relaxed">
-                          (Tại mục <em>Mẫu Email & Tự động hóa</em> ngay bên dưới): Nhập chính xác <strong>địa chỉ Gmail thật</strong> của bạn (chính là tài khoản Google dùng tạo 16 ký tự mật khẩu ứng dụng ở trên).
-                        </p>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* 💡 Quy trình thao tác nhanh (1 phút) */}
-                  <div className="p-3 rounded-lg border border-amber-200/80 bg-amber-50/50 dark:bg-amber-950/25 dark:border-amber-900/40 space-y-2 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-400">
-                        <Clock className="size-3.5" />
-                        Quy trình thao tác nhanh (1 phút):
-                      </div>
-                      <div className="mt-2 text-xs text-foreground/90 flex flex-wrap items-center gap-1.5 leading-relaxed">
-                        <span className="font-medium bg-background/90 px-2 py-1 rounded border text-[11px] shadow-2xs">1. Điền Mật khẩu ứng dụng</span>
-                        <ArrowRight className="size-3 text-muted-foreground shrink-0" />
-                        <span className="font-medium bg-background/90 px-2 py-1 rounded border text-[11px] shadow-2xs">2. Điền Email người gửi (Gmail)</span>
-                        <ArrowRight className="size-3 text-muted-foreground shrink-0" />
-                        <span className="font-medium bg-background/90 px-2 py-1 rounded border text-[11px] shadow-2xs">3. Bấm Lưu cấu hình email</span>
-                        <ArrowRight className="size-3 text-muted-foreground shrink-0" />
-                        <span className="font-medium bg-background/90 px-2 py-1 rounded border text-[11px] shadow-2xs">4. Gửi thử nghiệm</span>
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground italic pt-1">
-                      💡 <strong>Mẹo:</strong> Sau khi bấm Lưu, hãy nhập email vào ô thử nghiệm bên trên để kiểm tra kết nối ngay lập tức.
-                    </p>
-                  </div>
-                </div>
-
-                {/* 🟢 Các thông tin KHÔNG CẦN ĐỔI (Đã có sẵn mặc định) */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
-                    <span className="size-2 rounded-full bg-emerald-500 inline-block shrink-0"></span>
-                    Các thông tin KHÔNG CẦN ĐỔI (Đã có sẵn mặc định):
-                  </div>
-                  <div className="rounded-lg border overflow-hidden bg-background">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/40 text-[11px]">
-                          <TableHead className="w-[190px] font-bold h-8">Mục</TableHead>
-                          <TableHead className="w-[180px] font-bold h-8">Giá trị mặc định</TableHead>
-                          <TableHead className="font-bold h-8">Hướng dẫn</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody className="text-xs">
-                        <TableRow>
-                          <TableCell className="font-medium py-1.5">SMTP Server Host</TableCell>
-                          <TableCell className="font-mono text-muted-foreground py-1.5 text-[11px]">smtp.gmail.com</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Giữ nguyên (nếu dùng Gmail).</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium py-1.5">SMTP Port</TableCell>
-                          <TableCell className="font-mono text-muted-foreground py-1.5 text-[11px]">587</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Giữ nguyên.</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium py-1.5">Tên người gửi</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">SellFlow Admin</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Có thể đổi thành Tên công ty của bạn (ví dụ: Công ty ABC).</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium py-1.5">Tiêu đề & Nội dung mẫu</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Đã soạn sẵn đầy đủ biến số</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Giữ nguyên hoặc sửa đổi câu chữ theo ý muốn.</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium py-1.5">Tự động gửi & Đính kèm PDF</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Bật/tắt công tắc</TableCell>
-                          <TableCell className="text-muted-foreground py-1.5 text-[11px]">Tùy chọn theo nhu cầu gửi tự động khi ký hợp đồng.</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium">Tên người gửi</Label>
                   <Input
@@ -747,6 +655,116 @@ export function EmailPage() {
 
           <DialogFooter className="border-t pt-3">
             <Button className="w-full sm:w-auto text-xs" onClick={() => setShowGuide(false)}>
+              Đã hiểu, đóng hướng dẫn
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Usage & Field Filling Guide Dialog */}
+      <Dialog open={showUsageGuide} onOpenChange={setShowUsageGuide}>
+        <DialogContent className="sm:max-w-xl max-w-xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5 mb-1">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                <BookOpen className="size-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-foreground">Hướng dẫn điền thông tin & Sử dụng</DialogTitle>
+                <DialogDescription className="text-xs">Tóm tắt ngắn gọn quy tắc cấu hình và các bước thực hiện nhanh</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3.5 py-2 text-xs">
+            {/* 🔴 2 Thông tin BẮT BUỘC phải điền */}
+            <div className="p-3.5 rounded-xl border border-red-200 bg-red-50/50 dark:bg-red-950/25 dark:border-red-900/50 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-red-700 dark:text-red-400">
+                <span className="size-2.5 rounded-full bg-red-500 inline-block shrink-0"></span>
+                2 Thông tin BẮT BUỘC phải điền:
+              </div>
+              <div className="space-y-2 pl-3 border-l-2 border-red-300 dark:border-red-800 text-xs">
+                <div>
+                  <strong className="text-red-950 dark:text-red-200">1. Mật khẩu ứng dụng (App Password)</strong>
+                  <span className="text-muted-foreground text-[11px] block">
+                    (Tại mục <em>Máy chủ gửi thư SMTP</em>): Dán chuỗi <strong>16 ký tự</strong> do Google cấp (ví dụ: <code className="bg-red-100 dark:bg-red-950/80 px-1 py-0.5 rounded font-mono text-[11px] font-bold text-red-800 dark:text-red-300">abcd efgh ijkl mnop</code>).
+                  </span>
+                </div>
+                <div>
+                  <strong className="text-red-950 dark:text-red-200">2. Email người gửi</strong>
+                  <span className="text-muted-foreground text-[11px] block">
+                    (Tại mục <em>Mẫu Email & Tự động hóa</em> ngay bên dưới): Nhập chính xác <strong>địa chỉ Gmail thật</strong> của bạn (chính là tài khoản Google dùng để tạo 16 ký tự mật khẩu ứng dụng ở trên).
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 🟢 Các thông tin KHÔNG CẦN ĐỔI (Đã có sẵn mặc định) */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                <span className="size-2.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>
+                Các thông tin KHÔNG CẦN ĐỔI (Đã có sẵn mặc định):
+              </div>
+              <div className="rounded-lg border overflow-hidden bg-background">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/40 text-[11px]">
+                      <TableHead className="w-[170px] font-bold h-8">Mục</TableHead>
+                      <TableHead className="w-[140px] font-bold h-8">Giá trị mặc định</TableHead>
+                      <TableHead className="font-bold h-8">Hướng dẫn</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="text-xs">
+                    <TableRow>
+                      <TableCell className="font-medium py-1.5">SMTP Server Host</TableCell>
+                      <TableCell className="font-mono text-muted-foreground py-1.5 text-[11px]">smtp.gmail.com</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Giữ nguyên (nếu dùng Gmail).</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium py-1.5">SMTP Port</TableCell>
+                      <TableCell className="font-mono text-muted-foreground py-1.5 text-[11px]">587</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Giữ nguyên.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium py-1.5">Tên người gửi</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">SellFlow Admin</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Có thể đổi thành Tên công ty của bạn (ví dụ: Công ty ABC).</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium py-1.5">Tiêu đề & Nội dung mẫu</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Đã soạn sẵn đầy đủ</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Giữ nguyên hoặc sửa đổi câu chữ theo ý muốn.</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="font-medium py-1.5">Tự động gửi & Đính kèm PDF</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Bật/tắt công tắc</TableCell>
+                      <TableCell className="text-muted-foreground py-1.5 text-[11px]">Tùy chọn theo nhu cầu gửi tự động khi ký hợp đồng.</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            {/* 💡 Quy trình thao tác nhanh (1 phút) */}
+            <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 dark:bg-amber-950/25 dark:border-amber-900/50 space-y-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-400">
+                <Clock className="size-3.5" />
+                Quy trình thao tác nhanh (1 phút):
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-foreground/90">
+                <span className="font-medium bg-background px-2 py-1 rounded border text-[11px] shadow-2xs">Điền Mật khẩu ứng dụng</span>
+                <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                <span className="font-medium bg-background px-2 py-1 rounded border text-[11px] shadow-2xs">Điền Email người gửi (Gmail)</span>
+                <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                <span className="font-medium bg-background px-2 py-1 rounded border text-[11px] shadow-2xs">Bấm Lưu cấu hình email</span>
+                <ArrowRight className="size-3 text-muted-foreground shrink-0" />
+                <span className="font-medium bg-background px-2 py-1 rounded border text-[11px] shadow-2xs">Gửi thử nghiệm</span>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="border-t pt-3">
+            <Button className="w-full sm:w-auto text-xs" onClick={() => setShowUsageGuide(false)}>
               Đã hiểu, đóng hướng dẫn
             </Button>
           </DialogFooter>
