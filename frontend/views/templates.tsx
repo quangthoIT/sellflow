@@ -89,37 +89,37 @@ function renderTemplatePreview(template: Template, settings: AppSettings | null)
         <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">Thiết bị & Giải pháp phần mềm trọn gói</td>
         <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">bộ</td>
         <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">1</td>
-        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">25,000,000</td>
-        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">25,000,000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">25.000.000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">25.000.000</td>
       </tr>
       <tr>
         <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">2</td>
         <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">Dịch vụ triển khai & Đào tạo hướng dẫn</td>
         <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">gói</td>
         <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">1</td>
-        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">5,000,000</td>
-        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">5,000,000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">5.000.000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">5.000.000</td>
       </tr>
     </tbody>
     <tfoot>
       <tr style="font-weight:bold;">
         <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tổng tiền hàng:</td>
-        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">30,000,000 đ</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">30.000.000 đ</td>
       </tr>
       <tr style="font-weight:bold;">
         <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Thuế GTGT (10%):</td>
-        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">3,000,000 đ</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">3.000.000 đ</td>
       </tr>
       <tr style="font-weight:bold;background:#f1f5f9;">
         <td colspan="5" style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">TỔNG CỘNG THANH TOÁN:</td>
-        <td style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">33,000,000 đ</td>
+        <td style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">33.000.000 đ</td>
       </tr>
     </tfoot>
   </table>`;
 
   const samplePaymentTerms = `<div style="margin-top:8px;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
-    <p style="margin-bottom:4px;font-size:12pt;color:#000000;">- Đợt 1: Tạm ứng 50% ngay sau khi ký hợp đồng / xác nhận đơn hàng (<strong>16,500,000 đ</strong>).</p>
-    <p style="margin-bottom:4px;font-size:12pt;color:#000000;">- Đợt 2: Thanh toán 50% còn lại sau khi bàn giao & nghiệm thu đầy đủ (<strong>16,500,000 đ</strong>).</p>
+    <p style="margin-bottom:4px;font-size:12pt;color:#000000;">- Đợt 1: Tạm ứng 50% ngay sau khi ký hợp đồng / xác nhận đơn hàng (<strong>16.500.000 đ</strong>).</p>
+    <p style="margin-bottom:4px;font-size:12pt;color:#000000;">- Đợt 2: Thanh toán 50% còn lại sau khi bàn giao & nghiệm thu đầy đủ (<strong>16.500.000 đ</strong>).</p>
   </div>`;
 
   const companyName = settings?.company_name || "CÔNG TY BÁN HÀNG";
@@ -140,11 +140,11 @@ function renderTemplatePreview(template: Template, settings: AppSettings | null)
     SDT_KHACH_HANG: "0988 123 456",
     EMAIL_KHACH_HANG: "khachhang@congtyabc.com",
     BANG_SAN_PHAM: sampleTable,
-    TAM_TINH: "30,000,000 đ",
-    VAT: "3,000,000 đ",
-    TONG_TIEN: "33,000,000 đ",
-    DA_THANH_TOAN: "16,500,000 đ",
-    CON_PHAI_THU: "16,500,000 đ",
+    TAM_TINH: "30.000.000 đ",
+    VAT: "3.000.000 đ",
+    TONG_TIEN: "33.000.000 đ",
+    DA_THANH_TOAN: "16.500.000 đ",
+    CON_PHAI_THU: "16.500.000 đ",
     DIEU_KHOAN_THANH_TOAN: samplePaymentTerms,
     GHI_CHU: "Báo giá/Hợp đồng đã bao gồm chi phí vận chuyển và bảo hành 12 tháng tại nơi sử dụng.",
     PAGE: "1",

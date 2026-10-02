@@ -1,15 +1,23 @@
+export function formatNumber(n: number): string {
+  if (n == null || isNaN(n)) return "0";
+  const isNeg = n < 0;
+  const numStr = Math.abs(Math.round(n)).toString();
+  const formatted = numStr.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return isNeg ? `-${formatted}` : formatted;
+}
+
 export function formatVND(n: number): string {
   if (n == null || isNaN(n)) return "0đ";
-  return new Intl.NumberFormat("vi-VN").format(Math.round(n)) + "đ";
+  return formatNumber(n) + "đ";
 }
 
 export function formatVNDShort(n: number): string {
   if (n == null || isNaN(n)) return "0đ";
   const abs = Math.abs(n);
-  if (abs >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + " tỷ";
+  if (abs >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(".", ",") + " tỷ";
   if (abs >= 1_000_000) return (n / 1_000_000).toFixed(0) + " triệu";
   if (abs >= 1_000) return (n / 1_000).toFixed(0) + "k";
-  return n + "đ";
+  return formatVND(n);
 }
 
 export function formatDate(d: string | null): string {

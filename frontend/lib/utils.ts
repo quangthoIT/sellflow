@@ -7,6 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number | string): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  if (isNaN(num)) return '0 ₫';
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+  if (num == null || isNaN(num)) return '0 ₫';
+  const isNeg = num < 0;
+  const numStr = Math.abs(Math.round(num)).toString();
+  const formatted = numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${isNeg ? '-' : ''}${formatted} ₫`;
 }
+
