@@ -412,35 +412,35 @@ export function LoginPage() {
                 <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                   {/* Email Field */}
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <Input
                       type="text"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Email hoặc Tên đăng nhập"
-                      className="pl-10.5 pr-3 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
+                      placeholder="admin@sellflow.vn"
+                      className="pl-11 pr-4 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
                       required
                     />
                   </div>
 
                   {/* Password Field */}
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Mật khẩu"
-                      className="pl-10.5 pr-10 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
+                      className="pl-11 pr-11 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors p-1"
                       tabIndex={-1}
                     >
-                      {showPassword ? <EyeOff className="size-4.5" /> : <Eye className="size-4.5" />}
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
 
@@ -472,7 +472,7 @@ export function LoginPage() {
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="size-4.5 animate-spin" /> Đang đăng nhập...
+                        <Loader2 className="size-4 animate-spin" /> Đang đăng nhập...
                       </>
                     ) : (
                       "Đăng nhập"
@@ -509,10 +509,10 @@ export function LoginPage() {
             {viewMode === "register_step1" && (
               <div>
                 {/* Stepper Header */}
-                <div className="flex items-center justify-between max-w-[280px] mx-auto mb-4 relative">
+                <div className="flex items-center justify-between max-w-[260px] mx-auto mb-4 relative">
                   <div className="flex items-center flex-1">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="w-7 h-7 min-w-[28px] rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         1
                       </div>
                       <span className="text-[11px] font-bold text-[#0062cc] dark:text-blue-400">
@@ -520,10 +520,10 @@ export function LoginPage() {
                       </span>
                     </div>
 
-                    <div className="flex-1 h-[2px] mx-2 -mt-3.5 bg-slate-200 dark:bg-slate-800" />
+                    <div className="flex-1 h-[2px] mx-3 -mt-3.5 bg-slate-200 dark:bg-slate-800" />
 
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="size-6.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs font-bold">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="w-7 h-7 min-w-[28px] rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-xs font-bold">
                         2
                       </div>
                       <span className="text-[11px] font-medium text-slate-400">
@@ -546,7 +546,7 @@ export function LoginPage() {
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
                         placeholder="admin@sellflow.vn"
-                        className="pl-10 h-10 text-sm rounded-xl"
+                        className="pl-11 h-10 text-sm rounded-xl"
                         required
                       />
                     </div>
@@ -564,13 +564,13 @@ export function LoginPage() {
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="pl-10 pr-10 h-10 text-sm rounded-xl"
+                        className="pl-11 pr-11 h-10 text-sm rounded-xl"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowRegPassword(!showRegPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
                         tabIndex={-1}
                       >
                         {showRegPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -609,13 +609,13 @@ export function LoginPage() {
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="pl-10 pr-10 h-10 text-sm rounded-xl"
+                        className="pl-11 pr-11 h-10 text-sm rounded-xl"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowRegConfirmPassword(!showRegConfirmPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
                         tabIndex={-1}
                       >
                         {showRegConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -650,10 +650,10 @@ export function LoginPage() {
             {viewMode === "register_step2" && (
               <div>
                 {/* Stepper Header */}
-                <div className="flex items-center justify-between max-w-[280px] mx-auto mb-3.5 relative">
+                <div className="flex items-center justify-between max-w-[260px] mx-auto mb-3.5 relative">
                   <div className="flex items-center flex-1">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="w-7 h-7 min-w-[28px] rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         <Check className="size-3.5 stroke-[3]" />
                       </div>
                       <span className="text-[11px] font-semibold text-[#0062cc] dark:text-blue-400">
@@ -661,10 +661,10 @@ export function LoginPage() {
                       </span>
                     </div>
 
-                    <div className="flex-1 h-[2px] mx-2 -mt-3.5 bg-[#0062cc]" />
+                    <div className="flex-1 h-[2px] mx-3 -mt-3.5 bg-[#0062cc]" />
 
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="w-7 h-7 min-w-[28px] rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         2
                       </div>
                       <span className="text-[11px] font-bold text-[#0062cc] dark:text-blue-400">
@@ -687,7 +687,7 @@ export function LoginPage() {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Công ty TNHH SellFlow"
-                        className="pl-10 h-10 text-sm rounded-xl"
+                        className="pl-11 h-10 text-sm rounded-xl"
                         required
                       />
                     </div>
@@ -755,7 +755,7 @@ export function LoginPage() {
                           value={companyTax}
                           onChange={(e) => setCompanyTax(e.target.value)}
                           placeholder="Mã số thuế"
-                          className="pl-10 h-10 text-sm rounded-xl"
+                          className="pl-11 h-10 text-sm rounded-xl"
                         />
                       </div>
                     </div>
@@ -771,7 +771,7 @@ export function LoginPage() {
                           value={companyPhone}
                           onChange={(e) => setCompanyPhone(e.target.value)}
                           placeholder="Số hotline"
-                          className="pl-10 h-10 text-sm rounded-xl"
+                          className="pl-11 h-10 text-sm rounded-xl"
                         />
                       </div>
                     </div>
@@ -789,7 +789,7 @@ export function LoginPage() {
                         value={companyAddress}
                         onChange={(e) => setCompanyAddress(e.target.value)}
                         placeholder="Địa chỉ trụ sở chính"
-                        className="pl-10 h-10 text-sm rounded-xl"
+                        className="pl-11 h-10 text-sm rounded-xl"
                       />
                     </div>
                   </div>
