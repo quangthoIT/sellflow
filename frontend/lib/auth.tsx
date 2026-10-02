@@ -66,40 +66,85 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const defaultEnvPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123";
-    const defaultEnvEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@sellflow.vn";
+    const inputEmail = (email || "").trim().toLowerCase();
+    const cleanPassword = password || "";
+    const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
 
-    const validPassword =
+    // 1. Authenticate with Backend Database API
+    try {
+      const res = await fetch(`${apiBase}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inputEmail, password: cleanPassword }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.user) {
+          const sessionData: Session = {
+            access_token: data.token || "token-" + Date.now(),
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.name,
+              user_metadata: { name: data.user.name },
+            },
+          };
+          setSession(sessionData);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
+            localStorage.setItem("sellflow_logged_in", "true");
+            localStorage.setItem("sellflow_admin_password", cleanPassword);
+            localStorage.setItem("sellflow_admin_name", data.user.name);
+          }
+          window.location.href = "/dashboard";
+          return { error: null };
+        }
+      }
+    } catch (apiErr) {
+      console.warn("[Auth] Backend login request error, checking local credentials:", apiErr);
+    }
+
+    // 2. Fallback to locally registered / saved credentials
+    const defaultEnvPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123";
+    const defaultEnvEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@sellflow.vn").trim().toLowerCase();
+
+    const savedPassword =
       typeof window !== "undefined"
         ? localStorage.getItem("sellflow_admin_password") || defaultEnvPassword
         : defaultEnvPassword;
 
-    if (password !== validPassword) {
-      return { error: "Mật khẩu không chính xác. Vui lòng kiểm tra lại!" };
-    }
-
-    const savedName =
+    const savedEmail =
       typeof window !== "undefined"
-        ? localStorage.getItem("sellflow_admin_name") || "Quản trị viên"
-        : "Quản trị viên";
+        ? (localStorage.getItem("sellflow_remember_email") || defaultEnvEmail).trim().toLowerCase()
+        : defaultEnvEmail;
 
-    const sessionData: Session = {
-      access_token: "token-" + Date.now(),
-      user: {
-        id: "admin-1",
-        email: email || defaultEnvEmail,
-        name: savedName,
-        user_metadata: { name: savedName },
-      },
-    };
+    if (cleanPassword === savedPassword) {
+      const savedName =
+        typeof window !== "undefined"
+          ? localStorage.getItem("sellflow_admin_name") || "Quản trị viên"
+          : "Quản trị viên";
 
-    setSession(sessionData);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
-      localStorage.setItem("sellflow_logged_in", "true");
+      const sessionData: Session = {
+        access_token: "token-" + Date.now(),
+        user: {
+          id: "admin-1",
+          email: inputEmail || savedEmail,
+          name: savedName,
+          user_metadata: { name: savedName },
+        },
+      };
+
+      setSession(sessionData);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
+        localStorage.setItem("sellflow_logged_in", "true");
+      }
+      window.location.href = "/dashboard";
+      return { error: null };
     }
-    window.location.href = "/dashboard";
-    return { error: null };
+
+    return { error: "Email hoặc Mật khẩu không chính xác. Vui lòng kiểm tra lại!" };
   };
 
   const signOut = async () => {
