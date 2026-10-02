@@ -224,7 +224,7 @@ export function EmailPage() {
                   className="h-8 text-xs gap-1.5 border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300 font-medium w-full sm:w-auto"
                 >
                   <HelpCircle className="size-3.5 text-blue-600 dark:text-blue-400" />
-                  Hướng dẫn lấy thông tin (3 bước)
+                  Hướng dẫn lấy thông tin
                 </Button>
               </div>
             </CardHeader>
@@ -249,16 +249,7 @@ export function EmailPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium">Mật khẩu ứng dụng (App Password)</Label>
-                    <button
-                      type="button"
-                      onClick={() => setShowGuide(true)}
-                      className="text-[11px] text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5 font-medium"
-                    >
-                      <HelpCircle className="size-3" /> Cách lấy?
-                    </button>
-                  </div>
+                  <Label className="text-xs font-medium">Mật khẩu ứng dụng (App Password)</Label>
                   <Input
                     type="password"
                     value={smtpPassword}
