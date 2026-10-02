@@ -70,8 +70,9 @@ export function QuotesPage() {
   const customerName = (id: string | null) => customers.find((c) => c.id === id)?.name ?? "—";
 
   const quoteTotal = (id: string) => {
+    const q = quotes.find((x) => x.id === id);
     const items = allItems.filter((i) => i.quote_id === id);
-    return calcQuoteTotals(items, 0, 0, 0).total;
+    return calcQuoteTotals(items, q?.discount || 0, q?.vat_pct || 0, q?.shipping || 0).total;
   };
 
   const rows = quotes
@@ -868,6 +869,11 @@ function PaymentTermsEditor({ terms, total, onChange }: {
 }) {
   if (!terms) return null;
 
+  const totalPercent = Math.round(terms.installments.reduce((s, it) => s + (Number(it.percent) || 0), 0) * 100) / 100;
+  const totalAmount = terms.installments.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+  const isPercentComplete = Math.abs(totalPercent - 100) < 0.01;
+  const isAmountComplete = totalAmount === total;
+
   const setMethod = (method: string) => {
     onChange({ ...terms, method });
   };
@@ -892,10 +898,31 @@ function PaymentTermsEditor({ terms, total, onChange }: {
     }
   };
 
+  const splitEqually = () => {
+    const count = terms.installments.length;
+    if (count === 0) return;
+    const basePct = Math.floor((100 / count) * 100) / 100;
+    const remainderPct = Math.round((100 - basePct * count) * 100) / 100;
+
+    let remainingMoney = total;
+    const updated = terms.installments.map((it, i) => {
+      const isLast = i === count - 1;
+      const pct = isLast ? Math.round((basePct + remainderPct) * 100) / 100 : basePct;
+      const amt = isLast ? remainingMoney : Math.round((total * pct) / 100);
+      remainingMoney -= amt;
+      return {
+        ...it,
+        percent: pct,
+        amount: Math.max(0, amt),
+      };
+    });
+    onChange({ ...terms, installments: updated });
+  };
+
   const updateInstallment = (idx: number, field: keyof PaymentTerm, value: string | number) => {
     onChange({
       ...terms,
-      installments: terms.installments.map((it, i) => i === idx ? { ...it, [field]: value } : it),
+      installments: terms.installments.map((it, i) => (i === idx ? { ...it, [field]: value } : it)),
     });
   };
 
@@ -903,7 +930,7 @@ function PaymentTermsEditor({ terms, total, onChange }: {
     const amount = Math.round((total * percent) / 100);
     onChange({
       ...terms,
-      installments: terms.installments.map((it, i) => i === idx ? { ...it, percent, amount } : it),
+      installments: terms.installments.map((it, i) => (i === idx ? { ...it, percent, amount } : it)),
     });
   };
 
@@ -911,7 +938,7 @@ function PaymentTermsEditor({ terms, total, onChange }: {
     const percent = total > 0 ? Math.round((amount / total) * 100 * 100) / 100 : 0;
     onChange({
       ...terms,
-      installments: terms.installments.map((it, i) => i === idx ? { ...it, amount, percent } : it),
+      installments: terms.installments.map((it, i) => (i === idx ? { ...it, amount, percent } : it)),
     });
   };
 
@@ -926,7 +953,9 @@ function PaymentTermsEditor({ terms, total, onChange }: {
         <div className="space-y-1.5">
           <Label className="text-xs font-medium">Phương thức thanh toán</Label>
           <Select value={terms.method} onValueChange={setMethod}>
-            <SelectTrigger className="w-full h-9 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full h-9 text-xs">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="transfer">Chuyển khoản</SelectItem>
               <SelectItem value="cash">Tiền mặt</SelectItem>
@@ -935,14 +964,28 @@ function PaymentTermsEditor({ terms, total, onChange }: {
         </div>
 
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1">
-            <Label className="text-xs font-medium">Số đợt</Label>
-            <HelpCircle className="size-3.5 text-muted-foreground/70" />
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium">Số đợt thanh toán</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 text-[11px] text-blue-600 dark:text-blue-400 p-0 hover:bg-transparent"
+              onClick={splitEqually}
+            >
+              Chia đều %
+            </Button>
           </div>
           <Select value={String(terms.installments.length)} onValueChange={(v) => setInstallmentCount(+v)}>
-            <SelectTrigger className="w-full h-9 text-xs"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full h-9 text-xs">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              {[1, 2, 3, 4, 5, 6].map((n) => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} đợt
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -950,33 +993,82 @@ function PaymentTermsEditor({ terms, total, onChange }: {
 
       <div className="space-y-2.5">
         {terms.installments.map((it, idx) => (
-          <div key={idx} className="rounded-lg bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-3 space-y-2">
+          <div
+            key={idx}
+            className="rounded-lg bg-slate-50/80 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-3 space-y-2"
+          >
             <span className="text-xs font-semibold text-foreground block">Đợt {idx + 1}</span>
             <div className="flex items-end gap-2.5">
               <div className="w-[24%] space-y-1.5">
                 <Label className="text-xs text-muted-foreground font-medium">Ngày thanh toán</Label>
-                <Input type="date" className="h-9 text-xs bg-white dark:bg-slate-950" value={it.date} onChange={(e) => updateInstallment(idx, "date", e.target.value)} />
+                <Input
+                  type="date"
+                  className="h-9 text-xs bg-white dark:bg-slate-950"
+                  value={it.date}
+                  onChange={(e) => updateInstallment(idx, "date", e.target.value)}
+                />
               </div>
               <div className="w-[18%] space-y-1.5">
                 <Label className="text-xs text-muted-foreground font-medium">Phần trăm (%)</Label>
-                <Input type="number" className="h-9 text-xs text-right bg-white dark:bg-slate-950" value={it.percent} onChange={(e) => updatePercent(idx, +e.target.value)} />
+                <Input
+                  type="number"
+                  step="0.01"
+                  className="h-9 text-xs text-right bg-white dark:bg-slate-950 font-semibold"
+                  value={it.percent}
+                  onChange={(e) => updatePercent(idx, +e.target.value)}
+                />
               </div>
               <div className="w-[26%] space-y-1.5">
                 <Label className="text-xs text-muted-foreground font-medium">Số tiền (đ)</Label>
-                <Input type="number" className="h-9 text-xs text-right bg-white dark:bg-slate-950" value={it.amount} onChange={(e) => updateAmount(idx, +e.target.value)} />
+                <Input
+                  type="number"
+                  className="h-9 text-xs text-right bg-white dark:bg-slate-950 font-semibold"
+                  value={it.amount}
+                  onChange={(e) => updateAmount(idx, +e.target.value)}
+                />
               </div>
               <div className="flex-1 space-y-1.5">
                 <Label className="text-xs text-muted-foreground font-medium">Ghi chú</Label>
-                <Input className="h-9 text-xs bg-white dark:bg-slate-950" placeholder="Nhập ghi chú..." value={it.note || ""} onChange={(e) => updateInstallment(idx, "note", e.target.value)} />
+                <Input
+                  className="h-9 text-xs bg-white dark:bg-slate-950"
+                  placeholder="Nhập ghi chú..."
+                  value={it.note || ""}
+                  onChange={(e) => updateInstallment(idx, "note", e.target.value)}
+                />
               </div>
               {terms.installments.length > 1 && (
-                <Button size="sm" variant="ghost" className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => removeInstallment(idx)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => removeInstallment(idx)}
+                >
                   <Trash2 className="size-4" />
                 </Button>
               )}
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Summary Allocation Bar */}
+      <div className="flex items-center justify-between p-2.5 rounded-lg border bg-muted/30 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Tổng phân bổ:</span>
+          <span className="font-bold text-foreground">{formatVND(totalAmount)}</span>
+          <span className="text-muted-foreground">({totalPercent}%)</span>
+        </div>
+        <div>
+          {isPercentComplete && isAmountComplete ? (
+            <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] gap-1">
+              ✓ Khớp 100% tổng tiền
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-amber-700 dark:text-amber-400 bg-amber-500/10 text-[11px]">
+              Chênh lệch: {formatVND(total - totalAmount)} ({Math.round((100 - totalPercent) * 100) / 100}%)
+            </Badge>
+          )}
+        </div>
       </div>
     </div>
   );

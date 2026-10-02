@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { db, getCachedSettings, loadSettings, type Customer, type Quote, type Contract } from "@/lib/db";
-import { formatVND, formatDate, genId } from "@/lib/format";
+import { formatVND, formatDate, genId, calcQuoteTotals } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -247,8 +247,11 @@ function CustomerHistory({ customer, onOpenQuote, onOpenContract }: {
     })();
   }, [customer.id]);
 
-  const quoteTotal = (id: string) =>
-    quoteItems.filter((i) => i.quote_id === id).reduce((s, i) => s + i.qty * i.price - (i.discount || 0), 0);
+  const quoteTotal = (id: string) => {
+    const q = quotes.find((x) => x.id === id);
+    const items = quoteItems.filter((i) => i.quote_id === id);
+    return calcQuoteTotals(items, q?.discount || 0, q?.vat_pct || 0, q?.shipping || 0).total;
+  };
   const contractTotal = (id: string) =>
     contractItems.filter((i) => i.contract_id === id).reduce((s, i) => s + i.qty * i.price, 0);
   const contractPaid = (id: string) =>
