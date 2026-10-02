@@ -368,18 +368,6 @@ export function LoginPage() {
         <div className="lg:col-span-7 w-full">
           <div className="bg-white dark:bg-slate-900 rounded-[28px] sm:rounded-[32px] p-6 sm:p-8 md:p-10 shadow-2xl text-slate-800 dark:text-slate-100 border border-white/20 transition-all">
             
-            {/* Header: Logo SellFlow */}
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="size-8 rounded-full bg-[#0062cc] flex items-center justify-center text-white shadow-sm">
-                <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-              </div>
-              <span className="text-2xl font-black tracking-tight text-[#083874] dark:text-blue-400">
-                SellFlow
-              </span>
-            </div>
-
             {/* SCREEN 1: ĐĂNG NHẬP */}
             {viewMode === "login" && (
               <div>
