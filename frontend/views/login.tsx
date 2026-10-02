@@ -370,7 +370,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950 p-3 sm:p-5 md:p-8">
       {/* Outer Banner Card Container with Fixed Standard Size */}
       <div
-        className="w-full max-w-5xl min-h-[540px] lg:h-[570px] rounded-[28px] sm:rounded-[36px] overflow-hidden shadow-2xl shadow-blue-500/20 bg-cover bg-center p-5 sm:p-8 md:p-10 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative transition-all"
+        className="w-full max-w-6xl min-h-[550px] lg:h-[590px] rounded-[28px] sm:rounded-[36px] overflow-hidden shadow-2xl shadow-blue-500/20 bg-cover bg-center p-6 sm:p-8 md:p-10 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center relative transition-all"
         style={{ backgroundImage: "url('/assets/images/bg.png')" }}
       >
         {/* Left Side: Dynamic Informational Banner */}
@@ -395,7 +395,7 @@ export function LoginPage() {
 
         {/* Right Side: Interactive White Card */}
         <div className="lg:col-span-7 w-full flex items-center justify-center">
-          <div className="bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[28px] p-5 sm:p-7 md:p-8 shadow-2xl text-slate-800 dark:text-slate-100 border border-white/20 transition-all">
+          <div className="w-full max-w-[480px] bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[28px] p-6 sm:p-7 md:p-8 shadow-2xl text-slate-800 dark:text-slate-100 border border-white/20 transition-all">
             
             {/* SCREEN 1: ĐĂNG NHẬP */}
             {viewMode === "login" && (
@@ -418,7 +418,7 @@ export function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Email hoặc Tên đăng nhập"
-                      className="pl-10 pr-3 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
+                      className="pl-10.5 pr-3 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
                       required
                     />
                   </div>
@@ -431,7 +431,7 @@ export function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Mật khẩu"
-                      className="pl-10 pr-10 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
+                      className="pl-10.5 pr-10 h-10.5 text-sm rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 text-slate-900 dark:text-white"
                       required
                     />
                     <button
@@ -509,7 +509,7 @@ export function LoginPage() {
             {viewMode === "register_step1" && (
               <div>
                 {/* Stepper Header */}
-                <div className="flex items-center justify-between max-w-[260px] mx-auto mb-4 relative">
+                <div className="flex items-center justify-between max-w-[280px] mx-auto mb-4 relative">
                   <div className="flex items-center flex-1">
                     <div className="flex flex-col items-center gap-1">
                       <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
@@ -546,7 +546,7 @@ export function LoginPage() {
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
                         placeholder="admin@sellflow.vn"
-                        className="pl-10 h-10 text-xs rounded-xl"
+                        className="pl-10 h-10 text-sm rounded-xl"
                         required
                       />
                     </div>
@@ -564,7 +564,7 @@ export function LoginPage() {
                         value={regPassword}
                         onChange={(e) => setRegPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="pl-10 pr-10 h-10 text-xs rounded-xl"
+                        className="pl-10 pr-10 h-10 text-sm rounded-xl"
                         required
                       />
                       <button
@@ -609,7 +609,7 @@ export function LoginPage() {
                         value={regConfirmPassword}
                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                         placeholder="••••••••••••"
-                        className="pl-10 pr-10 h-10 text-xs rounded-xl"
+                        className="pl-10 pr-10 h-10 text-sm rounded-xl"
                         required
                       />
                       <button
@@ -650,7 +650,7 @@ export function LoginPage() {
             {viewMode === "register_step2" && (
               <div>
                 {/* Stepper Header */}
-                <div className="flex items-center justify-between max-w-[260px] mx-auto mb-3.5 relative">
+                <div className="flex items-center justify-between max-w-[280px] mx-auto mb-3.5 relative">
                   <div className="flex items-center flex-1">
                     <div className="flex flex-col items-center gap-1">
                       <div className="size-6.5 rounded-full bg-[#0062cc] text-white flex items-center justify-center text-xs font-bold shadow-sm">
@@ -687,7 +687,7 @@ export function LoginPage() {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="Công ty TNHH SellFlow"
-                        className="pl-10 h-9.5 text-xs rounded-xl"
+                        className="pl-10 h-10 text-sm rounded-xl"
                         required
                       />
                     </div>
@@ -743,19 +743,19 @@ export function LoginPage() {
                   </div>
 
                   {/* Tax Code & Phone Grid */}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                         Mã số thuế
                       </label>
                       <div className="relative">
-                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
+                        <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                         <Input
                           type="text"
                           value={companyTax}
                           onChange={(e) => setCompanyTax(e.target.value)}
                           placeholder="Mã số thuế"
-                          className="pl-8.5 h-9 text-xs rounded-xl"
+                          className="pl-10 h-10 text-sm rounded-xl"
                         />
                       </div>
                     </div>
@@ -765,13 +765,13 @@ export function LoginPage() {
                         Số điện thoại
                       </label>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
+                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                         <Input
                           type="text"
                           value={companyPhone}
                           onChange={(e) => setCompanyPhone(e.target.value)}
                           placeholder="Số hotline"
-                          className="pl-8.5 h-9 text-xs rounded-xl"
+                          className="pl-10 h-10 text-sm rounded-xl"
                         />
                       </div>
                     </div>
@@ -783,13 +783,13 @@ export function LoginPage() {
                       Địa chỉ công ty
                     </label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400 pointer-events-none" />
+                      <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400 pointer-events-none" />
                       <Input
                         type="text"
                         value={companyAddress}
                         onChange={(e) => setCompanyAddress(e.target.value)}
                         placeholder="Địa chỉ trụ sở chính"
-                        className="pl-8.5 h-9 text-xs rounded-xl"
+                        className="pl-10 h-10 text-sm rounded-xl"
                       />
                     </div>
                   </div>
