@@ -181,6 +181,7 @@ export function LoginPage() {
     setRegLoading(true);
 
     try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
       // 1. Call Backend API to register user and company settings
       const payload = {
         email: regEmail.trim(),
@@ -193,7 +194,7 @@ export function LoginPage() {
       };
 
       try {
-        await fetch("http://localhost:4000/api/auth/register", {
+        await fetch(`${apiBase}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -252,6 +253,7 @@ export function LoginPage() {
     setCooldown(60);
 
     try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
       let smtpOptions: any = undefined;
       if (typeof window !== "undefined") {
         const raw = localStorage.getItem("sellflow_email_settings");
@@ -269,7 +271,7 @@ export function LoginPage() {
         }
       }
 
-      await fetch("http://localhost:4000/api/emails/send-otp", {
+      await fetch(`${apiBase}/emails/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

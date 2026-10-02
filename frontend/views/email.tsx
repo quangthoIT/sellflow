@@ -236,7 +236,8 @@ export function EmailPage() {
     }
     setTesting(true);
     try {
-      const res = await fetch("http://localhost:4000/api/emails/send-otp", {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
+      const res = await fetch(`${apiBase}/emails/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
