@@ -57,33 +57,6 @@ export const DEFAULT_TEMPLATES = [
     {{BANG_SAN_PHAM}}
   </div>
 
-  <!-- Bảng Tổng kết chi phí -->
-  <table style="width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 24px; font-size: 11.5pt;">
-    <tr>
-      <td style="width: 55%; vertical-align: top; padding-right: 16px;">
-        <div style="font-size: 10.5pt; color: #475569; font-style: italic;">
-          * Báo giá đã bao gồm các hỗ trợ kỹ thuật tiêu chuẩn và chính sách bảo hành chính hãng.
-        </div>
-      </td>
-      <td style="width: 45%; vertical-align: top;">
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 4px 8px; text-align: left; color: #475569;">Cộng tiền hàng:</td>
-            <td style="padding: 4px 8px; text-align: right; font-weight: bold;">{{TAM_TINH}}</td>
-          </tr>
-          <tr>
-            <td style="padding: 4px 8px; text-align: left; color: #475569;">Thuế GTGT (VAT):</td>
-            <td style="padding: 4px 8px; text-align: right; font-weight: bold;">{{VAT}}</td>
-          </tr>
-          <tr style="border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a; background-color: #f1f5f9;">
-            <td style="padding: 8px 8px; text-align: left; font-weight: bold; color: #0f172a; font-size: 12pt;">TỔNG CỘNG:</td>
-            <td style="padding: 8px 8px; text-align: right; font-weight: bold; color: #b91c1c; font-size: 13pt;">{{TONG_TIEN}}</td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-
   <!-- Điều khoản & Điều kiện -->
   <div style="margin-bottom: 24px; font-size: 11pt; line-height: 1.5;">
     <strong style="color: #0f172a; font-size: 11.5pt;">ĐIỀU KHOẢN VÀ ĐIỀU KIỆN THƯƠNG MẠI:</strong>

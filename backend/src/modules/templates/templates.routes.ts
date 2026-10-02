@@ -3,16 +3,13 @@ import { db } from '../../config/db.js';
 import { DEFAULT_TEMPLATES } from './default-templates.js';
 
 export async function templatesRoutes(fastify: FastifyInstance) {
-  // Ensure default standard templates exist on startup / first query
+  // Ensure default standard templates exist and remain up-to-date
   const ensureDefaultTemplates = async () => {
     try {
       for (const t of DEFAULT_TEMPLATES) {
         await db.template.upsert({
           where: { id: t.id },
           update: {
-            name: t.name,
-            type: t.type,
-            paper: t.paper,
             content: t.content,
           },
           create: t,
@@ -23,12 +20,12 @@ export async function templatesRoutes(fastify: FastifyInstance) {
     }
   };
 
+  // Run on startup
+  ensureDefaultTemplates();
+
   fastify.get('/', async () => {
     try {
-      const count = await db.template.count();
-      if (count === 0) {
-        await ensureDefaultTemplates();
-      }
+      await ensureDefaultTemplates();
       return await db.template.findMany({ orderBy: [{ type: 'asc' }, { createdAt: 'desc' }] });
     } catch (err) {
       return [];
