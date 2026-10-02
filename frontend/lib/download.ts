@@ -100,6 +100,7 @@ export async function downloadPdf(title: string, html: string) {
     container.style.background = "#ffffff";
     container.style.color = "#000000";
     container.style.fontFamily = "'Times New Roman', Times, serif";
+    container.style.fontSize = "12pt";
     container.style.padding = "20px 24px";
     container.style.boxSizing = "border-box";
     container.innerHTML = cleanHtml;
@@ -131,7 +132,8 @@ export async function downloadPdf(title: string, html: string) {
 <title>${title}</title>
 <style>
   @page { size: A4 portrait; margin: 12mm; }
-  html, body { margin: 0; padding: 0; color: #000; background: #fff; }
+  html, body { margin: 0; padding: 0; color: #000000; background: #ffffff; font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
+  h2 { font-size: 16pt !important; }
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .html2pdf__page-break, [data-page-break="true"] { page-break-before: always !important; display: block !important; height: 0 !important; visibility: hidden !important; }
@@ -154,8 +156,9 @@ export function downloadWord(title: string, html: string) {
 <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
 <style>
 @page { size: A4 portrait; margin: 15mm 15mm 15mm 15mm; }
-body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.4; color: #000; }
-table { border-collapse: collapse; width: 100%; }
+body { margin: 0; padding: 0; font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.4; color: #000000; }
+h2 { font-size: 16pt; }
+table { border-collapse: collapse; width: 100%; font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
 </style>
 </head><body>`;
   const footer = "</body></html>";

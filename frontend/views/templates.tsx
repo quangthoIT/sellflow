@@ -74,52 +74,52 @@ const VARIABLES = [
 function renderTemplatePreview(template: Template, settings: AppSettings | null): string {
   if (!template?.content) return "<p>Mẫu trống</p>";
 
-  const sampleTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;">
-    <thead><tr style="background:#f1f5f9;">
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">STT</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left;">Tên sản phẩm / Dịch vụ</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:center;">ĐVT</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Số lượng</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Đơn giá (đ)</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thành tiền (đ)</th>
+  const sampleTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
+    <thead><tr style="background:#f1f5f9;font-weight:bold;">
+      <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">STT</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Tên sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">ĐVT</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Số lượng</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Đơn giá (đ)</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
       <tr>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">1</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;">Thiết bị & Giải pháp phần mềm trọn gói</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">bộ</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">1</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">25,000,000</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">25,000,000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">1</td>
+        <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">Thiết bị & Giải pháp phần mềm trọn gói</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">bộ</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">1</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">25,000,000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">25,000,000</td>
       </tr>
       <tr>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">2</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;">Dịch vụ triển khai & Đào tạo hướng dẫn</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center;">gói</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">1</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">5,000,000</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">5,000,000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">2</td>
+        <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">Dịch vụ triển khai & Đào tạo hướng dẫn</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">gói</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">1</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">5,000,000</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">5,000,000</td>
       </tr>
     </tbody>
     <tfoot>
-      <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">30,000,000 đ</td>
+      <tr style="font-weight:bold;">
+        <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tổng tiền hàng:</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">30,000,000 đ</td>
       </tr>
-      <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thuế GTGT (10%):</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">3,000,000 đ</td>
+      <tr style="font-weight:bold;">
+        <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Thuế GTGT (10%):</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">3,000,000 đ</td>
       </tr>
-      <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
-        <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">33,000,000 đ</td>
+      <tr style="font-weight:bold;background:#f1f5f9;">
+        <td colspan="5" style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">TỔNG CỘNG THANH TOÁN:</td>
+        <td style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">33,000,000 đ</td>
       </tr>
     </tfoot>
   </table>`;
 
-  const samplePaymentTerms = `<div style="margin-top:8px;">
-    <p style="margin-bottom:4px;">- Đợt 1: Tạm ứng 50% ngay sau khi ký hợp đồng / xác nhận đơn hàng (<strong>16,500,000 đ</strong>).</p>
-    <p style="margin-bottom:4px;">- Đợt 2: Thanh toán 50% còn lại sau khi bàn giao & nghiệm thu đầy đủ (<strong>16,500,000 đ</strong>).</p>
+  const samplePaymentTerms = `<div style="margin-top:8px;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
+    <p style="margin-bottom:4px;font-size:12pt;color:#000000;">- Đợt 1: Tạm ứng 50% ngay sau khi ký hợp đồng / xác nhận đơn hàng (<strong>16,500,000 đ</strong>).</p>
+    <p style="margin-bottom:4px;font-size:12pt;color:#000000;">- Đợt 2: Thanh toán 50% còn lại sau khi bàn giao & nghiệm thu đầy đủ (<strong>16,500,000 đ</strong>).</p>
   </div>`;
 
   const companyName = settings?.company_name || "CÔNG TY BÁN HÀNG";
@@ -133,7 +133,7 @@ function renderTemplatePreview(template: Template, settings: AppSettings | null)
     SDT_CONG_TY: settings?.company_phone || "0901 234 567",
     EMAIL_CONG_TY: settings?.company_email || "contact@doanhnghiep.vn",
     MST_CONG_TY: settings?.company_tax || "0101234567",
-    LOGO_CONG_TY: settings?.logo_url ? `<img src="${settings.logo_url}" alt="Logo" style="height:48px;max-width:150px;object-fit:contain;" />` : `<div style="font-weight:bold;color:#0f172a;font-size:16px;">${companyName}</div>`,
+    LOGO_CONG_TY: settings?.logo_url ? `<img src="${settings.logo_url}" alt="Logo" style="height:48px;max-width:150px;object-fit:contain;" />` : `<div style="font-weight:bold;color:#000000;font-size:12pt;">${companyName}</div>`,
     TEN_KHACH_HANG: "Công ty Cổ phần Thương mại Khách Hàng",
     DIA_CHI_KHACH_HANG: "Số 88 Đường Nguyễn Trãi, Quận Thanh Xuân, Hà Nội",
     MST_KHACH_HANG: "0309876543",
@@ -149,11 +149,11 @@ function renderTemplatePreview(template: Template, settings: AppSettings | null)
     GHI_CHU: "Báo giá/Hợp đồng đã bao gồm chi phí vận chuyển và bảo hành 12 tháng tại nơi sử dụng.",
     PAGE: "1",
     TOTAL_PAGES: "1",
-    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong>${companyName}</strong></div>`,
-    CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>NGUYỄN VĂN A</strong></div>`,
-    CHU_KY_KHACH_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>NGUYỄN VĂN A</strong></div>`,
-    CHU_KY_BEN_MUA: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN MUA</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>NGUYỄN VĂN A</strong></div>`,
-    CON_DAU: `<div style="display:inline-block; border:2px dashed #ef4444; border-radius:50%; padding:10px 16px; color:#ef4444; font-weight:bold; font-size:12px; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
+    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${companyName}</strong></div>`,
+    CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">NGUYỄN VĂN A</strong></div>`,
+    CHU_KY_KHACH_HANG: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">NGUYỄN VĂN A</strong></div>`,
+    CHU_KY_BEN_MUA: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN BÊN MUA</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">NGUYỄN VĂN A</strong></div>`,
+    CON_DAU: `<div style="display:inline-block; border:2px dashed #000000; border-radius:50%; padding:10px 16px; color:#000000; font-weight:bold; font-size:12pt; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
   };
 
   let html = template.content;

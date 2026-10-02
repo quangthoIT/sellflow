@@ -758,64 +758,64 @@ function QuotePreview({ quoteId, customers, templates, products = [] }: {
     || templates[0];
   const totals = calcQuoteTotals(items, quote.discount, quote.vat_pct, quote.shipping);
 
-  const productTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;">
-    <thead><tr style="background:#f1f5f9;">
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">STT</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:left">Sản phẩm / Dịch vụ</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:center">ĐVT</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Số lượng</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Đơn giá (đ)</th>
-      <th style="border:1px solid #cbd5e1;padding:6px;text-align:right">Thành tiền (đ)</th>
+  const productTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
+    <thead><tr style="background:#f1f5f9;font-weight:bold;">
+      <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">STT</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">ĐVT</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Số lượng</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Đơn giá (đ)</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Thành tiền (đ)</th>
     </tr></thead>
     <tbody>
       ${items.map((it, i) => {
         const prod = products.find((p) => p.id === it.product_id);
         const unit = prod?.unit || "cái";
         return `<tr>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center">${i + 1}</td>
-        <td style="border:1px solid #cbd5e1;padding:6px">${it.product_name}</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:center">${unit}</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${it.qty}</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.price)}</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right">${formatVND(it.qty * it.price - (it.discount || 0))}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">${i + 1}</td>
+        <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${it.product_name}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">${unit}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${it.qty}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(it.price)}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(it.qty * it.price - (it.discount || 0))}</td>
       </tr>`;
       }).join("")}
     </tbody>
     <tfoot>
-      <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.subtotal)}</td>
+      <tr style="font-weight:bold;">
+        <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tổng tiền hàng:</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(totals.subtotal)}</td>
       </tr>
       ${totals.vat > 0 ? `
-      <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Thuế GTGT (${quote.vat_pct}%):</td>
-        <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.vat)}</td>
+      <tr style="font-weight:bold;">
+        <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Thuế GTGT (${quote.vat_pct}%):</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(totals.vat)}</td>
       </tr>` : ""}
-      <tr style="font-weight:bold;background:#f1f5f9;color:#0f172a;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;">TỔNG CỘNG THANH TOÁN:</td>
-        <td style="border:1px solid #cbd5e1;padding:7px;text-align:right;font-size:11pt;color:#b91c1c;">${formatVND(totals.total)}</td>
+      <tr style="font-weight:bold;background:#f1f5f9;">
+        <td colspan="5" style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">TỔNG CỘNG THANH TOÁN:</td>
+        <td style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">${formatVND(totals.total)}</td>
       </tr>
     </tfoot>
   </table>`;
 
   const paymentTermsHtml = quote.payment_terms && quote.payment_terms.installments.length > 0
-    ? `<div style="margin-top:10px">
-        <p style="font-size:13px;margin-bottom:6px">Phương thức: <strong>${quote.payment_terms.method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#f5f5f5">
-            <th style="border:1px solid #ddd;padding:6px;text-align:left">Đợt</th>
-            <th style="border:1px solid #ddd;padding:6px;text-align:left">Ngày</th>
-            <th style="border:1px solid #ddd;padding:6px;text-align:right">Tỷ lệ (%)</th>
-            <th style="border:1px solid #ddd;padding:6px;text-align:right">Số tiền</th>
-            <th style="border:1px solid #ddd;padding:6px;text-align:left">Ghi chú</th>
+    ? `<div style="margin-top:10px;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
+        <p style="font-size:12pt;margin-bottom:6px;color:#000000;">Phương thức: <strong>${quote.payment_terms.method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
+        <table style="width:100%;border-collapse:collapse;font-size:12pt;color:#000000;">
+          <thead><tr style="background:#f5f5f5;font-weight:bold;">
+            <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Đợt</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Ngày</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tỷ lệ (%)</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Số tiền</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Ghi chú</th>
           </tr></thead>
           <tbody>
             ${quote.payment_terms.installments.map((it, idx) => `<tr>
-              <td style="border:1px solid #ddd;padding:6px">${it.label === "Thanh toán 1 lần" ? "Đợt 1" : (it.label || `Đợt ${idx + 1}`)}</td>
-              <td style="border:1px solid #ddd;padding:6px">${formatDate(it.date)}</td>
-              <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.percent || 0}%</td>
-              <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.amount)}</td>
-              <td style="border:1px solid #ddd;padding:6px">${it.note || ""}</td>
+              <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${it.label === "Thanh toán 1 lần" ? "Đợt 1" : (it.label || `Đợt ${idx + 1}`)}</td>
+              <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${formatDate(it.date)}</td>
+              <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${it.percent || 0}%</td>
+              <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(it.amount)}</td>
+              <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${it.note || ""}</td>
             </tr>`).join("")}
           </tbody>
         </table>
@@ -848,11 +848,11 @@ function QuotePreview({ quoteId, customers, templates, products = [] }: {
     GHI_CHU: quote.notes || "",
     PAGE: "1",
     TOTAL_PAGES: "1",
-    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong>${settings?.company_name || "CÔNG TY BÁN HÀNG"}</strong></div>`,
-    CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
-    CHU_KY_KHACH_HANG: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
-    CHU_KY_BEN_MUA: `<div style="text-align:center; padding:12px; margin-top:20px;"><strong>ĐẠI DIỆN BÊN MUA</strong><br/><em style="font-size:12px;color:#666;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong>${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
-    CON_DAU: `<div style="display:inline-block; border:2px dashed #ef4444; border-radius:50%; padding:10px 16px; color:#ef4444; font-weight:bold; font-size:12px; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
+    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${settings?.company_name || "CÔNG TY BÁN HÀNG"}</strong></div>`,
+    CHU_KY_KHAC_HANG: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+    CHU_KY_KHACH_HANG: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN KHÁCH HÀNG</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+    CHU_KY_BEN_MUA: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN BÊN MUA</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+    CON_DAU: `<div style="display:inline-block; border:2px dashed #000000; border-radius:50%; padding:10px 16px; color:#000000; font-weight:bold; font-size:12pt; transform:rotate(-12deg);">ĐÃ XÁC NHẬN</div>`,
   };
   for (const [k, v] of Object.entries(replacements)) {
     html = html.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, "gi"), v);
