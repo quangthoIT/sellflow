@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { db } from "@/lib/db";
+import { db, loadSettings, type AppSettings } from "@/lib/db";
 import { formatVND, formatVNDShort, formatDate } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +48,7 @@ export function DashboardPage() {
   const { navigate } = useNav();
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState("6_months");
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
 
   const [rawQuotes, setRawQuotes] = useState<QuoteRow[]>([]);
   const [rawContracts, setRawContracts] = useState<ContractRow[]>([]);
@@ -71,29 +72,38 @@ export function DashboardPage() {
   const [expiringQuotes, setExpiringQuotes] = useState<QuoteRow[]>([]);
   const [lowStock, setLowStock] = useState<ProductRow[]>([]);
 
-  // Initial Data Fetch
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const [quotes, contracts, products, quoteItems, contractItems, payments] = await Promise.all([
-        db.from("quotes").select("*").order("date", { ascending: false }),
-        db.from("contracts").select("*").order("date", { ascending: false }),
-        db.from("products").select("*").order("name"),
-        db.from("quote_items").select("quote_id, qty, price, discount"),
-        db.from("contract_items").select("contract_id, product_id, qty, price"),
-        db.from("payments").select("contract_id, amount, date"),
-      ]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const [quotes, contracts, products, quoteItems, contractItems, payments, settings] = await Promise.all([
+      db.from("quotes").select("*").order("date", { ascending: false }),
+      db.from("contracts").select("*").order("date", { ascending: false }),
+      db.from("products").select("*").order("name"),
+      db.from("quote_items").select("quote_id, qty, price, discount"),
+      db.from("contract_items").select("contract_id, product_id, qty, price"),
+      db.from("payments").select("contract_id, amount, date"),
+      loadSettings(),
+    ]);
 
-      setRawQuotes((quotes.data ?? []) as QuoteRow[]);
-      setRawContracts((contracts.data ?? []) as ContractRow[]);
-      setRawProducts((products.data ?? []) as ProductRow[]);
-      setRawQuoteItems((quoteItems.data ?? []) as QuoteItemRow[]);
-      setRawContractItems((contractItems.data ?? []) as ContractItemRow[]);
-      setRawPayments((payments.data ?? []) as PaymentRow[]);
+    setRawQuotes((quotes.data ?? []) as QuoteRow[]);
+    setRawContracts((contracts.data ?? []) as ContractRow[]);
+    setRawProducts((products.data ?? []) as ProductRow[]);
+    setRawQuoteItems((quoteItems.data ?? []) as QuoteItemRow[]);
+    setRawContractItems((contractItems.data ?? []) as ContractItemRow[]);
+    setRawPayments((payments.data ?? []) as PaymentRow[]);
+    setAppSettings(settings);
 
-      setLoading(false);
-    })();
+    setLoading(false);
   }, []);
+
+  // Initial Data Fetch & Setting listener
+  useEffect(() => {
+    fetchData();
+    const handleSettingsUpdate = () => {
+      loadSettings().then((s) => setAppSettings(s));
+    };
+    window.addEventListener("app-settings-updated", handleSettingsUpdate);
+    return () => window.removeEventListener("app-settings-updated", handleSettingsUpdate);
+  }, [fetchData]);
 
   // Compute stats and chart when raw data or timeRange changes
   const computeDashboard = useCallback(() => {
@@ -105,9 +115,15 @@ export function DashboardPage() {
     let rangeMonthsCount = 6;
     let rangeStartDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
-    if (timeRange === "3_months") {
+    if (timeRange === "this_month") {
+      rangeMonthsCount = 1;
+      rangeStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else if (timeRange === "3_months") {
       rangeMonthsCount = 3;
       rangeStartDate = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    } else if (timeRange === "6_months") {
+      rangeMonthsCount = 6;
+      rangeStartDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
     } else if (timeRange === "this_year") {
       rangeMonthsCount = now.getMonth() + 1;
       rangeStartDate = new Date(now.getFullYear(), 0, 1);
@@ -124,10 +140,13 @@ export function DashboardPage() {
     const pendingQ = rawQuotes.filter((q) => ["Nháp", "Đã gửi"].includes(q.status));
     const quotePending = pendingQ.reduce((s, q) => s + quoteTotal(q.id), 0);
 
-    // Signed contracts in selected range
+    // Signed & Active & Completed contracts in selected range
+    const signedStatuses = ["Đã ký", "Đang thực hiện", "Hoàn thành"];
     const signedContractsRange = rawContracts.filter(
       (c) =>
-        c.status === "Đã ký" && new Date(c.date) >= rangeStartDate && new Date(c.date) < rangeEndDate
+        signedStatuses.includes(c.status) &&
+        new Date(c.date) >= rangeStartDate &&
+        new Date(c.date) < rangeEndDate
     );
     const contractSigned = signedContractsRange.reduce((s, c) => s + contractTotal(c.id), 0);
 
@@ -159,7 +178,10 @@ export function DashboardPage() {
     }, 0);
 
     // Low stock
-    const lowStockProducts = rawProducts.filter((p) => p.stock <= p.min_stock);
+    const isAlertEnabled = appSettings ? appSettings.low_stock_alert !== false : true;
+    const lowStockProducts = isAlertEnabled
+      ? rawProducts.filter((p) => p.stock <= p.min_stock)
+      : [];
 
     // Expiring quotes
     const expiring = rawQuotes.filter((q) => {
@@ -178,7 +200,7 @@ export function DashboardPage() {
         (c) =>
           new Date(c.date) >= ms &&
           new Date(c.date) < me &&
-          ["Đã ký", "Đang thực hiện", "Hoàn thành"].includes(c.status)
+          signedStatuses.includes(c.status)
       );
       const signed = sContracts.reduce((s, c) => s + contractTotal(c.id), 0);
       const coll = rawPayments
@@ -201,22 +223,24 @@ export function DashboardPage() {
     setMonthlyData(months);
     setExpiringQuotes(expiring);
     setLowStock(lowStockProducts);
-  }, [loading, timeRange, rawQuotes, rawContracts, rawProducts, rawQuoteItems, rawContractItems, rawPayments]);
+  }, [loading, timeRange, rawQuotes, rawContracts, rawProducts, rawQuoteItems, rawContractItems, rawPayments, appSettings]);
 
   useEffect(() => {
     computeDashboard();
   }, [computeDashboard]);
 
   const getRangeTitle = () => {
+    if (timeRange === "this_month") return "Doanh thu tháng này";
     if (timeRange === "3_months") return "Doanh thu 3 tháng gần nhất";
     if (timeRange === "this_year") return "Doanh thu năm nay";
     return "Doanh thu 6 tháng gần nhất";
   };
 
   const getRangeBadgeLabel = () => {
+    if (timeRange === "this_month") return "tháng này";
     if (timeRange === "3_months") return "3 tháng";
     if (timeRange === "this_year") return "năm nay";
-    return "tháng này";
+    return "6 tháng";
   };
 
   const chartConfig = {
@@ -364,8 +388,9 @@ export function DashboardPage() {
                 <SelectValue placeholder="Chọn khoảng thời gian" />
               </SelectTrigger>
               <SelectContent align="end">
-                <SelectItem value="6_months">6 tháng gần nhất</SelectItem>
+                <SelectItem value="this_month">Tháng này</SelectItem>
                 <SelectItem value="3_months">3 tháng gần nhất</SelectItem>
+                <SelectItem value="6_months">6 tháng gần nhất</SelectItem>
                 <SelectItem value="this_year">Năm nay</SelectItem>
               </SelectContent>
             </Select>
@@ -419,7 +444,7 @@ export function DashboardPage() {
                   </div>
                   <h4 className="text-xs font-semibold text-foreground">Không có báo giá sắp hết hạn</h4>
                   <p className="text-[11px] text-muted-foreground mt-1 max-w-[200px]">
-                    Các báo giá sắp hết hạn sẽ được hiển thị tại đây.
+                    Các báo giá sắp hết hạn trong 7 ngày tới sẽ hiển thị tại đây.
                   </p>
                 </div>
               ) : (
@@ -460,14 +485,24 @@ export function DashboardPage() {
               </Button>
             </CardHeader>
             <CardContent className="p-4 pt-2 flex-1 flex flex-col justify-center">
-              {lowStock.length === 0 ? (
+              {appSettings && appSettings.low_stock_alert === false ? (
+                <div className="py-4 flex flex-col items-center justify-center text-center">
+                  <div className="size-11 rounded-full bg-muted/50 flex items-center justify-center mb-2">
+                    <Package className="size-5.5 text-muted-foreground/50" />
+                  </div>
+                  <h4 className="text-xs font-semibold text-foreground">Cảnh báo đang tắt</h4>
+                  <p className="text-[11px] text-muted-foreground mt-1 max-w-[200px]">
+                    Bật "Cảnh báo tồn kho thấp" trong phần Cài đặt để theo dõi.
+                  </p>
+                </div>
+              ) : lowStock.length === 0 ? (
                 <div className="py-4 flex flex-col items-center justify-center text-center">
                   <div className="size-11 rounded-full bg-muted/50 flex items-center justify-center mb-2">
                     <Package className="size-5.5 text-muted-foreground/50" />
                   </div>
                   <h4 className="text-xs font-semibold text-foreground">Tất cả sản phẩm đều đủ tồn kho</h4>
                   <p className="text-[11px] text-muted-foreground mt-1 max-w-[200px]">
-                    Các sản phẩm có số lượng thấp sẽ được hiển thị tại đây.
+                    Các sản phẩm có số lượng chạm mức tối thiểu sẽ hiển thị tại đây.
                   </p>
                 </div>
               ) : (
