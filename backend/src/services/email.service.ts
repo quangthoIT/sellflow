@@ -16,13 +16,14 @@ export class EmailService {
     attachments: { filename: string; content?: any; path?: string }[] = [],
     smtpOptions?: SmtpOptions
   ): Promise<boolean> {
-    const host = smtpOptions?.host || process.env.SMTP_HOST || 'smtp.gmail.com';
-    const port = smtpOptions?.port || Number(process.env.SMTP_PORT || 587);
-    const user = smtpOptions?.user || process.env.SMTP_USER;
-    const pass = smtpOptions?.pass || process.env.SMTP_PASS;
-    const senderName = smtpOptions?.senderName || 'SellFlow Support';
+    const host = smtpOptions?.host?.trim() || process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = smtpOptions?.port ? Number(smtpOptions.port) : Number(process.env.SMTP_PORT || 587);
+    const user = smtpOptions?.user?.trim() || process.env.SMTP_USER;
+    const rawPass = smtpOptions?.pass || process.env.SMTP_PASS;
+    const pass = rawPass ? rawPass.replace(/\s+/g, '') : undefined;
+    const senderName = smtpOptions?.senderName?.trim() || 'SellFlow Support';
 
-    console.log(`[EmailService] Preparing email dispatch to: ${to}, Subject: "${subject}"`);
+    console.log(`[EmailService] Preparing email dispatch to: ${to}, Sender: ${user}, Subject: "${subject}"`);
 
     if (user && pass) {
       try {
@@ -46,7 +47,15 @@ export class EmailService {
         return true;
       } catch (err: any) {
         console.error(`[EmailService] SMTP Dispatch Failed:`, err.message);
-        throw err;
+        let customMessage = err.message;
+        if (err.message?.includes('535') || err.message?.includes('Username and Password not accepted') || err.message?.includes('BadCredentials')) {
+          customMessage = `Xác thực SMTP thất bại. Vui lòng đảm bảo "Email người gửi" (${user}) là tài khoản Gmail thật và "Mật khẩu ứng dụng" là 16 ký tự do Google cấp.`;
+        } else if (err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT') {
+          customMessage = `Không thể kết nối đến máy chủ SMTP (${host}:${port}). Vui lòng kiểm tra lại kết nối mạng.`;
+        }
+        const error = new Error(customMessage);
+        (error as any).original = err;
+        throw error;
       }
     } else {
       console.warn(`[EmailService] No SMTP credentials provided. Logged email for simulation.`);
