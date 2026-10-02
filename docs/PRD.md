@@ -19,9 +19,12 @@
 
 **SellFlow** là hệ thống phần mềm tập trung giúp doanh nghiệp vừa và nhỏ (SMEs), hộ kinh doanh và các đơn vị thương mại dịch vụ số hóa quy trình bán hàng B2B. Hệ thống kết nối liền mạch chu trình từ **Quản lý danh mục sản phẩm & tồn kho -> Quản lý thông tin khách hàng -> Lập & gửi Báo giá -> Chuyển đổi ký kết Hợp đồng kinh tế -> Quản lý tiến độ thanh toán & Công nợ**.
 
-Phạm vi MVP tập trung vào ba kết quả cốt lõi: **(1) Người dùng tạo báo giá và hợp đồng nhanh chóng, chính xác; (2) Theo dõi chặt chẽ tiến độ thu tiền và công nợ theo từng đợt; (3) Quản lý nắm bắt bức tranh doanh thu và tình trạng đơn hàng tập trung theo thời gian thực**.
+Phạm vi MVP tập trung vào ba kết quả cốt lõi:
+1. **Tạo báo giá và hợp đồng nhanh chóng, chính xác**: Tự động hóa tính toán thuế, chiết khấu, đợt thanh toán và chuyển đổi 1-click từ báo giá sang hợp đồng.
+2. **Theo dõi chặt chẽ tiến độ thu tiền và công nợ**: Quản lý từng đợt thanh toán, theo dõi số tiền đã thu và số tiền còn phải thu trên từng hợp đồng.
+3. **Nắm bắt bức tranh tổng quan kinh doanh**: Dashboard theo dõi doanh thu lũy kế, tổng công nợ và danh sách đơn hàng theo thời gian thực.
 
-Phạm vi MVP giả định vận hành cho **một pháp nhân/chi nhánh chính; phân quyền người dùng chi tiết (Role-Based Access Control) sẽ thuộc về giai đoạn sau**. Các tính năng nâng cao như ký số điện tử, kê khai thuế trực tiếp hay cổng thanh toán trực tuyến cũng là hướng mở rộng sau MVP.
+Trong giai đoạn MVP, hệ thống tập trung hoàn thiện luồng nghiệp vụ cho **một pháp nhân/chi nhánh chính với tài khoản đăng nhập nội bộ thống nhất (chưa áp dụng phân quyền vai trò chi tiết)**. Các tính năng mở rộng như phân quyền RBAC, trợ lý AI, ký số điện tử hay cổng thanh toán trực tuyến sẽ được triển khai ở các giai đoạn sau.
 
 ---
 
@@ -29,13 +32,11 @@ Phạm vi MVP giả định vận hành cho **một pháp nhân/chi nhánh chín
 
 ### 2.1. Hiện trạng
 
-Trong thực tế vận hành tại nhiều doanh nghiệp vừa và nhỏ:
+Trong thực tế vận hành tại các doanh nghiệp vừa và nhỏ:
 - Báo giá và hợp đồng được lập thủ công trên các file Excel, Word rời rạc, làm tăng nguy cơ sai sót đơn giá, tính sai thuế VAT và chiết khấu.
-- Khi khách duyệt báo giá, nhân viên phải sao chép dữ liệu bằng tay sang file Word mẫu hợp đồng, gây mất thời gian và dễ phát sinh độ lệch thông tin giữa báo giá ban đầu và hợp đồng ký kết.
-- Kế toán khó theo dõi tiến độ thanh toán nhiều đợt của các hợp đồng đang thực hiện, dẫn đến chậm trễ thu hồi công nợ hoặc bỏ sót đợt thanh toán đến hạn.
-- Nhân viên bán hàng không nắm rõ số lượng hàng tồn kho thực tế khi lên đơn, dễ xảy ra tình trạng bán vượt tồn kho khả dụng.
-
-Đây là mô tả bài toán định hướng sản phẩm. **Cần xác nhận các số liệu baseline cụ thể theo từng mô hình doanh nghiệp thí điểm** để đo lường hiệu quả sau triển khai.
+- Khi khách duyệt báo giá, nhân viên phải sao chép dữ liệu bằng tay sang file mẫu hợp đồng, gây mất thời gian và dễ phát sinh độ lệch thông tin giữa báo giá ban đầu và hợp đồng ký kết.
+- Khó theo dõi tiến độ thanh toán nhiều đợt của các hợp đồng đang thực hiện, dẫn đến chậm trễ thu hồi công nợ hoặc bỏ sót đợt thanh toán đến hạn.
+- Không nắm rõ số lượng hàng tồn kho thực tế khi lên đơn, dễ xảy ra tình trạng bán vượt tồn kho khả dụng.
 
 ### 2.2. Tuyên bố vấn đề
 
@@ -43,10 +44,10 @@ Trong thực tế vận hành tại nhiều doanh nghiệp vừa và nhỏ:
 
 ### 2.3. Giá trị dự kiến
 
-- **Kinh doanh (Sales)**: Lập báo giá chuyên nghiệp chỉ trong vài phút, chuyển đổi hợp đồng với 1 thao tác, gửi trực tiếp tài liệu cho khách hàng.
-- **Kế toán (Accountant)**: Kiểm soát tiến độ thu tiền theo từng đợt, ghi nhận thanh toán nhanh chóng, theo dõi chính xác công nợ còn lại của từng hợp đồng.
-- **Kho hàng (Inventory)**: Cập nhật biến động xuất nhập tồn tức thì, nhận cảnh báo khi sản phẩm chạm ngưỡng tồn tối thiểu.
-- **Quản lý (Owner/Manager)**: Theo dõi bức tranh tổng thể về doanh thu, tỷ lệ chuyển đổi đơn hàng và dòng tiền trên một màn hình Dashboard duy nhất.
+- Lập báo giá chuyên nghiệp chỉ trong vài phút, chuyển đổi hợp đồng với 1 thao tác, gửi trực tiếp tài liệu cho khách hàng qua email.
+- Kiểm soát tiến độ thu tiền theo từng đợt, ghi nhận thanh toán nhanh chóng, theo dõi chính xác công nợ còn lại của từng hợp đồng.
+- Cập nhật biến động xuất nhập tồn tức thì, nhận cảnh báo khi sản phẩm chạm ngưỡng tồn tối thiểu.
+- Theo dõi bức tranh tổng thể về doanh thu, tỷ lệ chuyển đổi đơn hàng và dòng tiền trên một màn hình Dashboard duy nhất.
 
 ---
 
@@ -64,83 +65,96 @@ Trong thực tế vận hành tại nhiều doanh nghiệp vừa và nhỏ:
 
 ## 4. Người dùng mục tiêu và nhu cầu
 
-| Nhóm người dùng | Nhu cầu | Tác vụ chính |
+| Đối tượng sử dụng | Nhu cầu chính trong nghiệp vụ | Tác vụ trên hệ thống MVP |
 | --- | --- | --- |
-| **Nhân viên Kinh doanh (Sales)** | Soạn báo giá nhanh, gửi cho khách duyệt, chuyển đổi hợp đồng dễ dàng | Quản lý khách hàng, tạo báo giá, xuất PDF/Word, gửi email, chuyển đổi hợp đồng |
-| **Kế toán / Thu ngân (Accountant)** | Theo dõi tiến độ thu tiền, quản lý công nợ từng hợp đồng, ghi nhận phiếu thanh toán | Xem hợp đồng, ghi nhận thanh toán theo đợt, đối soát công nợ |
-| **Thủ kho (Inventory Staff)** | Quản lý số lượng tồn, thực hiện nhập/xuất kho, nhận cảnh báo hết hàng | Xem tồn kho, tạo phiếu nhập/xuất kho, điều chỉnh số lượng tồn |
-| **Quản trị viên / Giám đốc (Admin)** | Kiểm soát toàn bộ số liệu kinh doanh, cấu hình doanh nghiệp và mẫu tài liệu | Xem Dashboard thống kê, cấu hình mẫu báo giá/hợp đồng, quản lý tài khoản & cài đặt |
+| **Nhân sự Kinh doanh / Bán hàng** | Soạn báo giá nhanh, gửi cho khách duyệt, chuyển đổi hợp đồng dễ dàng | Quản lý khách hàng, tạo báo giá, xuất PDF/Word, gửi email, chuyển đổi hợp đồng |
+| **Nhân sự Kế toán / Thu ngân** | Theo dõi tiến độ thu tiền, quản lý công nợ từng hợp đồng, ghi nhận phiếu thanh toán | Xem hợp đồng, ghi nhận thanh toán theo đợt, đối soát công nợ |
+| **Nhân sự Kho hàng** | Quản lý số lượng tồn, thực hiện nhập/xuất kho, nhận cảnh báo hết hàng | Xem tồn kho, tạo phiếu nhập/xuất kho, điều chỉnh số lượng tồn |
+| **Chủ doanh nghiệp / Quản lý** | Kiểm soát toàn bộ số liệu kinh doanh, cấu hình doanh nghiệp và mẫu tài liệu | Xem Dashboard thống kê, cấu hình mẫu báo giá/hợp đồng, quản lý thông tin doanh nghiệp |
+
+> **Lưu ý phạm vi:** Trong phiên bản MVP hiện tại, hệ thống sử dụng cơ chế đăng nhập và giao diện nội bộ chung cho nhân sự vận hành; việc phân tách ma trận quyền hạn chi tiết từng vai trò sẽ được triển khai ở giai đoạn tiếp theo.
 
 ---
 
-## 5. Phạm vi sản phẩm
+## 5. Phạm vi sản phẩm (Product Scope)
 
 ### 5.1. Phạm vi MVP bắt buộc (Must Have)
 
-1. **Xác thực & Quản lý người dùng cơ bản**: Đăng nhập, đăng xuất, khôi phục mật khẩu qua mã OTP gửi về email (phân quyền phân vai trò chi tiết sẽ thực hiện ở giai đoạn sau).
-2. **Quản lý Khách hàng**: Lưu trữ thông tin đối tác/khách hàng (Tên, Mã số thuế, Địa chỉ, Số điện thoại, Email, Người đại diện, Ghi chú); sinh mã định danh tự động.
-3. **Quản lý Sản phẩm & Đơn vị tính**: Quản lý danh mục sản phẩm/dịch vụ; chọn Đơn vị tính từ danh mục chuẩn hóa; quản lý giá vốn, giá bán, số lượng tồn kho và mức tồn tối thiểu.
-4. **Quản lý Tồn kho cơ bản**: Tạo phiếu Nhập kho và Xuất kho; lưu nhật ký biến động kho; cảnh báo khi tồn kho chạm mức tối thiểu.
+1. **Xác thực & Người dùng cơ bản**:
+   - Đăng nhập và đăng xuất hệ thống an toàn.
+   - Quên mật khẩu: gửi mã xác thực OTP 6 chữ số ngẫu nhiên về email đã đăng ký để đổi mật khẩu mới.
+2. **Quản lý Khách hàng**:
+   - Lưu trữ danh bạ khách hàng/đối tác (Tên, Mã số thuế, Địa chỉ, Số điện thoại, Email, Người đại diện, Ghi chú).
+   - Tự động sinh mã khách hàng theo quy tắc `{PREFIX}-{YEAR}-{SEQ}` (ví dụ: `KH-2026-001`).
+   - Xem tổng hợp công nợ và lịch sử báo giá/hợp đồng của từng khách hàng.
+3. **Quản lý Sản phẩm & Đơn vị tính**:
+   - Quản lý danh mục sản phẩm/dịch vụ (Tên, Giá vốn, Giá bán, Tồn kho, Tồn tối thiểu, Trạng thái).
+   - Đơn vị tính (ĐVT) bắt buộc chọn từ danh mục chuẩn hóa của hệ thống (*cái, bộ, gói, mét, kg,...*) để đảm bảo tính đồng bộ dữ liệu.
+   - Cảnh báo trực quan khi tồn kho chạm hoặc thấp hơn mức tồn tối thiểu (`stock <= minStock`).
+4. **Quản lý Tồn kho cơ bản**:
+   - Lập phiếu Nhập kho (Stock In) và Xuất kho (Stock Out).
+   - Tự động cập nhật số lượng tồn kho của sản phẩm và lưu nhật ký biến động kho.
 5. **Soạn thảo & Quản lý Báo giá**:
-   - Chọn khách hàng, thêm các dòng sản phẩm/dịch vụ, tự động tính thành tiền.
-   - Hỗ trợ chiết khấu từng dòng, chiết khấu toàn đơn, thuế GTGT (VAT %) và phí vận chuyển.
-   - Thiết lập điều khoản thanh toán theo đợt (Tỷ lệ %, số tiền, ngày dự kiến, ghi chú).
-   - Xuất tài liệu định dạng PDF, Word và gửi email trực tiếp cho khách hàng.
-   - Quản lý trạng thái vòng đời báo giá: *Nháp, Đã gửi, Chấp nhận, Từ chối, Hết hạn*.
-6. **Quản lý Hợp đồng kinh tế**:
-   - Tạo hợp đồng độc lập hoặc chuyển đổi trực tiếp 1-click từ Báo giá đã duyệt.
-   - Kế thừa tự động toàn bộ danh mục sản phẩm, giá trị hợp đồng và tiến độ thanh toán.
-   - Xuất bản hợp đồng kinh tế đầy đủ các điều khoản pháp lý chuẩn mực.
-   - Quản lý trạng thái hợp đồng: *Nháp, Đang thực hiện, Hoàn tất, Đã hủy*.
-7. **Quản lý Thanh toán & Công nợ**:
-   - Ghi nhận thanh toán từng đợt gắn liền với hợp đồng (Tiền mặt / Chuyển khoản).
-   - Tự động tính toán tổng số tiền đã thanh toán và số tiền công nợ còn phải thu.
-8. **Quản lý Mẫu tài liệu**:
-   - Trình biên tập mẫu trực quan với hệ thống biến thay thế dữ liệu tự động.
-   - Hỗ trợ nhập mẫu Word (.docx), xem trước bản in, khóa mẫu và đặt làm mẫu mặc định.
-9. **Cấu hình Doanh nghiệp & Quy tắc sinh mã**:
-   - Cài đặt thông tin pháp nhân công ty, logo, thuế VAT mặc định, thời hạn hiệu lực báo giá.
-   - Cấu hình tiền tố và quy tắc sinh mã tự động cho các loại chứng từ.
-10. **Dashboard Tổng quan**: Thống kê doanh thu, số lượng báo giá/hợp đồng, tổng công nợ cần thu và biểu đồ doanh số theo thời gian.
-
-### 5.2. Phạm vi ưu tiên tiếp theo (Should Have)
-
-| Mức | Nhóm tính năng | Điều kiện xem xét |
-| --- | --- | --- |
-| **Should** | **Phân quyền người dùng chi tiết (RBAC)** | Phân tách quyền hạn chặt chẽ theo vai trò Admin, Sales, Kế toán (thuộc giai đoạn sau) |
-| **Should** | Tự động trừ tồn kho khi kích hoạt hợp đồng | Cần chốt cơ chế trừ kho ngay lúc ký hay khi xuất kho thực tế |
-| **Should** | Cảnh báo đợt thanh toán đến hạn / quá hạn tự động | Cần xác nhận kênh thông báo và tần suất nhắc |
-| **Should** | Xuất báo cáo danh sách công nợ ra file Excel | Thực hiện khi có yêu cầu nghiệp vụ kế toán mở rộng |
-
-### 5.3. Phạm vi xem xét giai đoạn sau (Could Have)
-
-| Mức | Nhóm tính năng | Ghi chú |
-| --- | --- | --- |
-| **Could** | Ký số điện tử (E-Signature) trực tuyến | Tích hợp cổng ký số bên thứ 3 sau khi luồng MVP ổn định |
-| **Could** | Tự động tạo mã VietQR động theo đợt thanh toán | Bổ sung khi có nhu cầu thanh toán ngân hàng tự động |
-| **Could** | Phân hệ tính hoa hồng cho nhân viên kinh doanh | Đặc tả riêng theo chính sách thưởng của từng doanh nghiệp |
-| **Could** | Trợ lý AI trong SellFlow | Tích hợp AI để hỗ trợ soạn thảo báo giá, hợp đồng, hoặc phân tích dữ liệu kinh doanh |
-
-### 5.4. Ngoài phạm vi hệ thống (Out of Scope)
-
-Kê khai hóa đơn điện tử trực tiếp lên cơ quan Thuế, phân hệ hoạch toán kế toán tổng hợp chuyên sâu, quản lý quy trình sản xuất (BOM/MRP), và quản lý giao vận logistics tích hợp nhà vận chuyển bên ngoài.
-
-### 5.5. Giả định và ràng buộc
-
-- Hệ thống phục vụ cho một pháp nhân doanh nghiệp với dữ liệu tập trung.
-- Định dạng tiền tệ và thuế tuân theo quy định kế toán hiện hành (mặc định đơn vị VNĐ).
-- Việc gửi email qua SMTP phụ thuộc vào hạ tầng mail server của doanh nghiệp; lỗi gửi mail bên ngoài không được chặn luồng tạo và lưu chứng từ trên hệ thống.
+   - Chọn khách hàng, thêm nhiều sản phẩm, tự động tính thành tiền từng dòng.
+   - Hỗ trợ chiết khấu đơn hàng, thuế GTGT (VAT %) và chi phí vận chuyển.
+   - Thiết lập các đợt thanh toán (Installments: tỷ lệ %, số tiền, ngày dự kiến, ghi chú).
+   - Xem trước bản in, xuất file PDF, xuất file Word (.docx) và gửi email trực tiếp cho khách.
+   - Quản lý trạng thái: *Nháp, Đã gửi, Chấp nhận, Từ chối, Hết hạn*.
+6. **Chuyển đổi 1-Click sang Hợp đồng**:
+   - Bấm nút **Chuyển thành Hợp đồng** trên Báo giá đã duyệt để tự động tạo Hợp đồng mới.
+   - Kế thừa toàn bộ thông tin khách hàng, danh mục hàng hóa, giá trị và tiến độ thanh toán.
+   - Liên kết mã báo giá gốc (`quote_id`) để truy vết nguồn gốc.
+7. **Quản lý Hợp đồng kinh tế**:
+   - Quản lý danh sách hợp đồng, trạng thái: *Nháp, Đang thực hiện, Hoàn tất, Đã hủy*.
+   - In ấn và xuất file PDF/Word hợp đồng kinh tế theo mẫu chuẩn.
+8. **Quản lý Thanh toán & Công nợ**:
+   - Ghi nhận thanh toán từng đợt theo Hợp đồng (phương thức Tiền mặt / Chuyển khoản, ngày thu, số tiền, ghi chú).
+   - Tự động tính toán tổng số tiền đã thanh toán và số tiền công nợ còn phải thu (`Tổng tiền HĐ - Đã thanh toán`).
+   - Tự động đánh dấu hợp đồng *Hoàn tất* khi công nợ bằng 0.
+9. **Quản lý Mẫu tài liệu (Templates)**:
+   - Trình biên tập trực quan WYSIWYG mẫu Báo giá & Hợp đồng.
+   - Hỗ trợ hệ thống mã biến thay thế dữ liệu (`{{TEN_CONG_TY}}`, `{{BANG_SAN_PHAM}}`, `{{DIEU_KHOAN_THANH_TOAN}}`, `{{TONG_TIEN}}`,...).
+   - Nhập file Word mẫu (.docx qua mammoth), khóa mẫu và đặt mẫu mặc định.
+10. **Cài đặt Doanh nghiệp & Quy tắc hệ thống**:
+    - Cấu hình thông tin công ty, địa chỉ, MST, điện thoại, email, logo.
+    - Cấu hình tiền tố và quy tắc sinh mã tự động cho toàn bộ chứng từ.
+    - Cấu hình SMTP gửi email thông báo và mã OTP.
+11. **Dashboard Tổng quan**:
+    - Thống kê doanh thu lũy kế, tổng công nợ phải thu, số lượng báo giá/hợp đồng, tỷ lệ chuyển đổi đơn hàng và biểu đồ doanh số theo thời gian.
 
 ---
 
-## 6. Luồng người dùng (User Flows)
+### 5.2. Các phần việc để ở Giai đoạn sau (Post-MVP / Phase 2)
+
+Các tính năng dưới đây **không nằm trong MVP hiện tại** và sẽ được phát triển ở giai đoạn tiếp theo:
+
+1. **Phân quyền người dùng chi tiết (RBAC)**: Phân tách quyền hạn truy cập theo từng vai trò cụ thể (`ADMIN`, `SALES`, `ACCOUNTANT`).
+2. **Trợ lý AI (AI Assistant)**: Tích hợp trợ lý thông minh hỗ trợ gợi ý sản phẩm, soạn thảo nội dung báo giá và phân tích số liệu bán hàng.
+3. **Cơ chế tự động trừ tồn kho theo Hợp đồng**: Tự động trừ hoặc khóa giữ số lượng tồn kho ngay khi hợp đồng được ký kết.
+4. **Tự động gửi email nhắc nợ định kỳ**: Tự động quét và gửi email nhắc khách hàng khi các đợt thanh toán đến hạn hoặc quá hạn.
+5. **Xuất báo cáo công nợ & doanh thu nâng cao ra Excel**: Công cụ kết xuất báo cáo đa chiều phục vụ nghiệp vụ kế toán chuyên sâu.
+6. **Ký số điện tử (E-Signature) trực tuyến**: Tích hợp cổng ký điện tử từ xa cho khách hàng.
+7. **Tích hợp cổng thanh toán VietQR động**: Tự động sinh mã QR chuyển khoản theo từng đợt thanh toán có sẵn số tiền và nội dung chuyển khoản.
+
+---
+
+### 5.3. Ngoài phạm vi hệ thống (Out of Scope)
+
+- Kê khai và phát hành hóa đơn đỏ điện tử trực tiếp lên cơ quan Thuế.
+- Phần mềm hoạch toán kế toán tổng hợp chuyên sâu.
+- Quản lý định mức sản xuất và dây chuyền chế tạo (BOM / MRP).
+- Tích hợp vận chuyển logistics với các hãng vận chuyển thứ ba (GHN, Viettel Post,...).
+
+---
+
+## 6. Luồng nghiệp vụ người dùng (User Flows)
 
 ### 6.1. Luồng Lập và Phát hành Báo giá
 
-1. Nhân viên chọn Khách hàng có sẵn hoặc tạo nhanh Khách hàng mới.
+1. Người dùng chọn Khách hàng có sẵn trong danh bạ hoặc tạo nhanh Khách hàng mới.
 2. Thêm các sản phẩm/dịch vụ từ danh mục, điều chỉnh số lượng và đơn giá thỏa thuận.
-3. Thiết lập chiết khấu, tỷ lệ thuế VAT và chi phí vận chuyển (nếu có).
-4. Thiết lập kế hoạch thanh toán theo các đợt (tỷ lệ % và ngày dự kiến).
+3. Thiết lập chiết khấu đơn hàng, tỷ lệ thuế VAT và chi phí vận chuyển (nếu có).
+4. Thiết lập kế hoạch thanh toán theo các đợt (tỷ lệ %, số tiền và ngày dự kiến).
 5. Chọn mẫu báo giá, kiểm tra bản xem trước tài liệu.
 6. Lưu báo giá, xuất file PDF/Word hoặc gửi email trực tiếp cho khách hàng.
 
@@ -155,12 +169,12 @@ flowchart TD
 
 ### 6.2. Luồng Chuyển đổi Hợp đồng và Thu hồi Công nợ
 
-1. Khi khách hàng đồng ý báo giá, nhân viên mở chi tiết Báo giá và thực hiện thao tác **Chuyển thành Hợp đồng**.
-2. Hệ thống tự động tạo Hợp đồng mới, sao chép toàn bộ thông tin khách hàng, danh mục hàng hóa và tiến độ thanh toán đã thỏa thuận.
+1. Khi khách hàng đồng ý báo giá, người dùng mở Báo giá và bấm nút **Chuyển thành Hợp đồng**.
+2. Hệ thống tự động tạo Hợp đồng mới, sao chép toàn bộ thông tin khách hàng, danh mục hàng hóa, giá trị và tiến độ thanh toán đã thỏa thuận.
 3. Các bên tiến hành ký kết hợp đồng; trạng thái hợp đồng chuyển sang **Đang thực hiện**.
-4. Khi khách thanh toán từng đợt, kế toán vào hợp đồng và thực hiện **Ghi nhận thanh toán**.
-5. Hệ thống cập nhật số tiền đã thu và tự động tính lại số công nợ còn lại.
-6. Khi tất cả các đợt thanh toán hoàn tất (công nợ = 0), hợp đồng được đánh dấu **Hoàn tất**.
+4. Khi khách thanh toán từng đợt, người dùng vào chi tiết hợp đồng và bấm **Ghi nhận thanh toán** (nhập số tiền, ngày thu, phương thức).
+5. Hệ thống cập nhật tổng số tiền đã thu và tự động tính lại số công nợ còn lại.
+6. Khi tất cả các đợt thanh toán hoàn tất (công nợ = 0), hợp đồng tự động được đánh dấu **Hoàn tất**.
 
 ```mermaid
 flowchart TD
@@ -175,15 +189,15 @@ flowchart TD
 
 ---
 
-## 7. Yêu cầu chức năng chi tiết
+## 7. Yêu cầu chức năng chi tiết (Functional Requirements)
 
-| ID | Ưu tiên | Yêu cầu nghiệp vụ có thể kiểm thử |
+| ID | Ưu tiên | Yêu cầu nghiệp vụ cốt lõi trong MVP |
 | --- | --- | --- |
-| **FR-01** | Must | Đăng nhập bằng Email và Mật khẩu; Quên mật khẩu gửi mã OTP ngẫu nhiên về email để xác thực đổi mật khẩu mới. |
-| **FR-02** | Must | Quản lý danh bạ khách hàng: thêm, sửa, xóa, tìm kiếm, lọc; tự động sinh mã khách hàng theo cấu trúc cấu hình. |
-| **FR-03** | Must | Quản lý danh mục sản phẩm/dịch vụ: chọn Đơn vị tính từ danh mục chuẩn hóa; quản lý giá vốn, giá bán, tồn kho, mức tồn tối thiểu. |
-| **FR-04** | Must | Quản lý kho: lập phiếu Nhập kho / Xuất kho; cập nhật số lượng tồn tức thì; hiển thị cảnh báo khi tồn kho ≤ tồn tối thiểu. |
-| **FR-05** | Must | Soạn báo giá: tính toán tự động thành tiền từng dòng, chiết khấu, thuế VAT, phí vận chuyển và tổng cộng thanh toán. |
+| **FR-01** | Must | Đăng nhập bằng Email/Password; Quên mật khẩu gửi mã OTP 6 số qua email thật để xác thực đổi mật khẩu mới. |
+| **FR-02** | Must | Quản lý danh bạ khách hàng: thêm, sửa, xóa, tìm kiếm, lọc; tự động sinh mã khách hàng (`KH-YYYY-SEQ`). |
+| **FR-03** | Must | Quản lý sản phẩm: chọn Đơn vị tính từ danh mục chuẩn hóa; quản lý giá vốn, giá bán, tồn kho, mức tồn tối thiểu. |
+| **FR-04** | Must | Quản lý kho: lập phiếu Nhập kho / Xuất kho; cập nhật tồn kho tức thì; cảnh báo khi tồn kho ≤ tồn tối thiểu. |
+| **FR-05** | Must | Soạn báo giá: tự tính thành tiền từng dòng, chiết khấu, thuế VAT, phí vận chuyển và tổng cộng thanh toán. |
 | **FR-06** | Must | Thiết lập điều khoản thanh toán theo đợt trong Báo giá và Hợp đồng với tỷ lệ %, số tiền và ngày đến hạn. |
 | **FR-07** | Must | Chuyển đổi Báo giá sang Hợp đồng với 1 thao tác, tự động sao chép toàn bộ dữ liệu và liên kết mã báo giá gốc. |
 | **FR-08** | Must | Quản lý danh sách hợp đồng, theo dõi trạng thái hợp đồng và in ấn/xuất file PDF/Word hợp đồng chuẩn. |
@@ -192,25 +206,6 @@ flowchart TD
 | **FR-11** | Must | Gửi email Báo giá và Hợp đồng qua cấu hình SMTP; lưu nhật ký gửi mail (`email_logs`). |
 | **FR-12** | Must | Cài đặt thông tin pháp nhân doanh nghiệp, logo và quy tắc định dạng mã sinh tự động cho các loại tài liệu. |
 | **FR-13** | Must | Dashboard thống kê doanh thu, tổng công nợ phải thu, số lượng đơn hàng và biểu đồ doanh số theo thời gian. |
-| **FR-14** | Should | Đánh dấu áp dụng trừ tồn kho khi hợp đồng chuyển sang trạng thái có hiệu lực. |
-| **FR-15** | Should | Cảnh báo trực quan các đợt thanh toán quá hạn trên màn hình quản lý thanh toán. |
-
-### 7.1. Ma trận phân quyền người dùng [ĐỀ XUẤT CHO GIAI ĐOẠN SAU]
-
-> **Ghi chú phạm vi:** Trong giai đoạn MVP hiện tại, hệ thống tập trung hoàn thiện luồng nghiệp vụ bán hàng cốt lõi và dùng chung quyền truy cập quản trị cho các tài khoản nội bộ. Bảng ma trận phân quyền chi tiết dưới đây là **định hướng nghiệp vụ cho giai đoạn tiếp theo (Should Have)** khi mở rộng quy mô tổ chức:
-
-| Nhóm chức năng | ADMIN | SALES | ACCOUNTANT | Giai đoạn |
-| --- | :---: | :---: | :---: | :---: |
-| Xem Dashboard tổng quan | Toàn quyền | Chỉ xem số liệu cá nhân | Toàn quyền tài chính | Giai đoạn sau |
-| Quản lý Khách hàng | Toàn quyền | Toàn quyền | Xem & Cập nhật | Giai đoạn sau |
-| Quản lý Sản phẩm & Đơn vị tính | Toàn quyền | Chỉ xem | Chỉ xem | Giai đoạn sau |
-| Lập phiếu Nhập / Xuất kho | Toàn quyền | Không có quyền | Xem lịch sử kho | Giai đoạn sau |
-| Tạo & Quản lý Báo giá | Toàn quyền | Toàn quyền | Xem | Giai đoạn sau |
-| Chuyển đổi Báo giá -> Hợp đồng | Toàn quyền | Toàn quyền | Xem | Giai đoạn sau |
-| Quản lý Hợp đồng | Toàn quyền | Tạo & Theo dõi | Toàn quyền | Giai đoạn sau |
-| Ghi nhận Thanh toán & Công nợ | Toàn quyền | Xem tiến độ | Toàn quyền thu tiền | Giai đoạn sau |
-| Quản lý Mẫu tài liệu (Templates) | Toàn quyền | Chỉ sử dụng | Chỉ sử dụng | Giai đoạn sau |
-| Cấu hình Hệ thống & Doanh nghiệp | Toàn quyền | Không có quyền | Không có quyền | Giai đoạn sau |
 
 ---
 
@@ -237,7 +232,7 @@ flowchart TD
 | **Đã gửi** (Báo giá) | Khách từ chối / Hết hạn | **Từ chối / Hết hạn** | Khách phản hồi hoặc vượt quá ngày hiệu lực |
 | **Nháp** (Hợp đồng) | Ký kết hợp đồng | **Đang thực hiện** | Hai bên hoàn tất ký kết |
 | **Đang thực hiện** | Thanh toán đủ 100% | **Hoàn tất** | Công nợ còn lại bằng 0 |
-| **Đang thực hiện** | Hai bên hủy thỏa thuận | **Đã hủy** | **[CẦN XÁC NHẬN]** quyền hạn phê duyệt hủy |
+| **Đang thực hiện** | Hai bên hủy thỏa thuận | **Đã hủy** | Người dùng cập nhật trạng thái hủy |
 
 ---
 
@@ -245,15 +240,15 @@ flowchart TD
 
 ### 9.1. Các thực thể dữ liệu cốt lõi
 
-| Thực thể | Thuộc tính chính | Quan hệ / Vai trò |
+| Thực thể | Thuộc tính chính | Vai trò trong hệ thống |
 | --- | --- | --- |
-| **User** | ID, email, password, name, role | Quản lý tài khoản người dùng nội bộ |
-| **Customer** | ID (Mã KH), name, phone, email, tax, address, representative, note | Một khách hàng có thể có nhiều báo giá và hợp đồng |
-| **Product** | ID (Mã SP), name, category, unit, cost, price, stock, minStock, status | Lưu thông tin sản phẩm, đơn giá và tồn kho |
+| **User** | ID, email, password, name | Quản lý tài khoản người dùng nội bộ |
+| **Customer** | ID (Mã KH), name, phone, email, tax, address, representative, note | Lưu thông tin khách hàng và đối tác B2B |
+| **Product** | ID (Mã SP), name, category, unit, cost, price, stock, minStock, status | Lưu danh mục sản phẩm, đơn giá và tồn kho |
 | **Quote** | ID (Mã BG), customerId, date, status, discount, vatPct, shipping, paymentTerms, notes, validUntil | Lưu thông tin báo giá và điều khoản thanh toán |
-| **QuoteItem** | ID, quoteId, productId, productName, qty, price, discount | Danh mục chi tiết các sản phẩm trong báo giá |
+| **QuoteItem** | ID, quoteId, productId, productName, qty, price, discount | Danh mục chi tiết các dòng sản phẩm trong báo giá |
 | **Contract** | ID (Mã HĐ), quoteId, customerId, date, status, paymentTerms, notes, stockApplied | Lưu hợp đồng kinh tế và tiến độ thanh toán |
-| **ContractItem** | ID, contractId, productId, productName, qty, price | Danh mục chi tiết các sản phẩm trong hợp đồng |
+| **ContractItem** | ID, contractId, productId, productName, qty, price | Danh mục chi tiết các dòng sản phẩm trong hợp đồng |
 | **Payment** | ID (Mã TT), contractId, date, amount, method, note | Ghi nhận các lần thanh toán theo hợp đồng |
 | **InventoryTransaction** | ID (Mã NK), productId, date, type (in/out/adjust), qty, ref, note | Nhật ký các lần nhập / xuất / điều chỉnh kho |
 | **Template** | ID, type (quote/contract), name, isDefault, paper, locked, content | Lưu trữ mẫu tài liệu và cấu trúc HTML định dạng |
@@ -262,14 +257,14 @@ flowchart TD
 ### 9.2. Tích hợp bên ngoài
 
 - **Hạ tầng gửi Email (SMTP)**: Kết nối dịch vụ gửi email để gửi báo giá, hợp đồng và mã OTP xác thực.
-- **Cơ sở dữ liệu**: Cơ sở dữ liệu quan hệ PostgreSQL đảm bảo tính toàn vẹn dữ liệu giao dịch tài chính.
-- **Thư viện xuất bản tài liệu**: Tích hợp các bộ thư viện chuyển đổi HTML sang PDF và Word (.docx).
+- **Cơ sở dữ liệu**: PostgreSQL đảm bảo tính toàn vẹn dữ liệu giao dịch tài chính.
+- **Thư viện xuất bản tài liệu**: Tích hợp các bộ thư viện chuyển đổi HTML sang PDF (`html2pdf.js`) và Word (.docx qua định dạng Office XML).
 
 ---
 
 ## 10. Danh sách màn hình và Định hướng UX
 
-| Khu vực | Màn hình | Nội dung và tác vụ chính |
+| Phân hệ | Màn hình | Nội dung và tác vụ chính |
 | --- | --- | --- |
 | **Tổng quan** | Dashboard | Các thẻ chỉ số tổng hợp, biểu đồ doanh thu, danh sách báo giá và hợp đồng mới |
 | **Khách hàng** | Danh sách & Chi tiết Khách hàng | Bảng tra cứu khách hàng, form thêm/sửa, xem lịch sử báo giá/hợp đồng của khách |
@@ -278,7 +273,7 @@ flowchart TD
 | **Hợp đồng** | Quản lý & Soạn thảo Hợp đồng | Bảng hợp đồng, form soạn thảo, theo dõi tiến độ thanh toán, in ấn và xuất file hợp đồng |
 | **Thanh toán** | Quản lý Thanh toán & Công nợ | Bảng theo dõi các đợt thanh toán, form ghi nhận phiếu thu tiền theo từng hợp đồng |
 | **Mẫu tài liệu** | Quản lý Mẫu Báo giá & Hợp đồng | Danh sách mẫu, trình soạn thảo trực quan, công cụ chèn biến thay thế dữ liệu |
-| **Cài đặt** | Cài đặt Doanh nghiệp & Hệ thống | Cấu hình thông tin công ty, logo, quy tắc sinh mã, cấu hình email và tài khoản |
+| **Cài đặt** | Cài đặt Doanh nghiệp & Hệ thống | Cấu hình thông tin công ty, logo, quy tắc sinh mã, cấu hình email |
 | **Xác thực** | Đăng nhập & Quên mật khẩu | Giao diện đăng nhập, form nhập email nhận OTP khôi phục mật khẩu |
 
 ---
@@ -298,8 +293,6 @@ flowchart TD
 
 ## 12. Tiêu chí nghiệm thu (Acceptance Criteria)
 
-### 12.1. Điều kiện bắt buộc của MVP
-
 | Mã | Tình huống kiểm thử | Tiêu chí đạt |
 | --- | --- | --- |
 | **AC-01** | Tạo khách hàng và sản phẩm mới | Dữ liệu được lưu chính xác; mã khách hàng/sản phẩm tự động sinh đúng quy tắc cấu hình. |
@@ -310,45 +303,16 @@ flowchart TD
 | **AC-06** | Xuất bản file PDF và Word | Tài liệu xuất ra có đầy đủ thông tin doanh nghiệp, khách hàng, bảng sản phẩm và điều khoản thanh toán. |
 | **AC-07** | Nhập kho và cảnh báo tồn kho | Số lượng tồn kho tăng đúng theo phiếu nhập; sản phẩm hiển thị cảnh báo khi số lượng tồn ≤ mức tồn tối thiểu. |
 | **AC-08** | Khôi phục mật khẩu qua email OTP | Nhập đúng email đã đăng ký, hệ thống gửi mã OTP xác thực; nhập đúng OTP cho phép đổi mật khẩu mới thành công. |
-| **AC-09** | Bảo mật xác thực người dùng | Người dùng chưa đăng nhập không thể truy cập các trang nghiệp vụ nội bộ; phân quyền vai trò chi tiết sẽ nghiệm thu ở giai đoạn sau. |
-
-### 12.2. Definition of Done cho bản phát hành MVP
-
-Hệ thống có đầy đủ dữ liệu mẫu (sản phẩm, khách hàng, mẫu báo giá và hợp đồng), vận hành trơn tru luồng nghiệp vụ từ tạo báo giá, chuyển đổi hợp đồng đến ghi nhận thanh toán và công nợ, không xảy ra lỗi nghiêm trọng (crash/blocker) và vượt qua 100% các tiêu chí nghiệm thu bắt buộc.
+| **AC-09** | Bảo mật xác thực người dùng | Người dùng chưa đăng nhập không thể truy cập các trang nghiệp vụ nội bộ. |
 
 ---
 
-## 13. Rủi ro và Hướng xử lý
-
-| Rủi ro tiềm ẩn | Mức độ | Hướng xử lý đề xuất |
-| --- | :---: | --- |
-| Lỗi dịch vụ gửi email bên ngoài làm gián đoạn luồng công việc | Trung bình | Lưu nhật ký lỗi vào `email_logs`; hiển thị thông báo trạng thái rõ ràng mà không làm gián đoạn thao tác lưu chứng từ. |
-| Giá sản phẩm trong danh mục thay đổi làm ảnh hưởng báo giá cũ | Cao | Lưu ảnh chụp (snapshot) tên sản phẩm và đơn giá tại thời điểm tạo vào dòng chi tiết của báo giá/hợp đồng. |
-| Người dùng nhập sai cấu trúc mã định danh chứng từ | Thấp | Khóa trường nhập mã thủ công, áp dụng cơ chế tự động sinh mã theo quy tắc định sẵn. |
-| Xung đột dữ liệu khi nhiều người cùng thao tác trên một đơn hàng | Trung bình | **[ĐỀ XUẤT]** Áp dụng cơ chế kiểm tra phiên bản cập nhật khi lưu dữ liệu. |
-
----
-
-## 14. Câu hỏi cần xác nhận và quyết định sản phẩm
-
-| Mã | Mức ưu tiên | Quyết định nghiệp vụ cần chốt | Bên chịu trách nhiệm |
-| --- | :---: | --- | --- |
-| **Q-01** | **P0** | Trừ tồn kho tự động được thực hiện ngay khi Hợp đồng có hiệu lực hay khi lập Phiếu xuất kho thực tế? | Product Owner / Đại diện doanh nghiệp |
-| **Q-02** | **P0** | Báo giá khi gửi cho khách có cần giới hạn số ngày hiệu lực bắt buộc để tự động chuyển sang trạng thái Hết hạn không? | Đại diện doanh nghiệp |
-| **Q-03** | **P0** | Khi Hợp đồng đã có ghi nhận thanh toán một phần, có cho phép sửa lại danh mục hàng hóa hoặc giá trị hợp đồng không? | Đại diện doanh nghiệp / Kế toán |
-| **Q-04** | **P1** | Cơ chế phân quyền chi tiết (RBAC) giữa Sales, Kế toán và Admin có triển khai ngay sau khi hoàn thành MVP không? | Product Owner / Đại diện doanh nghiệp |
-| **Q-05** | **P1** | Có cần thiết lập hạn mức công nợ tối đa cho từng khách hàng để cảnh báo khi lên báo giá mới không? | Đại diện doanh nghiệp |
-| **Q-06** | **P1** | Quy định về quyền hủy hợp đồng: người dùng có được tự hủy hợp đồng hay bắt buộc phải do Admin phê duyệt? | Product Owner / Đại diện doanh nghiệp |
-| **Q-07** | **P2** | Thời gian lưu trữ dữ liệu lịch sử và quy định về việc sao lưu dữ liệu định kỳ của hệ thống? | Đội kỹ thuật |
-
----
-
-## 15. Kịch bản trình diễn tham chiếu (Demo Flow)
+## 13. Kịch bản trình diễn tham chiếu (Demo Flow)
 
 1. **Chuẩn bị dữ liệu**: Hệ thống đã có danh mục sản phẩm thiết bị văn phòng, mức tồn kho và danh bạ khách hàng doanh nghiệp.
-2. **Lập Báo giá**: Nhân viên kinh doanh tạo báo giá mới cho khách hàng, thêm 3 sản phẩm, áp dụng thuế VAT 10%, chia 3 đợt thanh toán (40% - 30% - 30%), xem trước bản in và xuất file PDF gửi khách.
-3. **Chuyển đổi Hợp đồng**: Khi khách chốt đơn, nhân viên bấm nút **Chuyển thành Hợp đồng**. Hệ thống tự động sinh Hợp đồng kinh tế mới kế thừa đầy đủ dữ liệu.
-4. **Ký kết & Ghi nhận Thanh toán**: Hợp đồng chuyển sang trạng thái thực hiện. Kế toán ghi nhận đợt thanh toán 1 (40% qua chuyển khoản ngân hàng). Hệ thống tự động trừ và hiển thị chính xác số tiền công nợ còn lại 60%.
+2. **Lập Báo giá**: Người dùng tạo báo giá mới cho khách hàng, thêm 3 sản phẩm, áp dụng thuế VAT 10%, chia 3 đợt thanh toán (40% - 30% - 30%), xem trước bản in và xuất file PDF gửi khách.
+3. **Chuyển đổi Hợp đồng**: Khi khách chốt đơn, người dùng bấm nút **Chuyển thành Hợp đồng**. Hệ thống tự động sinh Hợp đồng kinh tế mới kế thừa đầy đủ dữ liệu.
+4. **Ký kết & Ghi nhận Thanh toán**: Hợp đồng chuyển sang trạng thái thực hiện. Ghi nhận đợt thanh toán 1 (40% qua chuyển khoản ngân hàng). Hệ thống tự động trừ và hiển thị chính xác số tiền công nợ còn lại 60%.
 5. **Theo dõi Dashboard**: Màn hình tổng quan cập nhật tức thì doanh thu mới ghi nhận và danh sách đơn hàng đang thực hiện.
 
 ---
