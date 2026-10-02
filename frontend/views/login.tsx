@@ -368,14 +368,14 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950 p-3 sm:p-5 md:p-8">
-      {/* Outer Banner Card Container */}
+      {/* Outer Banner Card Container with Fixed Standard Size */}
       <div
-        className="w-full max-w-5xl rounded-[28px] sm:rounded-[36px] overflow-hidden shadow-2xl shadow-blue-500/20 bg-cover bg-center p-5 sm:p-8 md:p-10 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative transition-all"
+        className="w-full max-w-5xl min-h-[540px] lg:h-[570px] rounded-[28px] sm:rounded-[36px] overflow-hidden shadow-2xl shadow-blue-500/20 bg-cover bg-center p-5 sm:p-8 md:p-10 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center relative transition-all"
         style={{ backgroundImage: "url('/assets/images/bg.png')" }}
       >
         {/* Left Side: Dynamic Informational Banner */}
-        <div className="lg:col-span-5 text-white space-y-3 pr-0 lg:pr-2 transition-all">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white/90 text-[11px] font-semibold tracking-wider uppercase border border-white/20">
+        <div className="lg:col-span-5 text-white space-y-3 pr-0 lg:pr-2 transition-all flex flex-col justify-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white/90 text-[11px] font-semibold tracking-wider uppercase border border-white/20 w-fit">
             <Sparkles className="size-3 text-blue-200" />
             {bannerContent.tag}
           </div>
@@ -394,7 +394,7 @@ export function LoginPage() {
         </div>
 
         {/* Right Side: Interactive White Card */}
-        <div className="lg:col-span-7 w-full">
+        <div className="lg:col-span-7 w-full flex items-center justify-center">
           <div className="bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[28px] p-5 sm:p-7 md:p-8 shadow-2xl text-slate-800 dark:text-slate-100 border border-white/20 transition-all">
             
             {/* SCREEN 1: ĐĂNG NHẬP */}
