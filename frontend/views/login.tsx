@@ -68,18 +68,50 @@ export function LoginPage() {
     }
   };
 
-  const generateAndSendOtp = (targetEmail: string) => {
+  const generateAndSendOtp = async (targetEmail: string) => {
     // Sinh mã OTP ngẫu nhiên 6 chữ số
     const generated = Math.floor(100000 + Math.random() * 900000).toString();
     setServerOtp(generated);
     setOtpExpiresAt(Date.now() + 5 * 60 * 1000); // Hết hạn trong 5 phút
     setCooldown(60);
 
-    // Lưu log gửi email và hiển thị thông báo
-    toast.success(`Mã OTP xác thực của bạn là: ${generated}`, {
-      duration: 15000,
-      description: `Mã OTP đã được gửi đến ${targetEmail}. Mã có hiệu lực trong 5 phút.`,
+    try {
+      let smtpOptions: any = undefined;
+      if (typeof window !== "undefined") {
+        const raw = localStorage.getItem("sellflow_email_settings");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.sender_email && parsed.smtp_password) {
+            smtpOptions = {
+              host: parsed.smtp_host || "smtp.gmail.com",
+              port: Number(parsed.smtp_port) || 587,
+              user: parsed.sender_email,
+              pass: parsed.smtp_password,
+              senderName: parsed.sender_name || "SellFlow Support",
+            };
+          }
+        }
+      }
+
+      await fetch("http://localhost:4000/api/emails/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: targetEmail,
+          otp: generated,
+          smtpOptions,
+        }),
+      });
+    } catch (err) {
+      console.error("Lỗi khi gửi email OTP:", err);
+    }
+
+    // Thông báo hướng dẫn người dùng mở email
+    toast.success(`Đã gửi mã OTP đến ${targetEmail}`, {
+      duration: 8000,
+      description: "Vui lòng kiểm tra hộp thư đến (hoặc thư rác/spam) của bạn để lấy mã xác thực.",
     });
+
     return generated;
   };
 
@@ -95,7 +127,7 @@ export function LoginPage() {
   };
 
   // Request Reset OTP Link
-  const handleSendResetCode = (e: React.FormEvent) => {
+  const handleSendResetCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail || !resetEmail.includes("@")) {
       toast.error("Vui lòng nhập địa chỉ email hợp lệ");
@@ -103,11 +135,12 @@ export function LoginPage() {
     }
     setResetLoading(true);
 
-    setTimeout(() => {
-      setResetLoading(false);
-      generateAndSendOtp(resetEmail);
+    try {
+      await generateAndSendOtp(resetEmail);
       setResetStep("verify");
-    }, 600);
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   // Submit New Password Reset
@@ -306,30 +339,14 @@ export function LoginPage() {
             </form>
           ) : (
             <form onSubmit={handleConfirmReset} className="space-y-3.5 pt-1">
-              {/* Alert thông báo OTP */}
-              <div className="p-3 rounded-xl border border-blue-200 bg-blue-50/80 dark:bg-blue-950/40 dark:border-blue-900 text-xs space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                    <KeyRound className="size-3.5 text-blue-600 dark:text-blue-400" />
-                    Mã xác thực OTP:
-                  </span>
-                  {serverOtp && (
-                    <button
-                      type="button"
-                      onClick={() => setOtpCode(serverOtp)}
-                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 underline hover:opacity-80"
-                    >
-                      Tự động điền mã
-                    </button>
-                  )}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-blue-700 dark:text-blue-300">
-                    Mã đã gửi đến <strong className="font-mono">{resetEmail}</strong>:
-                  </span>
-                  <span className="font-mono font-bold text-sm tracking-widest text-blue-700 dark:text-blue-300 bg-white dark:bg-blue-900/60 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                    {serverOtp || "------"}
-                  </span>
+              {/* Thông báo hướng dẫn kiểm tra hòm thư email */}
+              <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/30 dark:border-blue-900 text-xs flex items-start gap-2.5 text-blue-900 dark:text-blue-200">
+                <Mail className="size-4.5 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-semibold text-blue-950 dark:text-blue-100">Kiểm tra hộp thư email của bạn</p>
+                  <p className="text-[11px] text-blue-700/90 dark:text-blue-300 leading-relaxed">
+                    Hệ thống đã gửi mã OTP 6 chữ số đến <strong className="font-mono text-blue-950 dark:text-blue-100">{resetEmail}</strong>. Vui lòng mở hộp thư đến (hoặc thư rác/spam) để lấy mã và nhập vào ô bên dưới.
+                  </p>
                 </div>
               </div>
 
