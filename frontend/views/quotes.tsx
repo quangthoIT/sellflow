@@ -358,7 +358,7 @@ function QuoteEditor({ quoteId, customers, products, templates, onSaved, onCance
         setTemplateId(defaultTpl?.id ?? "");
         setVatPct(s.vat_default);
         setValidUntil(new Date(Date.now() + s.quote_valid_days * 86400000).toISOString().split("T")[0]);
-        setPaymentTerms({ method: "transfer", installments: [{ label: "Thanh toán 1 lần", date: new Date().toISOString().split("T")[0], percent: 100, amount: 0, note: "" }] });
+        setPaymentTerms({ method: "transfer", installments: [{ label: "Đợt 1", date: new Date().toISOString().split("T")[0], percent: 100, amount: 0, note: "" }] });
       }
       setLoading(false);
     })();
@@ -783,7 +783,7 @@ function QuotePreview({ quoteId, customers, templates, products = [] }: {
     </tbody>
     <tfoot>
       <tr style="font-weight:bold;background:#f8fafc;">
-        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng (Tạm tính):</td>
+        <td colspan="5" style="border:1px solid #cbd5e1;padding:6px;text-align:right;">Tổng tiền hàng:</td>
         <td style="border:1px solid #cbd5e1;padding:6px;text-align:right;">${formatVND(totals.subtotal)}</td>
       </tr>
       ${totals.vat > 0 ? `
@@ -810,8 +810,8 @@ function QuotePreview({ quoteId, customers, templates, products = [] }: {
             <th style="border:1px solid #ddd;padding:6px;text-align:left">Ghi chú</th>
           </tr></thead>
           <tbody>
-            ${quote.payment_terms.installments.map((it) => `<tr>
-              <td style="border:1px solid #ddd;padding:6px">${it.label}</td>
+            ${quote.payment_terms.installments.map((it, idx) => `<tr>
+              <td style="border:1px solid #ddd;padding:6px">${it.label === "Thanh toán 1 lần" ? "Đợt 1" : (it.label || `Đợt ${idx + 1}`)}</td>
               <td style="border:1px solid #ddd;padding:6px">${formatDate(it.date)}</td>
               <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.percent || 0}%</td>
               <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.amount)}</td>
@@ -943,8 +943,10 @@ function PaymentTermsEditor({ terms, total, onChange }: {
       remainingMoney -= amt;
 
       const old = current[i];
+      const oldLabel = old?.label;
+      const label = (!oldLabel || oldLabel === "Thanh toán 1 lần") ? `Đợt ${i + 1}` : oldLabel;
       newInstallments.push({
-        label: old?.label || `Đợt ${i + 1}`,
+        label,
         date: old?.date || new Date().toISOString().split("T")[0],
         percent: pct,
         amount: Math.max(0, amt),

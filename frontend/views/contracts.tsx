@@ -546,8 +546,8 @@ function ContractPreview({ contractId, customers, templates, products = [] }: {
             <th style="border:1px solid #ddd;padding:6px;text-align:left">Ghi chú</th>
           </tr></thead>
           <tbody>
-            ${(contract.payment_terms as any).installments.map((it: any) => `<tr>
-              <td style="border:1px solid #ddd;padding:6px">${it.label}</td>
+            ${(contract.payment_terms as any).installments.map((it: any, idx: number) => `<tr>
+              <td style="border:1px solid #ddd;padding:6px">${it.label === "Thanh toán 1 lần" ? "Đợt 1" : (it.label || `Đợt ${idx + 1}`)}</td>
               <td style="border:1px solid #ddd;padding:6px">${formatDate(it.date)}</td>
               <td style="border:1px solid #ddd;padding:6px;text-align:right">${it.percent || 0}%</td>
               <td style="border:1px solid #ddd;padding:6px;text-align:right">${formatVND(it.amount)}</td>
