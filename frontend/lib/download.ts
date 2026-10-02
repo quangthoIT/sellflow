@@ -48,14 +48,48 @@ function cleanHtmlForExport(rawHtml: string, target: "pdf" | "word"): string {
   }
 }
 
+async function getHtml2Pdf(): Promise<any> {
+  if (typeof window === "undefined") return null;
+  if ((window as any).html2pdf) return (window as any).html2pdf;
+
+  try {
+    // @ts-ignore
+    const mod = await import("html2pdf.js");
+    let fn = (mod as any).default || mod;
+    if (typeof fn === "function") return fn;
+    if (fn && typeof fn.default === "function") return fn.default;
+  } catch (err) {
+    console.warn("Webpack module load failed, fallback to script injection:", err);
+  }
+
+  // Fallback: load bundle from reliable script CDN if webpack bundle fails
+  if (!(window as any).html2pdf) {
+    await new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector('script[src*="html2pdf"]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve());
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Không thể tải thư viện xuất PDF"));
+      document.head.appendChild(script);
+    });
+  }
+
+  return (window as any).html2pdf;
+}
+
 export async function downloadPdf(title: string, html: string) {
   if (typeof window === "undefined") return;
   const toastId = toast.loading("Đang khởi tạo và tải file PDF...");
   try {
-    // Dynamically import html2pdf.js to avoid SSR bundling issues
-    // @ts-ignore
-    const html2pdfModule = await import("html2pdf.js");
-    const html2pdf = html2pdfModule.default || html2pdfModule;
+    const html2pdfFn = await getHtml2Pdf();
+    if (!html2pdfFn || typeof html2pdfFn !== "function") {
+      throw new Error("html2pdf library is not available as a function");
+    }
 
     const cleanHtml = cleanHtmlForExport(html, "pdf");
     const container = document.createElement("div");
@@ -80,8 +114,7 @@ export async function downloadPdf(title: string, html: string) {
       pagebreak: { mode: ["css", "legacy"], before: [".html2pdf__page-break", '[data-page-break="true"]', '[data-page-break]'] },
     };
 
-    // @ts-ignore
-    await html2pdf().set(opt).from(container).save();
+    await html2pdfFn().set(opt).from(container).save();
     document.body.removeChild(container);
     toast.success("Đã tải xong file PDF!", { id: toastId });
   } catch (err) {
