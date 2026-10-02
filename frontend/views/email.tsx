@@ -81,20 +81,33 @@ export function EmailPage() {
     ]);
 
     let localSettings: any = {};
+    let appSettings: any = {};
     if (typeof window !== "undefined") {
       try {
         const raw = localStorage.getItem("sellflow_email_settings");
         if (raw) localSettings = JSON.parse(raw);
+        const rawApp = localStorage.getItem("sellflow_app_settings");
+        if (rawApp) appSettings = JSON.parse(rawApp);
       } catch (e) {}
     }
 
-    const merged = { ...defaultEmailSettings, ...(s.data || {}), ...localSettings };
+    const fallbackSenderName = appSettings.company_name || defaultEmailSettings.sender_name;
+    const fallbackSenderEmail = appSettings.company_email || defaultEmailSettings.sender_email;
+
+    const merged = {
+      ...defaultEmailSettings,
+      sender_name: fallbackSenderName,
+      sender_email: fallbackSenderEmail,
+      reply_to: fallbackSenderEmail,
+      ...(s.data || {}),
+      ...localSettings,
+    };
 
     const loadedSettings: EmailSettings = {
       id: 1,
-      sender_name: merged.sender_name ?? defaultEmailSettings.sender_name,
-      sender_email: merged.sender_email ?? defaultEmailSettings.sender_email,
-      reply_to: merged.reply_to ?? defaultEmailSettings.reply_to,
+      sender_name: merged.sender_name ?? fallbackSenderName,
+      sender_email: merged.sender_email ?? fallbackSenderEmail,
+      reply_to: merged.reply_to ?? fallbackSenderEmail,
       auto_send_signed: merged.auto_send_signed ?? defaultEmailSettings.auto_send_signed,
       attach_pdf: merged.attach_pdf ?? defaultEmailSettings.attach_pdf,
       subject: merged.subject ?? defaultEmailSettings.subject,

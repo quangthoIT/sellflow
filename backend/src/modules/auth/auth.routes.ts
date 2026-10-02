@@ -89,7 +89,28 @@ export async function authRoutes(fastify: FastifyInstance) {
         },
       });
 
-      // 3. Ensure Default Templates Exist
+      // 3. Setup Email Settings
+      try {
+        await db.emailSetting.upsert({
+          where: { id: 'default' },
+          update: {
+            senderName: cleanCompanyName,
+            senderEmail: cleanEmail,
+          },
+          create: {
+            id: 'default',
+            senderName: cleanCompanyName,
+            senderEmail: cleanEmail,
+            smtpHost: 'smtp.gmail.com',
+            smtpPort: 587,
+            autoSend: false,
+          },
+        });
+      } catch (emailSetErr) {
+        console.warn('[Auth] Email setting sync warning:', emailSetErr);
+      }
+
+      // 4. Ensure Default Templates Exist
       try {
         for (const t of DEFAULT_TEMPLATES) {
           await db.template.upsert({

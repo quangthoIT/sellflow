@@ -220,6 +220,17 @@ export function LoginPage() {
         };
         localStorage.setItem("sellflow_app_settings", JSON.stringify(updatedSettings));
         clearSettingsCache();
+
+        // Sync to Email Settings as well
+        const currentEmailSettings = localStorage.getItem("sellflow_email_settings");
+        const parsedEmailSettings = currentEmailSettings ? JSON.parse(currentEmailSettings) : {};
+        const updatedEmailSettings = {
+          ...parsedEmailSettings,
+          sender_name: companyName.trim(),
+          sender_email: regEmail.trim(),
+          reply_to: regEmail.trim(),
+        };
+        localStorage.setItem("sellflow_email_settings", JSON.stringify(updatedEmailSettings));
       }
 
       // 3. Automatically sign in as admin and redirect
