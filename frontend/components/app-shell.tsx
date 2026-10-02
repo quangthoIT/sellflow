@@ -3,7 +3,6 @@ import { usePathname } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
-import { AIAssistant } from "@/components/ai-assistant";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { LoginPage } from "@/views/login";
 
@@ -37,7 +36,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </SidebarInset>
-      <AIAssistant />
     </SidebarProvider>
   );
 }
