@@ -1,11 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../config/db.js';
+import { requireTenantContext } from '../../utils/tenant.js';
 
 export async function contractsRoutes(fastify: FastifyInstance) {
   // Get all contracts
-  fastify.get('/', async () => {
+  fastify.get('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
       const contracts = await db.contract.findMany({
+        where: { companyId: tenant.companyId },
         include: { customer: true, items: true, payments: true },
         orderBy: { createdAt: 'desc' },
       });
@@ -42,9 +47,13 @@ export async function contractsRoutes(fastify: FastifyInstance) {
   });
 
   // Get all contract items
-  fastify.get('/items', async () => {
+  fastify.get('/items', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
       const items = await db.contractItem.findMany({
+        where: { contract: { companyId: tenant.companyId } },
         orderBy: { createdAt: 'asc' },
       });
       return items.map(i => ({
@@ -64,13 +73,16 @@ export async function contractsRoutes(fastify: FastifyInstance) {
 
   // Get single contract
   fastify.get('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      const c = await db.contract.findUnique({
-        where: { id },
+      const c = await db.contract.findFirst({
+        where: { id, companyId: tenant.companyId },
         include: { customer: true, items: true, payments: true },
       });
-      if (!c) return reply.status(404).send({ success: false, message: 'Not found' });
+      if (!c) return reply.status(404).send({ success: false, message: 'Không tìm thấy hợp đồng' });
       return {
         ...c,
         quoteId: c.quoteId,
@@ -105,6 +117,9 @@ export async function contractsRoutes(fastify: FastifyInstance) {
 
   // Upsert contract
   fastify.post('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const id = data.id || `HD${Date.now()}`;
@@ -119,11 +134,24 @@ export async function contractsRoutes(fastify: FastifyInstance) {
         notes: data.notes || '',
       };
 
-      await db.contract.upsert({
-        where: { id },
-        update: contractData,
-        create: { id, ...contractData },
+      const existing = await db.contract.findFirst({
+        where: { id, companyId: tenant.companyId },
       });
+
+      if (existing) {
+        await db.contract.update({
+          where: { id },
+          data: contractData,
+        });
+      } else {
+        await db.contract.create({
+          data: {
+            id,
+            companyId: tenant.companyId,
+            ...contractData,
+          },
+        });
+      }
 
       if (data.items && Array.isArray(data.items)) {
         await db.contractItem.deleteMany({ where: { contractId: id } });
@@ -150,15 +178,22 @@ export async function contractsRoutes(fastify: FastifyInstance) {
 
   // Add / Upsert contract items directly
   fastify.post('/items', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const items = Array.isArray(data) ? data : [data];
       const created = [];
       for (const item of items) {
+        const contractId = item.contractId || item.contract_id;
+        const contract = await db.contract.findFirst({ where: { id: contractId, companyId: tenant.companyId } });
+        if (!contract) continue;
+
         const row = await db.contractItem.create({
           data: {
             id: item.id || undefined,
-            contractId: item.contractId || item.contract_id,
+            contractId: contractId,
             productId: item.productId || item.product_id || null,
             productName: item.productName || item.product_name || '',
             qty: Number(item.qty || 1),
@@ -175,8 +210,15 @@ export async function contractsRoutes(fastify: FastifyInstance) {
 
   // Delete contract items by contractId
   fastify.delete('/items/by-contract/:contractId', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { contractId } = request.params as { contractId: string };
     try {
+      const contract = await db.contract.findFirst({ where: { id: contractId, companyId: tenant.companyId } });
+      if (!contract) {
+        return reply.status(404).send({ success: false, message: 'Hợp đồng không tồn tại' });
+      }
       await db.contractItem.deleteMany({ where: { contractId } });
       return { success: true };
     } catch (error: any) {
@@ -186,9 +228,17 @@ export async function contractsRoutes(fastify: FastifyInstance) {
 
   // Delete contract item by id
   fastify.delete('/items/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.contractItem.deleteMany({ where: { OR: [{ id }, { contractId: id }] } });
+      await db.contractItem.deleteMany({
+        where: {
+          OR: [{ id }, { contractId: id }],
+          contract: { companyId: tenant.companyId },
+        },
+      });
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });
@@ -197,9 +247,17 @@ export async function contractsRoutes(fastify: FastifyInstance) {
 
   // Delete contract
   fastify.delete('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.contract.delete({ where: { id } });
+      const res = await db.contract.deleteMany({
+        where: { id, companyId: tenant.companyId },
+      });
+      if (res.count === 0) {
+        return reply.status(404).send({ success: false, message: 'Hợp đồng không tồn tại hoặc không thuộc doanh nghiệp' });
+      }
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });

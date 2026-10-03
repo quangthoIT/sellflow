@@ -204,35 +204,9 @@ export function LoginPage() {
         throw new Error(errData.message || "Đăng ký tài khoản trên máy chủ thất bại");
       }
 
-      // 2. Persist workspace profile settings cache
+      // 2. Clear old cached settings
       if (typeof window !== "undefined") {
-        localStorage.removeItem("sellflow_admin_password");
-        localStorage.setItem("sellflow_admin_name", `Quản trị viên - ${companyName.trim()}`);
-
-        const currentSettings = localStorage.getItem("sellflow_app_settings");
-        const parsedSettings = currentSettings ? JSON.parse(currentSettings) : {};
-        const updatedSettings = {
-          ...parsedSettings,
-          company_name: companyName.trim(),
-          company_email: regEmail.trim(),
-          company_tax: companyTax.trim(),
-          company_phone: companyPhone.trim(),
-          company_address: companyAddress.trim(),
-          logo_url: logoUrl.trim(),
-        };
-        localStorage.setItem("sellflow_app_settings", JSON.stringify(updatedSettings));
         clearSettingsCache();
-
-        // Sync to Email Settings as well
-        const currentEmailSettings = localStorage.getItem("sellflow_email_settings");
-        const parsedEmailSettings = currentEmailSettings ? JSON.parse(currentEmailSettings) : {};
-        const updatedEmailSettings = {
-          ...parsedEmailSettings,
-          sender_name: companyName.trim(),
-          sender_email: regEmail.trim(),
-          reply_to: regEmail.trim(),
-        };
-        localStorage.setItem("sellflow_email_settings", JSON.stringify(updatedEmailSettings));
       }
 
       // 3. Automatically sign in as admin and redirect

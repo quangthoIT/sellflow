@@ -1,11 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../config/db.js';
+import { requireTenantContext } from '../../utils/tenant.js';
 
 export async function quotationsRoutes(fastify: FastifyInstance) {
-  // Get all quotations
-  fastify.get('/', async () => {
+  // Get all quotations for company
+  fastify.get('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
       const quotes = await db.quote.findMany({
+        where: { companyId: tenant.companyId },
         include: { customer: true, items: true },
         orderBy: { createdAt: 'desc' },
       });
@@ -36,10 +41,14 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Get all quote items
-  fastify.get('/items', async () => {
+  // Get all quote items for company
+  fastify.get('/items', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
       const items = await db.quoteItem.findMany({
+        where: { quote: { companyId: tenant.companyId } },
         orderBy: { createdAt: 'asc' },
       });
       return items.map(i => ({
@@ -60,13 +69,16 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
 
   // Get single quotation
   fastify.get('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      const q = await db.quote.findUnique({
-        where: { id },
+      const q = await db.quote.findFirst({
+        where: { id, companyId: tenant.companyId },
         include: { customer: true, items: true },
       });
-      if (!q) return reply.status(404).send({ success: false, message: 'Not found' });
+      if (!q) return reply.status(404).send({ success: false, message: 'Không tìm thấy báo giá' });
       return {
         ...q,
         customerId: q.customerId,
@@ -96,6 +108,9 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
 
   // Upsert quotation
   fastify.post('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const id = data.id || `BG${Date.now()}`;
@@ -112,11 +127,24 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
         paymentTerms: data.paymentTerms || data.payment_terms || null,
       };
 
-      await db.quote.upsert({
-        where: { id },
-        update: quoteData,
-        create: { id, ...quoteData },
+      const existing = await db.quote.findFirst({
+        where: { id, companyId: tenant.companyId },
       });
+
+      if (existing) {
+        await db.quote.update({
+          where: { id },
+          data: quoteData,
+        });
+      } else {
+        await db.quote.create({
+          data: {
+            id,
+            companyId: tenant.companyId,
+            ...quoteData,
+          },
+        });
+      }
 
       if (data.items && Array.isArray(data.items)) {
         await db.quoteItem.deleteMany({ where: { quoteId: id } });
@@ -144,15 +172,23 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
 
   // Add / Upsert quote items directly
   fastify.post('/items', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const items = Array.isArray(data) ? data : [data];
       const created = [];
       for (const item of items) {
+        const quoteId = item.quoteId || item.quote_id;
+        // Verify quote ownership
+        const quote = await db.quote.findFirst({ where: { id: quoteId, companyId: tenant.companyId } });
+        if (!quote) continue;
+
         const row = await db.quoteItem.create({
           data: {
             id: item.id || undefined,
-            quoteId: item.quoteId || item.quote_id,
+            quoteId: quoteId,
             productId: item.productId || item.product_id || null,
             productName: item.productName || item.product_name || '',
             qty: Number(item.qty || 1),
@@ -170,8 +206,15 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
 
   // Delete quote items by quoteId
   fastify.delete('/items/by-quote/:quoteId', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { quoteId } = request.params as { quoteId: string };
     try {
+      const quote = await db.quote.findFirst({ where: { id: quoteId, companyId: tenant.companyId } });
+      if (!quote) {
+        return reply.status(404).send({ success: false, message: 'Báo giá không tồn tại' });
+      }
       await db.quoteItem.deleteMany({ where: { quoteId } });
       return { success: true };
     } catch (error: any) {
@@ -181,9 +224,17 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
 
   // Delete quote item by id
   fastify.delete('/items/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.quoteItem.deleteMany({ where: { OR: [{ id }, { quoteId: id }] } });
+      await db.quoteItem.deleteMany({
+        where: {
+          OR: [{ id }, { quoteId: id }],
+          quote: { companyId: tenant.companyId },
+        },
+      });
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });
@@ -192,9 +243,17 @@ export async function quotationsRoutes(fastify: FastifyInstance) {
 
   // Delete quotation
   fastify.delete('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.quote.delete({ where: { id } });
+      const res = await db.quote.deleteMany({
+        where: { id, companyId: tenant.companyId },
+      });
+      if (res.count === 0) {
+        return reply.status(404).send({ success: false, message: 'Báo giá không tồn tại hoặc không thuộc doanh nghiệp' });
+      }
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });

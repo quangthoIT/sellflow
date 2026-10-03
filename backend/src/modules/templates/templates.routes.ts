@@ -1,42 +1,63 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../config/db.js';
 import { DEFAULT_TEMPLATES } from './default-templates.js';
+import { requireTenantContext } from '../../utils/tenant.js';
 
 export async function templatesRoutes(fastify: FastifyInstance) {
-  // Ensure default standard templates exist and remain up-to-date
-  const ensureDefaultTemplates = async () => {
+  // Ensure default standard templates exist for a given company
+  const ensureCompanyTemplates = async (companyId: string) => {
     try {
-      for (const t of DEFAULT_TEMPLATES) {
-        await db.template.upsert({
-          where: { id: t.id },
-          update: {
-            content: t.content,
-          },
-          create: t,
-        });
+      const count = await db.template.count({ where: { companyId } });
+      if (count === 0) {
+        for (const t of DEFAULT_TEMPLATES) {
+          await db.template.create({
+            data: {
+              id: `${companyId}_${t.id}`,
+              companyId: companyId,
+              type: t.type,
+              name: t.name,
+              isDefault: t.isDefault,
+              paper: t.paper,
+              locked: t.locked,
+              content: t.content,
+            },
+          });
+        }
       }
     } catch (err) {
-      console.warn('Warning: Could not auto-seed default templates:', err);
+      console.warn('Warning: Could not seed templates for company:', err);
     }
   };
 
-  // Run on startup
-  ensureDefaultTemplates();
+  fastify.get('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
 
-  fastify.get('/', async () => {
     try {
-      await ensureDefaultTemplates();
-      return await db.template.findMany({ orderBy: [{ type: 'asc' }, { createdAt: 'desc' }] });
+      await ensureCompanyTemplates(tenant.companyId);
+      return await db.template.findMany({
+        where: {
+          OR: [
+            { companyId: tenant.companyId },
+            { companyId: null },
+          ],
+        },
+        orderBy: [{ type: 'asc' }, { createdAt: 'desc' }],
+      });
     } catch (err) {
       return [];
     }
   });
 
   fastify.post('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const id = data.id || `TMP_${Date.now()}`;
       const templateData = {
+        companyId: tenant.companyId,
         type: data.type || 'quote',
         name: data.name,
         isDefault: Boolean(data.isDefault ?? data.is_default),
@@ -47,16 +68,26 @@ export async function templatesRoutes(fastify: FastifyInstance) {
 
       if (templateData.isDefault) {
         await db.template.updateMany({
-          where: { type: templateData.type },
+          where: { type: templateData.type, companyId: tenant.companyId },
           data: { isDefault: false },
         });
       }
 
-      const template = await db.template.upsert({
-        where: { id },
-        update: templateData,
-        create: { id, ...templateData },
+      const existing = await db.template.findFirst({
+        where: { id, companyId: tenant.companyId },
       });
+
+      let template;
+      if (existing) {
+        template = await db.template.update({
+          where: { id },
+          data: templateData,
+        });
+      } else {
+        template = await db.template.create({
+          data: { id, ...templateData },
+        });
+      }
 
       return { success: true, template };
     } catch (error: any) {
@@ -65,6 +96,9 @@ export async function templatesRoutes(fastify: FastifyInstance) {
   });
 
   fastify.post('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     const data = request.body as any;
     try {
@@ -80,16 +114,26 @@ export async function templatesRoutes(fastify: FastifyInstance) {
 
       if (templateData.isDefault && templateData.type) {
         await db.template.updateMany({
-          where: { type: templateData.type },
+          where: { type: templateData.type, companyId: tenant.companyId },
           data: { isDefault: false },
         });
       }
 
-      const template = await db.template.upsert({
-        where: { id },
-        update: templateData,
-        create: { id, ...templateData },
+      const existing = await db.template.findFirst({
+        where: { id, companyId: tenant.companyId },
       });
+
+      let template;
+      if (existing) {
+        template = await db.template.update({
+          where: { id },
+          data: templateData,
+        });
+      } else {
+        template = await db.template.create({
+          data: { id, companyId: tenant.companyId, ...templateData },
+        });
+      }
 
       return { success: true, template };
     } catch (error: any) {
@@ -98,13 +142,20 @@ export async function templatesRoutes(fastify: FastifyInstance) {
   });
 
   fastify.delete('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.template.delete({ where: { id } });
+      const res = await db.template.deleteMany({
+        where: { id, companyId: tenant.companyId },
+      });
+      if (res.count === 0) {
+        return reply.status(404).send({ success: false, message: 'Mẫu tài liệu không tồn tại' });
+      }
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });
     }
   });
 }
-

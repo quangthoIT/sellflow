@@ -22,11 +22,51 @@ export type Session = {
     id: string;
     email: string;
     name?: string;
+    role?: string;
+    companyId?: string;
+    company_id?: string;
+    company?: {
+      id: string;
+      name: string;
+    };
     user_metadata?: {
       name?: string;
     };
   };
 };
+
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("sellflow_session");
+      if (raw) {
+        const sess = JSON.parse(raw);
+        if (sess.access_token) {
+          headers["Authorization"] = `Bearer ${sess.access_token}`;
+        }
+        const cid = sess.user?.companyId || sess.user?.company_id || sess.user?.company?.id;
+        if (cid) {
+          headers["x-company-id"] = cid;
+        }
+      }
+    } catch {}
+  }
+  return headers;
+}
+
+export function getCurrentCompanyId(): string {
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("sellflow_session");
+      if (raw) {
+        const sess = JSON.parse(raw);
+        return sess.user?.companyId || sess.user?.company_id || sess.user?.company?.id || "default";
+      }
+    } catch {}
+  }
+  return "default";
+}
 
 function createLocalQueryBuilder(table: string) {
   const endpoint = ENDPOINT_MAP[table];
@@ -73,23 +113,43 @@ function createLocalQueryBuilder(table: string) {
       const items = isArray ? payload : [payload];
       return (async () => {
         try {
-          if (table === "app_settings" || table === "email_settings") {
+          const companyId = getCurrentCompanyId();
+          if (table === "app_settings") {
+            const item = items[0];
+            try {
+              await fetch(`${API_BASE}/auth/settings`, {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(item),
+              });
+            } catch {}
             if (typeof window !== "undefined") {
-              const key = table === "app_settings" ? "sellflow_app_settings" : "sellflow_email_settings";
+              const key = `sellflow_app_settings_${companyId}`;
               const raw = localStorage.getItem(key);
-              const current = raw ? JSON.parse(raw) : (table === "app_settings" ? getCachedSettings() : {});
+              const current = raw ? JSON.parse(raw) : getCachedSettings();
+              const merged = { ...current, ...item };
+              localStorage.setItem(key, JSON.stringify(merged));
+              clearSettingsCache();
+            }
+            return { data: isArray ? items : items[0], error: null };
+          }
+          if (table === "email_settings") {
+            if (typeof window !== "undefined") {
+              const key = `sellflow_email_settings_${companyId}`;
+              const raw = localStorage.getItem(key);
+              const current = raw ? JSON.parse(raw) : {};
               const merged = { ...current, ...items[0] };
               localStorage.setItem(key, JSON.stringify(merged));
-              if (table === "app_settings") clearSettingsCache();
             }
             return { data: isArray ? items : items[0], error: null };
           }
           if (table === "email_logs") {
             if (typeof window !== "undefined") {
-              const raw = localStorage.getItem("sellflow_email_logs");
+              const key = `sellflow_email_logs_${companyId}`;
+              const raw = localStorage.getItem(key);
               const logs = raw ? JSON.parse(raw) : [];
               const updated = [...items, ...logs];
-              localStorage.setItem("sellflow_email_logs", JSON.stringify(updated.slice(0, 100)));
+              localStorage.setItem(key, JSON.stringify(updated.slice(0, 100)));
             }
             return { data: isArray ? items : items[0], error: null };
           }
@@ -98,7 +158,7 @@ function createLocalQueryBuilder(table: string) {
           if (table === "quote_items" || table === "contract_items") {
             const res = await fetch(`${API_BASE}${endpoint}`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: getAuthHeaders(),
               body: JSON.stringify(isArray ? items : items[0]),
             });
             const data = await res.json();
@@ -109,7 +169,7 @@ function createLocalQueryBuilder(table: string) {
           for (const item of items) {
             const res = await fetch(`${API_BASE}${endpoint}`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: getAuthHeaders(),
               body: JSON.stringify(item),
             });
             const data = await res.json();
@@ -135,9 +195,19 @@ function createLocalQueryBuilder(table: string) {
     },
     then<TResult1 = any>(resolve?: ((value: { data: any; error: any; count?: number | null }) => TResult1 | PromiseLike<TResult1>) | null, reject?: any): Promise<TResult1> {
       const resPromise = (async () => {
+        const companyId = getCurrentCompanyId();
         if (table === "app_settings" || table === "email_settings") {
-          const key = table === "app_settings" ? "sellflow_app_settings" : "sellflow_email_settings";
+          const key = table === "app_settings" ? `sellflow_app_settings_${companyId}` : `sellflow_email_settings_${companyId}`;
           if (builder._isUpdate && builder._updatePayload) {
+            if (table === "app_settings") {
+              try {
+                await fetch(`${API_BASE}/auth/settings`, {
+                  method: "POST",
+                  headers: getAuthHeaders(),
+                  body: JSON.stringify(builder._updatePayload),
+                });
+              } catch {}
+            }
             const current = table === "app_settings" ? getCachedSettings() : {};
             const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
             const parsed = raw ? JSON.parse(raw) : current;
@@ -158,7 +228,8 @@ function createLocalQueryBuilder(table: string) {
         }
 
         if (table === "email_logs") {
-          const raw = typeof window !== "undefined" ? localStorage.getItem("sellflow_email_logs") : null;
+          const key = `sellflow_email_logs_${companyId}`;
+          const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
           const logs = raw ? JSON.parse(raw) : [];
           return { data: logs, error: null, count: logs.length };
         }
@@ -168,7 +239,10 @@ function createLocalQueryBuilder(table: string) {
           if (builder._isDelete) {
             const idVal = builder._eq.id || builder._eq.quote_id || builder._eq.contract_id || builder._eq.quoteId || builder._eq.contractId;
             if (idVal) {
-              const res = await fetch(`${API_BASE}${endpoint}/${idVal}`, { method: "DELETE" });
+              const res = await fetch(`${API_BASE}${endpoint}/${idVal}`, {
+                method: "DELETE",
+                headers: getAuthHeaders(),
+              });
               const data = await res.json();
               return { data, error: null, count: 1 };
             }
@@ -179,14 +253,16 @@ function createLocalQueryBuilder(table: string) {
             const payloadWithId = idVal ? { ...builder._updatePayload, id: idVal } : builder._updatePayload;
             const res = await fetch(`${API_BASE}${endpoint}${idVal ? `/${idVal}` : ""}`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: getAuthHeaders(),
               body: JSON.stringify(payloadWithId),
             });
             const data = await res.json();
             return { data: data.product || data.customer || data.quote || data.contract || data.payment || data, error: null, count: 1 };
           }
 
-          const res = await fetch(`${API_BASE}${endpoint}`);
+          const res = await fetch(`${API_BASE}${endpoint}`, {
+            headers: getAuthHeaders(),
+          });
           const data = await res.json();
           let list = Array.isArray(data) ? data : [];
           if (table === "products") {
@@ -272,6 +348,7 @@ export const db: any = {
   from: (table: string) => createLocalQueryBuilder(table),
   storage: {
     from(bucket: string) {
+      const companyId = getCurrentCompanyId();
       return {
         async upload(path: string, file: File, _options?: any) {
           return new Promise((resolve) => {
@@ -280,8 +357,8 @@ export const db: any = {
               const dataUrl = (e.target?.result as string) || "";
               try {
                 if (typeof window !== "undefined") {
-                  localStorage.setItem(`storage_${bucket}_${path}`, dataUrl);
-                  localStorage.setItem(`storage_${bucket}_latest`, dataUrl);
+                  localStorage.setItem(`storage_${companyId}_${bucket}_${path}`, dataUrl);
+                  localStorage.setItem(`storage_${companyId}_${bucket}_latest`, dataUrl);
                 }
               } catch (err) {
                 // localstorage size exceeded fallback
@@ -297,7 +374,7 @@ export const db: any = {
         getPublicUrl(path: string) {
           let url = "";
           if (typeof window !== "undefined") {
-            url = localStorage.getItem(`storage_${bucket}_${path}`) || localStorage.getItem(`storage_${bucket}_latest`) || "";
+            url = localStorage.getItem(`storage_${companyId}_${bucket}_${path}`) || localStorage.getItem(`storage_${companyId}_${bucket}_latest`) || "";
           }
           return { data: { publicUrl: url } };
         }
@@ -333,12 +410,22 @@ export const db: any = {
         if (res.ok && data.success && data.user) {
           const session: Session = {
             access_token: data.token || "token-" + Date.now(),
-            user: { id: data.user.id, email: data.user.email, name: data.user.name },
+            user: {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.name,
+              role: data.user.role,
+              companyId: data.user.companyId,
+              company_id: data.user.companyId,
+              company: data.user.company,
+              user_metadata: { name: data.user.name },
+            },
           };
           if (typeof window !== "undefined") {
             localStorage.setItem("sellflow_session", JSON.stringify(session));
             localStorage.setItem("sellflow_logged_in", "true");
           }
+          clearSettingsCache();
           return { data: { session }, error: null };
         }
         return { data: null, error: { message: data.message || "Tài khoản hoặc mật khẩu không chính xác" } };
@@ -350,6 +437,7 @@ export const db: any = {
       if (typeof window !== "undefined") {
         localStorage.removeItem("sellflow_session");
         localStorage.removeItem("sellflow_logged_in");
+        clearSettingsCache();
       }
       return { error: null };
     },
@@ -481,7 +569,7 @@ export type Template = {
 };
 
 export type EmailSettings = {
-  id: number;
+  id: number | string;
   sender_name: string;
   sender_email: string;
   reply_to: string;
@@ -508,7 +596,7 @@ export type EmailLog = {
 };
 
 export type AppSettings = {
-  id: number;
+  id: number | string;
   quote_prefix: string;
   contract_prefix: string;
   payment_prefix: string;
@@ -557,8 +645,52 @@ let cachedSettings: AppSettings | null = null;
 let settingsPromise: Promise<AppSettings> | null = null;
 
 export async function loadSettings(): Promise<AppSettings> {
+  const companyId = getCurrentCompanyId();
+
+  // Try fetching latest settings from backend API
+  const authHeaders = getAuthHeaders();
+  if (authHeaders["Authorization"]) {
+    try {
+      const res = await fetch(`${API_BASE}/auth/settings`, {
+        headers: authHeaders,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.companyName || data.company_name || data.id)) {
+          const mapped: AppSettings = {
+            id: data.id || 1,
+            company_name: data.companyName ?? data.company_name ?? "SellFlow Workspace",
+            company_address: data.companyAddress ?? data.company_address ?? "",
+            company_phone: data.companyPhone ?? data.company_phone ?? "",
+            company_email: data.companyEmail ?? data.company_email ?? "",
+            company_tax: data.companyTax ?? data.company_tax ?? "",
+            logo_url: data.logoUrl ?? data.logo_url ?? "",
+            quote_prefix: data.quotePrefix ?? data.quote_prefix ?? "BG",
+            contract_prefix: data.contractPrefix ?? data.contract_prefix ?? "HD",
+            payment_prefix: data.paymentPrefix ?? data.payment_prefix ?? "TT",
+            customer_prefix: data.customerPrefix ?? data.customer_prefix ?? "KH",
+            product_prefix: data.productPrefix ?? data.product_prefix ?? "SP",
+            inventory_prefix: data.inventoryPrefix ?? data.inventory_prefix ?? "NK",
+            email_prefix: data.emailPrefix ?? data.email_prefix ?? "EM",
+            id_format: data.idFormat ?? data.id_format ?? "{PREFIX}-{YEAR}-{SEQ}",
+            currency: data.currency ?? "VND",
+            vat_default: Number(data.vatDefault ?? data.vat_default ?? 10),
+            quote_valid_days: Number(data.quoteValidDays ?? data.quote_valid_days ?? 15),
+            low_stock_alert: Boolean(data.lowStockAlert ?? data.low_stock_alert ?? true),
+            created_at: data.createdAt ?? data.created_at ?? "",
+          };
+          cachedSettings = mapped;
+          if (typeof window !== "undefined") {
+            localStorage.setItem(`sellflow_app_settings_${companyId}`, JSON.stringify(mapped));
+          }
+          return cachedSettings;
+        }
+      }
+    } catch {}
+  }
+
   if (typeof window !== "undefined") {
-    const raw = localStorage.getItem("sellflow_app_settings");
+    const raw = localStorage.getItem(`sellflow_app_settings_${companyId}`);
     if (raw) {
       try {
         const parsed = JSON.parse(raw);

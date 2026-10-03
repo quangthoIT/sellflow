@@ -1,11 +1,16 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../config/db.js';
+import { requireTenantContext } from '../../utils/tenant.js';
 
 export async function paymentsRoutes(fastify: FastifyInstance) {
-  // Get all payments
-  fastify.get('/', async () => {
+  // Get all payments for company
+  fastify.get('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
       const payments = await db.payment.findMany({
+        where: { companyId: tenant.companyId },
         include: { contract: { include: { customer: true } } },
         orderBy: { createdAt: 'desc' },
       });
@@ -23,13 +28,16 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
 
   // Get single payment
   fastify.get('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      const p = await db.payment.findUnique({
-        where: { id },
+      const p = await db.payment.findFirst({
+        where: { id, companyId: tenant.companyId },
         include: { contract: { include: { customer: true } } },
       });
-      if (!p) return reply.status(404).send({ success: false, message: 'Not found' });
+      if (!p) return reply.status(404).send({ success: false, message: 'Không tìm thấy thanh toán' });
       return {
         ...p,
         contractId: p.contractId,
@@ -44,22 +52,46 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
 
   // Upsert payment
   fastify.post('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const id = data.id || `PT${Date.now()}`;
+      const contractId = data.contractId || data.contract_id;
+
+      // Verify contract belongs to company
+      const contract = await db.contract.findFirst({
+        where: { id: contractId, companyId: tenant.companyId },
+      });
+      if (!contract) {
+        return reply.status(400).send({ success: false, message: 'Hợp đồng không tồn tại hoặc không thuộc công ty của bạn' });
+      }
+
       const paymentData = {
-        contractId: data.contractId || data.contract_id,
+        companyId: tenant.companyId,
+        contractId: contractId,
         date: new Date(data.date || Date.now()),
         amount: BigInt(Math.round(Number(data.amount || 0))),
         method: data.method || 'Chuyển khoản',
         note: data.note || '',
       };
 
-      const payment = await db.payment.upsert({
-        where: { id },
-        update: paymentData,
-        create: { id, ...paymentData },
+      const existing = await db.payment.findFirst({
+        where: { id, companyId: tenant.companyId },
       });
+
+      let payment;
+      if (existing) {
+        payment = await db.payment.update({
+          where: { id },
+          data: paymentData,
+        });
+      } else {
+        payment = await db.payment.create({
+          data: { id, ...paymentData },
+        });
+      }
 
       return {
         success: true,
@@ -77,9 +109,20 @@ export async function paymentsRoutes(fastify: FastifyInstance) {
 
   // Delete payment
   fastify.delete('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.payment.deleteMany({ where: { OR: [{ id }, { contractId: id }] } });
+      const res = await db.payment.deleteMany({
+        where: {
+          OR: [{ id }, { contractId: id }],
+          companyId: tenant.companyId,
+        },
+      });
+      if (res.count === 0) {
+        return reply.status(404).send({ success: false, message: 'Không tìm thấy thanh toán cần xóa' });
+      }
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });

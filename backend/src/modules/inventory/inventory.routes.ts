@@ -1,10 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../config/db.js';
+import { requireTenantContext } from '../../utils/tenant.js';
 
 export async function inventoryRoutes(fastify: FastifyInstance) {
-  fastify.get('/', async () => {
+  fastify.get('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
       return await db.inventoryTransaction.findMany({
+        where: { companyId: tenant.companyId },
         include: { product: true },
         orderBy: { createdAt: 'desc' },
       });
@@ -14,12 +19,25 @@ export async function inventoryRoutes(fastify: FastifyInstance) {
   });
 
   const handleTransaction = async (request: any, reply: any) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     try {
       const productId = data.productId || data.product_id;
+
+      // Verify product belongs to company
+      const product = await db.product.findFirst({
+        where: { id: productId, companyId: tenant.companyId },
+      });
+      if (!product) {
+        return reply.status(400).send({ success: false, message: 'Sản phẩm không tồn tại hoặc không thuộc công ty của bạn' });
+      }
+
       const transaction = await db.inventoryTransaction.create({
         data: {
           id: data.id || `TX_${Date.now()}`,
+          companyId: tenant.companyId,
           productId: productId,
           type: data.type, // 'Nhập kho' | 'Xuất kho' | 'Điều chỉnh'
           qty: Number(data.qty),

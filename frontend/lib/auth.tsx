@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { db, type Session } from "@/lib/db";
+import { db, clearSettingsCache, type Session } from "@/lib/db";
 
 type AuthState = {
   session: Session | null;
@@ -72,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: data.user.id,
             email: data.user.email,
             name: data.user.name,
+            role: data.user.role,
+            companyId: data.user.companyId,
+            company_id: data.user.companyId,
+            company: data.user.company,
             user_metadata: { name: data.user.name },
           },
         };
@@ -79,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (typeof window !== "undefined") {
           localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
           localStorage.setItem("sellflow_logged_in", "true");
+          clearSettingsCache();
         }
         window.location.href = "/dashboard";
         return { error: null };
@@ -101,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     localStorage.removeItem("sellflow_session");
     localStorage.removeItem("sellflow_logged_in");
+    clearSettingsCache();
     setSession(null);
     window.location.href = "/login";
   };

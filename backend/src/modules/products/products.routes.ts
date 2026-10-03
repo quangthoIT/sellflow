@@ -1,10 +1,17 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../../config/db.js';
+import { requireTenantContext } from '../../utils/tenant.js';
 
 export async function productsRoutes(fastify: FastifyInstance) {
-  fastify.get('/', async () => {
+  fastify.get('/', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return [];
+
     try {
-      const products = await db.product.findMany({ orderBy: { createdAt: 'desc' } });
+      const products = await db.product.findMany({
+        where: { companyId: tenant.companyId },
+        orderBy: { createdAt: 'desc' },
+      });
       return products.map(p => ({
         ...p,
         cost: p.cost.toString(),
@@ -17,6 +24,9 @@ export async function productsRoutes(fastify: FastifyInstance) {
   });
 
   const saveProduct = async (request: any, reply: any) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const data = request.body as any;
     const paramId = (request.params as any)?.id;
     const id = paramId || data.id || `SP_${Date.now()}`;
@@ -34,22 +44,34 @@ export async function productsRoutes(fastify: FastifyInstance) {
       if (data.description !== undefined) updateData.description = data.description;
       if (data.status !== undefined) updateData.status = data.status;
 
-      const product = await db.product.upsert({
-        where: { id },
-        update: updateData,
-        create: {
-          id,
-          name: data.name || 'Sản phẩm mới',
-          category: data.category || '',
-          unit: data.unit || 'cái',
-          cost: BigInt(data.cost || 0),
-          price: BigInt(data.price || 0),
-          stock: data.stock !== undefined ? Number(data.stock) : 0,
-          minStock: data.minStock !== undefined ? Number(data.minStock) : (data.min_stock !== undefined ? Number(data.min_stock) : 0),
-          description: data.description || '',
-          status: data.status || 'Đang bán',
-        },
+      // Check if product exists and belongs to this company
+      const existing = await db.product.findFirst({
+        where: { id, companyId: tenant.companyId },
       });
+
+      let product;
+      if (existing) {
+        product = await db.product.update({
+          where: { id },
+          data: updateData,
+        });
+      } else {
+        product = await db.product.create({
+          data: {
+            id,
+            companyId: tenant.companyId,
+            name: data.name || 'Sản phẩm mới',
+            category: data.category || '',
+            unit: data.unit || 'cái',
+            cost: BigInt(data.cost || 0),
+            price: BigInt(data.price || 0),
+            stock: data.stock !== undefined ? Number(data.stock) : 0,
+            minStock: data.minStock !== undefined ? Number(data.minStock) : (data.min_stock !== undefined ? Number(data.min_stock) : 0),
+            description: data.description || '',
+            status: data.status || 'Đang bán',
+          },
+        });
+      }
 
       return {
         success: true,
@@ -70,9 +92,17 @@ export async function productsRoutes(fastify: FastifyInstance) {
   fastify.patch('/:id', saveProduct);
 
   fastify.delete('/:id', async (request, reply) => {
+    const tenant = await requireTenantContext(request, reply);
+    if (!tenant) return;
+
     const { id } = request.params as { id: string };
     try {
-      await db.product.delete({ where: { id } });
+      const res = await db.product.deleteMany({
+        where: { id, companyId: tenant.companyId },
+      });
+      if (res.count === 0) {
+        return reply.status(404).send({ success: false, message: 'Không tìm thấy sản phẩm của doanh nghiệp này' });
+      }
       return { success: true };
     } catch (error: any) {
       return reply.status(400).send({ success: false, message: error.message });

@@ -13,20 +13,50 @@ enum Role {
   ACCOUNTANT
 }
 
+model Company {
+  id                    String                  @id @default(cuid())
+  name                  String
+  email                 String                  @default("")
+  phone                 String                  @default("")
+  address               String                  @default("")
+  tax                   String                  @default("")
+  logoUrl               String                  @default("") @map("logo_url")
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+  users                 User[]
+  products              Product[]
+  customers             Customer[]
+  quotes                Quote[]
+  contracts             Contract[]
+  inventoryTransactions InventoryTransaction[]
+  payments              Payment[]
+  templates             Template[]
+  appSettings           AppSetting[]
+  emailSettings         EmailSetting[]
+  emailLogs             EmailLog[]
+
+  @@map("companies")
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
   role      Role     @default(SALES)
+  companyId String   @map("company_id")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([companyId])
   @@map("users")
 }
 
 model Product {
   id                    String                  @id
+  companyId             String                  @map("company_id")
+  company               Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
   name                  String
   category              String                  @default("")
   unit                  String                  @default("cái")
@@ -41,11 +71,14 @@ model Product {
   contractItems         ContractItem[]
   inventoryTransactions InventoryTransaction[]
 
+  @@index([companyId])
   @@map("products")
 }
 
 model Customer {
   id             String     @id
+  companyId      String     @map("company_id")
+  company        Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   name           String
   phone          String     @default("")
   email          String     @default("")
@@ -57,11 +90,14 @@ model Customer {
   quotes         Quote[]
   contracts      Contract[]
 
+  @@index([companyId])
   @@map("customers")
 }
 
 model Quote {
   id           String      @id
+  companyId    String      @map("company_id")
+  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   customerId   String?     @map("customer_id")
   customer     Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
   date         DateTime    @default(now()) @db.Date
@@ -77,6 +113,7 @@ model Quote {
   items        QuoteItem[]
   contracts    Contract[]
 
+  @@index([companyId])
   @@map("quotes")
 }
 
@@ -97,6 +134,8 @@ model QuoteItem {
 
 model Contract {
   id           String         @id
+  companyId    String         @map("company_id")
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   quoteId      String?        @map("quote_id")
   quote        Quote?         @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   customerId   String?        @map("customer_id")
@@ -111,6 +150,7 @@ model Contract {
   items        ContractItem[]
   payments     Payment[]
 
+  @@index([companyId])
   @@map("contracts")
 }
 
@@ -130,6 +170,8 @@ model ContractItem {
 
 model InventoryTransaction {
   id        String   @id
+  companyId String   @map("company_id")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   date      DateTime @default(now()) @db.Date
   productId String   @map("product_id")
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -139,11 +181,14 @@ model InventoryTransaction {
   note      String   @default("")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([companyId])
   @@map("inventory_transactions")
 }
 
 model Payment {
   id         String   @id
+  companyId  String   @map("company_id")
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contractId String   @map("contract_id")
   contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
   date       DateTime @default(now()) @db.Date
@@ -152,11 +197,14 @@ model Payment {
   note       String   @default("")
   createdAt  DateTime @default(now()) @map("created_at")
 
+  @@index([companyId])
   @@map("payments")
 }
 
 model Template {
   id        String   @id
+  companyId String?  @map("company_id")
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
   type      String   @default("quote")
   name      String
   isDefault Boolean  @default(false) @map("is_default")
@@ -165,34 +213,42 @@ model Template {
   content   String   @default("")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([companyId])
   @@map("templates")
 }
 
 model EmailSetting {
-  id         String   @id @default("default")
-  senderName String   @default("Sales Department") @map("sender_name")
-  senderEmail String  @default("sales@company.com") @map("sender_email")
-  smtpHost   String   @default("smtp.gmail.com") @map("smtp_host")
-  smtpPort   Int      @default(587) @map("smtp_port")
-  autoSend   Boolean  @default(false) @map("auto_send")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(cuid())
+  companyId   String   @unique @map("company_id")
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  senderName  String   @default("Sales Department") @map("sender_name")
+  senderEmail String   @default("sales@company.com") @map("sender_email")
+  smtpHost    String   @default("smtp.gmail.com") @map("smtp_host")
+  smtpPort    Int      @default(587) @map("smtp_port")
+  autoSend    Boolean  @default(false) @map("auto_send")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("email_settings")
 }
 
 model EmailLog {
   id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   recipient String
   subject   String
   status    String   @default("pending")
   errorMsg  String?  @map("error_msg")
   sentAt    DateTime @default(now()) @map("sent_at")
 
+  @@index([companyId])
   @@map("email_logs")
 }
 
 model AppSetting {
-  id              Int      @id @default(1)
+  id              String   @id @default(cuid())
+  companyId       String   @unique @map("company_id")
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyName     String   @default("Hộ Kinh Doanh Demo") @map("company_name")
   companyAddress  String   @default("") @map("company_address")
   companyPhone    String   @default("") @map("company_phone")
