@@ -100,26 +100,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.location.href = "/dashboard";
           return { error: null };
         }
+        const errData = await res.json().catch(() => ({}));
+        return { error: { message: errData.message || "Tài khoản hoặc mật khẩu không chính xác" } };
       }
     } catch (apiErr) {
-      console.warn("[Auth] Backend login request error, checking local credentials:", apiErr);
+      console.warn("[Auth] Backend login request error, checking locally saved registered credentials:", apiErr);
     }
 
-    // 2. Fallback to locally registered / saved credentials
-    const defaultEnvPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123";
-    const defaultEnvEmail = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@sellflow.vn").trim().toLowerCase();
+    // 2. Fallback to locally saved credentials (if previously registered or offline)
+    const savedPassword = typeof window !== "undefined" ? localStorage.getItem("sellflow_admin_password") : null;
+    const savedEmail = typeof window !== "undefined" ? localStorage.getItem("sellflow_remember_email") : null;
 
-    const savedPassword =
-      typeof window !== "undefined"
-        ? localStorage.getItem("sellflow_admin_password") || defaultEnvPassword
-        : defaultEnvPassword;
-
-    const savedEmail =
-      typeof window !== "undefined"
-        ? (localStorage.getItem("sellflow_remember_email") || defaultEnvEmail).trim().toLowerCase()
-        : defaultEnvEmail;
-
-    if (cleanPassword === savedPassword) {
+    if (savedPassword && cleanPassword === savedPassword) {
       const savedName =
         typeof window !== "undefined"
           ? localStorage.getItem("sellflow_admin_name") || "Quản trị viên"
@@ -128,8 +120,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sessionData: Session = {
         access_token: "token-" + Date.now(),
         user: {
-          id: "admin-1",
-          email: inputEmail || savedEmail,
+          id: "user-" + Date.now(),
+          email: inputEmail || savedEmail || "user@sellflow.vn",
           name: savedName,
           user_metadata: { name: savedName },
         },

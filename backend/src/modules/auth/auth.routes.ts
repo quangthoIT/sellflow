@@ -6,16 +6,12 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.post('/login', async (request, reply) => {
     const { email, password } = request.body as any;
     const inputEmail = (email || '').trim().toLowerCase();
-    const adminEmail = (process.env.ADMIN_EMAIL || process.env.ADMIN_USER || 'admin@sellflow.vn').trim().toLowerCase();
-    const adminPassword = process.env.ADMIN_PASSWORD || process.env.ADMIN_PASS || 'admin123';
 
-    // 1. Check configured environment admin credentials
-    if (inputEmail === adminEmail && password === adminPassword) {
-      const token = fastify.jwt.sign({ id: 'admin-1', email: adminEmail, role: 'ADMIN' });
-      return { success: true, token, user: { id: 'admin-1', name: 'Quản trị viên SellFlow', email: adminEmail, role: 'ADMIN' } };
+    if (!inputEmail || !password) {
+      return reply.status(400).send({ success: false, message: 'Vui lòng cung cấp email và mật khẩu' });
     }
 
-    // 2. Check registered user in PostgreSQL database
+    // Authenticate registered user in PostgreSQL database
     try {
       const dbUser = await db.user.findUnique({
         where: { email: inputEmail },
@@ -143,7 +139,12 @@ export async function authRoutes(fastify: FastifyInstance) {
   });
 
   fastify.get('/me', async (request, reply) => {
-    const adminEmail = (process.env.ADMIN_EMAIL || process.env.ADMIN_USER || 'admin@sellflow.vn').trim().toLowerCase();
-    return { user: { id: 'u1', name: 'Quản trị viên SellFlow', email: adminEmail, role: 'ADMIN' } };
+    try {
+      await request.jwtVerify();
+      const user = (request as any).user;
+      return { user };
+    } catch {
+      return reply.status(401).send({ message: 'Unauthorized' });
+    }
   });
 }

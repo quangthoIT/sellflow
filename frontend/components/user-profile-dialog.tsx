@@ -68,14 +68,13 @@ export function UserProfileDialog({
         return;
       }
 
-      const defaultEnvPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123";
       // Xác thực mật khẩu hiện tại
       const storedPassword =
         typeof window !== "undefined"
-          ? localStorage.getItem("sellflow_admin_password") || defaultEnvPassword
-          : defaultEnvPassword;
+          ? localStorage.getItem("sellflow_admin_password")
+          : null;
 
-      if (currentPassword !== storedPassword) {
+      if (storedPassword && currentPassword !== storedPassword) {
         toast.error("Mật khẩu hiện tại không chính xác!");
         return;
       }
