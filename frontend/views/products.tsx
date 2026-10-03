@@ -326,7 +326,7 @@ export function ProductsPage() {
             </TableBody>
           </Table>
         </CardContent>
-        {totalItems > 0 && (
+        {totalItems > pageSize && (
           <Pagination
             currentPage={page}
             totalPages={totalPages}

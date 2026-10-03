@@ -24,6 +24,7 @@ import { SortableHead, sortData, filterData, type SortDir } from "@/components/s
 import { fetchReservedStockMap } from "@/lib/inventory";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Pagination } from "@/components/pagination";
 import { cn } from "@/lib/utils";
 
 const QUOTE_STATUSES = ["Nháp", "Đã gửi", "Khách đồng ý", "Khách từ chối", "Hết hạn"];
@@ -45,6 +46,8 @@ export function QuotesPage() {
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,6 +118,10 @@ export function QuotesPage() {
     return sortData(filteredRows, accessor[sortKey] ?? ((r) => r.quote.id), sortDir);
   })();
 
+  const totalItems = sortedRows.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const paginatedRows = sortedRows.slice((page - 1) * pageSize, page * pageSize);
+
   const handleDelete = async (id: string) => {
     await db.from("quote_items").delete().eq("quote_id", id);
     const { error } = await db.from("quotes").delete().eq("id", id);
@@ -169,7 +176,7 @@ export function QuotesPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {sortedRows.map(({ quote, customer, total }) => (
+              {paginatedRows.map(({ quote, customer, total }) => (
                 <QuoteRow
                   key={quote.id}
                   quote={quote}
@@ -185,6 +192,15 @@ export function QuotesPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalItems > pageSize && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        )}
       </Card>
 
       {/* Confirm Delete Dialog */}

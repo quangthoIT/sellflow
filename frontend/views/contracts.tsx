@@ -20,6 +20,7 @@ import { TableSkeleton } from "@/components/loading";
 import { SortableHead, sortData, filterData, type SortDir } from "@/components/sortable-head";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Pagination } from "@/components/pagination";
 
 const CONTRACT_STATUSES = ["Nháp", "Chờ ký", "Đã ký", "Đang thực hiện", "Hoàn thành", "Hủy"];
 
@@ -39,6 +40,8 @@ export function ContractsPage() {
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -115,6 +118,10 @@ export function ContractsPage() {
     };
     return sortData(filteredRows, accessor[sortKey] ?? ((r) => r.contract.id), sortDir);
   })();
+
+  const totalItems = sortedRows.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const paginatedRows = sortedRows.slice((page - 1) * pageSize, page * pageSize);
 
   const handleStatusChange = async (contract: Contract, newStatus: string) => {
     if (newStatus === "Đã ký" && !contract.stock_applied) {
@@ -263,7 +270,7 @@ export function ContractsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {sortedRows.map(({ contract, customer, total, paid }) => (
+              {paginatedRows.map(({ contract, customer, total, paid }) => (
                 <ContractRow
                   key={contract.id}
                   contract={contract}
@@ -281,6 +288,15 @@ export function ContractsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalItems > pageSize && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        )}
       </Card>
 
       {/* Confirm Delete Dialog */}

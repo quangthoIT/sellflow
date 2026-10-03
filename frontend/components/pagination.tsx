@@ -23,6 +23,11 @@ export function Pagination({
   onPageChange,
   className,
 }: PaginationProps) {
+  // Chỉ hiển thị phân trang khi số bản ghi vượt quá kích thước 1 trang
+  if (totalItems <= pageSize || totalPages <= 1) {
+    return null;
+  }
+
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 

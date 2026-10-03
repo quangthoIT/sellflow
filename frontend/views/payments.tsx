@@ -19,6 +19,7 @@ import { TableSkeleton } from "@/components/loading";
 import { SortableHead, sortData, filterData, type SortDir } from "@/components/sortable-head";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Pagination } from "@/components/pagination";
 
 const PAYMENT_METHODS = ["Tiền mặt", "Chuyển khoản", "Thẻ tín dụng", "Khác"];
 
@@ -41,10 +42,13 @@ export function PaymentsPage() {
   const [debtSortKey, setDebtSortKey] = useState<string | null>(null);
   const [debtSortDir, setDebtSortDir] = useState<SortDir>(null);
   const [debtFilters, setDebtFilters] = useState<Record<string, string>>({});
+  const [debtPage, setDebtPage] = useState(1);
 
   const [paySortKey, setPaySortKey] = useState<string | null>(null);
   const [paySortDir, setPaySortDir] = useState<SortDir>(null);
   const [payFilters, setPayFilters] = useState<Record<string, string>>({});
+  const [payPage, setPayPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,6 +107,10 @@ export function PaymentsPage() {
     return sortData(filteredDebtRows, accessor[debtSortKey] ?? ((r) => r.contract.id), debtSortDir);
   })();
 
+  const totalDebtItems = sortedDebtRows.length;
+  const totalDebtPages = Math.ceil(totalDebtItems / pageSize);
+  const paginatedDebtRows = sortedDebtRows.slice((debtPage - 1) * pageSize, debtPage * pageSize);
+
   // Payment History Table logic
   const payRows = payments
     .filter((p) => !filterContractId || p.contract_id === filterContractId)
@@ -139,6 +147,10 @@ export function PaymentsPage() {
     };
     return sortData(filteredPayRows, accessor[paySortKey] ?? ((r) => r.payment.id), paySortDir);
   })();
+
+  const totalPayItems = sortedPayRows.length;
+  const totalPayPages = Math.ceil(totalPayItems / pageSize);
+  const paginatedPayRows = sortedPayRows.slice((payPage - 1) * pageSize, payPage * pageSize);
 
   const handleAddPayment = async (contractId: string, amount: number, date: string, method: string, note: string) => {
     const s = await loadSettings();
@@ -237,7 +249,7 @@ export function PaymentsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {sortedDebtRows.map(({ contract: c, customer, paid }) => (
+              {paginatedDebtRows.map(({ contract: c, customer, paid }) => (
                 <ContractDebtRow
                   key={c.id}
                   contract={c}
@@ -253,6 +265,15 @@ export function PaymentsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalDebtItems > pageSize && (
+          <Pagination
+            currentPage={debtPage}
+            totalPages={totalDebtPages}
+            totalItems={totalDebtItems}
+            pageSize={pageSize}
+            onPageChange={setDebtPage}
+          />
+        )}
       </Card>
 
       {/* Payment history */}
@@ -286,7 +307,7 @@ export function PaymentsPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {sortedPayRows.map(({ payment: p, customer }) => (
+              {paginatedPayRows.map(({ payment: p, customer }) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-mono text-xs">{p.id}</TableCell>
                   <TableCell className="font-mono text-xs">{p.contract_id}</TableCell>
@@ -308,6 +329,15 @@ export function PaymentsPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalPayItems > pageSize && (
+          <Pagination
+            currentPage={payPage}
+            totalPages={totalPayPages}
+            totalItems={totalPayItems}
+            pageSize={pageSize}
+            onPageChange={setPayPage}
+          />
+        )}
       </Card>
 
       {/* Confirm Delete Dialog */}

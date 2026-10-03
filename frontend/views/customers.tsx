@@ -19,6 +19,7 @@ import { TableSkeleton } from "@/components/loading";
 import { SortableHead, sortData, filterData, type SortDir } from "@/components/sortable-head";
 import { ActionTooltip } from "@/components/action-tooltip";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { Pagination } from "@/components/pagination";
 
 type QuoteItemRow = { quote_id: string; qty: number; price: number; discount: number };
 type ContractItemRow = { contract_id: string; qty: number; price: number };
@@ -36,6 +37,8 @@ export function CustomersPage() {
   const [sortKey, setSortKey] = useState<keyof Customer | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -47,6 +50,7 @@ export function CustomersPage() {
   useEffect(() => { load(); }, [load]);
 
   const filtered = customers.filter((c) =>
+    c.id.toLowerCase().includes(search.toLowerCase()) ||
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.phone.includes(search) ||
     c.email.toLowerCase().includes(search.toLowerCase()));
@@ -60,6 +64,9 @@ export function CustomersPage() {
   ];
 
   const result = sortData(filterData(filtered, colFilters), (sortKey as any) ?? "name", sortDir);
+  const totalItems = result.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const paginatedResult = result.slice((page - 1) * pageSize, page * pageSize);
 
   const handleSave = async (c: Partial<Customer>) => {
     if (!c.id?.trim()) {
@@ -156,7 +163,7 @@ export function CustomersPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {result.map((c) => (
+              {paginatedResult.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono text-xs">{c.id}</TableCell>
                   <TableCell className="font-medium">{c.name}</TableCell>
@@ -187,6 +194,15 @@ export function CustomersPage() {
             </TableBody>
           </Table>
         </CardContent>
+        {totalItems > pageSize && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        )}
       </Card>
 
       {/* Confirm Delete Dialog */}
