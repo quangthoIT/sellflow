@@ -193,19 +193,20 @@ export function LoginPage() {
         companyAddress: companyAddress.trim(),
       };
 
-      try {
-        await fetch(`${apiBase}/auth/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } catch (backendErr) {
-        console.warn("[Onboarding] Backend sync error, continuing local fallback:", backendErr);
+      const res = await fetch(`${apiBase}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || "Đăng ký tài khoản trên máy chủ thất bại");
       }
 
-      // 2. Persist to LocalStorage for instant access
+      // 2. Persist workspace profile settings cache
       if (typeof window !== "undefined") {
-        localStorage.setItem("sellflow_admin_password", regPassword);
+        localStorage.removeItem("sellflow_admin_password");
         localStorage.setItem("sellflow_admin_name", `Quản trị viên - ${companyName.trim()}`);
 
         const currentSettings = localStorage.getItem("sellflow_app_settings");

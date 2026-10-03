@@ -147,4 +147,36 @@ export async function authRoutes(fastify: FastifyInstance) {
       return reply.status(401).send({ message: 'Unauthorized' });
     }
   });
+
+  fastify.post('/change-password', async (request, reply) => {
+    const { email, currentPassword, newPassword, name } = request.body as any;
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (!cleanEmail) {
+      return reply.status(400).send({ success: false, message: 'Vui lòng cung cấp email' });
+    }
+
+    try {
+      const user = await db.user.findUnique({ where: { email: cleanEmail } });
+      if (!user) {
+        return reply.status(404).send({ success: false, message: 'Tài khoản không tồn tại' });
+      }
+
+      if (currentPassword && user.password !== currentPassword) {
+        return reply.status(400).send({ success: false, message: 'Mật khẩu hiện tại không chính xác' });
+      }
+
+      const updated = await db.user.update({
+        where: { email: cleanEmail },
+        data: {
+          ...(newPassword ? { password: newPassword } : {}),
+          ...(name ? { name: name.trim() } : {}),
+        },
+      });
+
+      return { success: true, user: { id: updated.id, name: updated.name, email: updated.email } };
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, message: err.message || 'Lỗi cập nhật tài khoản' });
+    }
+  });
 }

@@ -98,20 +98,31 @@ export function UserProfileDialog({
     setIsLoading(true);
 
     try {
+      const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
+      const res = await fetch(`${apiBase}/auth/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          currentPassword: isChangingPassword ? currentPassword : undefined,
+          newPassword: isChangingPassword ? newPassword : undefined,
+          name: name.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.message || "Cập nhật tài khoản thất bại");
+      }
+
       if (typeof window !== "undefined") {
         localStorage.setItem("sellflow_admin_name", name.trim());
+        localStorage.removeItem("sellflow_admin_password");
       }
 
       if (isChangingPassword) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("sellflow_admin_password", newPassword);
-        }
-        try {
-          await db.auth.updateUser({ password: newPassword });
-        } catch {
-          // Fallback handled
-        }
-        toast.success("Đổi mật khẩu thành công! Mật khẩu mới đã có hiệu lực.");
+        toast.success("Đổi mật khẩu thành công! Mật khẩu mới đã được cập nhật.");
       } else {
         toast.success("Cập nhật thông tin tài khoản thành công!");
       }
@@ -122,7 +133,7 @@ export function UserProfileDialog({
       setConfirmPassword("");
       onOpenChange(false);
     } catch (err: any) {
-      toast.error("Lỗi khi cập nhật thông tin: " + (err?.message || "Không thể lưu"));
+      toast.error("Lỗi: " + (err?.message || "Không thể lưu thông tin"));
     } finally {
       setIsLoading(false);
     }

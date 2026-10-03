@@ -22,47 +22,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      try {
-        const { data } = await db.auth.getSession();
-        if (data?.session) {
-          setSession(data.session);
-          setLoading(false);
-          return;
-        }
-      } catch {
-        // Ignore auth error
-      }
-
-      // Check local storage session fallback
-      const localSess = localStorage.getItem("sellflow_session");
+      // Check active local storage session
+      const localSess = typeof window !== "undefined" ? localStorage.getItem("sellflow_session") : null;
       if (localSess) {
         try {
-          setSession(JSON.parse(localSess));
+          const parsed = JSON.parse(localSess);
+          if (parsed && parsed.user && parsed.user.email) {
+            setSession(parsed);
+          } else {
+            localStorage.removeItem("sellflow_session");
+            localStorage.removeItem("sellflow_logged_in");
+            setSession(null);
+          }
         } catch {
+          localStorage.removeItem("sellflow_session");
+          localStorage.removeItem("sellflow_logged_in");
           setSession(null);
         }
       } else {
-        const isLogged = localStorage.getItem("sellflow_logged_in");
-        if (isLogged === "true") {
-          const mockSess = {
-            access_token: "mock-token-admin",
-            user: { id: "admin", email: "admin@sellflow.vn" },
-          } as unknown as Session;
-          setSession(mockSess);
-        } else {
-          setSession(null);
-        }
+        setSession(null);
       }
       setLoading(false);
     })();
-
-    const { data: listener } = db.auth.onAuthStateChange((_event: any, sess: Session | null) => {
-      if (sess) setSession(sess);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
   }, []);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
@@ -70,7 +51,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cleanPassword = password || "";
     const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
 
-    // 1. Authenticate with Backend Database API
+    if (!inputEmail || !cleanPassword) {
+      return { error: "Vui lòng nhập đầy đủ Email và Mật khẩu" };
+    }
+
+    // Authenticate exclusively with Backend PostgreSQL Database API
     try {
       const res = await fetch(`${apiBase}/auth/login`, {
         method: "POST",
@@ -78,65 +63,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email: inputEmail, password: cleanPassword }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.user) {
-          const sessionData: Session = {
-            access_token: data.token || "token-" + Date.now(),
-            user: {
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.name,
-              user_metadata: { name: data.user.name },
-            },
-          };
-          setSession(sessionData);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
-            localStorage.setItem("sellflow_logged_in", "true");
-            localStorage.setItem("sellflow_admin_password", cleanPassword);
-            localStorage.setItem("sellflow_admin_name", data.user.name);
-          }
-          window.location.href = "/dashboard";
-          return { error: null };
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success && data.user) {
+        const sessionData: Session = {
+          access_token: data.token || "token-" + Date.now(),
+          user: {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            user_metadata: { name: data.user.name },
+          },
+        };
+        setSession(sessionData);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
+          localStorage.setItem("sellflow_logged_in", "true");
         }
-        const errData = await res.json().catch(() => ({}));
-        return { error: String(errData.message || "Tài khoản hoặc mật khẩu không chính xác") };
+        window.location.href = "/dashboard";
+        return { error: null };
       }
-    } catch (apiErr) {
-      console.warn("[Auth] Backend login request error, checking locally saved registered credentials:", apiErr);
-    }
 
-    // 2. Fallback to locally saved credentials (if previously registered or offline)
-    const savedPassword = typeof window !== "undefined" ? localStorage.getItem("sellflow_admin_password") : null;
-    const savedEmail = typeof window !== "undefined" ? localStorage.getItem("sellflow_remember_email") : null;
-
-    if (savedPassword && cleanPassword === savedPassword) {
-      const savedName =
-        typeof window !== "undefined"
-          ? localStorage.getItem("sellflow_admin_name") || "Quản trị viên"
-          : "Quản trị viên";
-
-      const sessionData: Session = {
-        access_token: "token-" + Date.now(),
-        user: {
-          id: "user-" + Date.now(),
-          email: inputEmail || savedEmail || "user@sellflow.vn",
-          name: savedName,
-          user_metadata: { name: savedName },
-        },
+      return {
+        error: String(data.message || "Tài khoản hoặc mật khẩu không chính xác. Nếu vừa xóa/cài mới hệ thống, vui lòng bấm Đăng ký tài khoản mới.")
       };
-
-      setSession(sessionData);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("sellflow_session", JSON.stringify(sessionData));
-        localStorage.setItem("sellflow_logged_in", "true");
-      }
-      window.location.href = "/dashboard";
-      return { error: null };
+    } catch (apiErr) {
+      console.error("[Auth] Backend login error:", apiErr);
+      return { error: "Không thể kết nối đến máy chủ Backend. Vui lòng kiểm tra lại dịch vụ Backend!" };
     }
-
-    return { error: "Email hoặc Mật khẩu không chính xác. Vui lòng kiểm tra lại!" };
   };
 
   const signOut = async () => {

@@ -320,17 +320,31 @@ export const db: any = {
       return { data: { subscription: { unsubscribe: () => {} } } };
     },
     async signInWithPassword({ email, password }: { email?: string; password?: string }) {
-      if ((email === "admin@sellflow.com" || email) && password) {
-        const session: Session = {
-          access_token: "token-" + Date.now(),
-          user: { id: "u1", email: email || "admin@sellflow.com", name: "System Admin" },
-        };
-        if (typeof window !== "undefined") {
-          localStorage.setItem("sellflow_session", JSON.stringify(session));
-        }
-        return { data: { session }, error: null };
+      if (!email || !password) {
+        return { data: null, error: { message: "Vui lòng nhập email và mật khẩu" } };
       }
-      return { data: null, error: { message: "Invalid credentials" } };
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success && data.user) {
+          const session: Session = {
+            access_token: data.token || "token-" + Date.now(),
+            user: { id: data.user.id, email: data.user.email, name: data.user.name },
+          };
+          if (typeof window !== "undefined") {
+            localStorage.setItem("sellflow_session", JSON.stringify(session));
+            localStorage.setItem("sellflow_logged_in", "true");
+          }
+          return { data: { session }, error: null };
+        }
+        return { data: null, error: { message: data.message || "Tài khoản hoặc mật khẩu không chính xác" } };
+      } catch (err) {
+        return { data: null, error: { message: "Không thể kết nối máy chủ" } };
+      }
     },
     async signOut() {
       if (typeof window !== "undefined") {
