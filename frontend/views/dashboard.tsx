@@ -351,7 +351,7 @@ export function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3 items-stretch">
         {/* Left Column: Biểu đồ doanh thu */}
         <Card className="lg:col-span-2 shadow-2xs flex flex-col justify-between">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
                 <BarChart3 className="size-4.5" />
@@ -362,77 +362,77 @@ export function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center flex-wrap gap-2.5">
-              {/* Legend chú thích màu */}
-              <div className="flex items-center gap-3 text-xs bg-muted/40 px-2.5 py-1 rounded-lg border border-border/50">
-                <div className="flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-sm bg-blue-600 dark:bg-blue-500 inline-block shadow-2xs" />
-                  <span className="text-foreground/80 font-medium">HĐ đã ký</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="size-2.5 rounded-sm bg-emerald-500 inline-block shadow-2xs" />
-                  <span className="text-foreground/80 font-medium">Đã thực thu</span>
-                </div>
-              </div>
-
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="h-8.5 text-xs w-38 gap-1.5 bg-background">
-                  <Calendar className="size-3.5 text-muted-foreground" />
-                  <SelectValue placeholder="Khoảng thời gian" />
-                </SelectTrigger>
-                <SelectContent align="end">
-                  <SelectItem value="this_month">Tháng này</SelectItem>
-                  <SelectItem value="3_months">3 tháng gần nhất</SelectItem>
-                  <SelectItem value="6_months">6 tháng gần nhất</SelectItem>
-                  <SelectItem value="this_year">Năm nay</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="h-8.5 text-xs w-40 gap-1.5 bg-background">
+                <Calendar className="size-3.5 text-muted-foreground" />
+                <SelectValue placeholder="Chọn khoảng thời gian" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="this_month">Tháng này</SelectItem>
+                <SelectItem value="3_months">3 tháng gần nhất</SelectItem>
+                <SelectItem value="6_months">6 tháng gần nhất</SelectItem>
+                <SelectItem value="this_year">Năm nay</SelectItem>
+              </SelectContent>
+            </Select>
           </CardHeader>
 
           <CardContent className="p-4 pt-2 flex-1 flex flex-col justify-center">
             {hasChartData ? (
-              <ChartContainer config={chartConfig} className="h-[240px] w-full">
-                <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
-                  <YAxis tickFormatter={(v) => formatVNDShort(v)} tickLine={false} axisLine={false} width={70} />
-                  <ChartTooltip
-                    cursor={{ fill: "var(--muted)", opacity: 0.35 }}
-                    content={({ active, payload, label }) => {
-                      if (!active || !payload || !payload.length) return null;
-                      return (
-                        <div className="rounded-xl border bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-xs min-w-[210px] space-y-2 border-border/80">
-                          <div className="font-semibold text-xs text-foreground pb-1.5 border-b border-border/60 flex items-center justify-between">
-                            <span>Tháng {String(label || "").replace(/^T/, "")}</span>
-                            <span className="text-[10px] text-muted-foreground font-normal">Chi tiết doanh thu</span>
-                          </div>
-                          <div className="space-y-1.5 text-xs">
-                            {payload.map((item, index) => {
-                              const isSigned = item.dataKey === "signed";
-                              const name = isSigned ? "Hợp đồng đã ký" : "Đã thực thu";
-                              const dotColor = isSigned ? "bg-blue-600 dark:bg-blue-500" : "bg-emerald-500";
-                              return (
-                                <div key={index} className="flex items-center justify-between gap-3">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className={`size-2.5 rounded-full ${dotColor} shrink-0`} />
-                                    <span className="text-muted-foreground">{name}:</span>
+              <div className="space-y-3">
+                <ChartContainer config={chartConfig} className="h-[230px] w-full">
+                  <BarChart data={monthlyData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickFormatter={(v) => formatVNDShort(v)} tickLine={false} axisLine={false} width={70} />
+                    <ChartTooltip
+                      cursor={{ fill: "var(--muted)", opacity: 0.35 }}
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload || !payload.length) return null;
+                        return (
+                          <div className="rounded-xl border bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-xs min-w-[210px] space-y-2 border-border/80">
+                            <div className="font-semibold text-xs text-foreground pb-1.5 border-b border-border/60 flex items-center justify-between">
+                              <span>Tháng {String(label || "").replace(/^T/, "")}</span>
+                              <span className="text-[10px] text-muted-foreground font-normal">Chi tiết doanh thu</span>
+                            </div>
+                            <div className="space-y-1.5 text-xs">
+                              {payload.map((item, index) => {
+                                const isSigned = item.dataKey === "signed";
+                                const name = isSigned ? "Hợp đồng đã ký" : "Đã thực thu";
+                                const dotColor = isSigned ? "bg-blue-600 dark:bg-blue-500" : "bg-emerald-500";
+                                return (
+                                  <div key={index} className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className={`size-2.5 rounded-full ${dotColor} shrink-0`} />
+                                      <span className="text-muted-foreground">{name}:</span>
+                                    </div>
+                                    <span className="font-semibold tabular-nums text-foreground">
+                                      {formatVND(Number(item.value))}
+                                    </span>
                                   </div>
-                                  <span className="font-semibold tabular-nums text-foreground">
-                                    {formatVND(Number(item.value))}
-                                  </span>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Bar dataKey="signed" name="HĐ đã ký" fill="var(--color-signed)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  <Bar dataKey="collected" name="Đã thực thu" fill="var(--color-collected)" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                </BarChart>
-              </ChartContainer>
+                        );
+                      }}
+                    />
+                    <Bar dataKey="signed" name="HĐ đã ký" fill="var(--color-signed)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <Bar dataKey="collected" name="Đã thực thu" fill="var(--color-collected)" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ChartContainer>
+
+                {/* Legend chú thích màu dưới biểu đồ */}
+                <div className="pt-2 border-t border-border/50 flex items-center justify-center gap-6 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2.5 rounded-xs bg-blue-600 dark:bg-blue-500 inline-block shadow-2xs" />
+                    <span className="text-muted-foreground font-medium">Hợp đồng đã ký (Doanh số)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="size-2.5 rounded-xs bg-emerald-500 inline-block shadow-2xs" />
+                    <span className="text-muted-foreground font-medium">Đã thực thu (Tiền về)</span>
+                  </div>
+                </div>
+              </div>
             ) : (
               <EmptyState
                 icon={BarChart3}
