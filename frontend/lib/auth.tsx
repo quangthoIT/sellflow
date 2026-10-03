@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { error: null };
         }
         const errData = await res.json().catch(() => ({}));
-        return { error: { message: errData.message || "Tài khoản hoặc mật khẩu không chính xác" } };
+        return { error: errData.message || "Tài khoản hoặc mật khẩu không chính xác" };
       }
     } catch (apiErr) {
       console.warn("[Auth] Backend login request error, checking locally saved registered credentials:", apiErr);
