@@ -188,11 +188,13 @@ export function ContractsPage() {
     const paid = (pays ?? []).reduce((s: number, p: any) => s + p.amount, 0);
     const remaining = total - paid;
 
+    const appCfg = getCachedSettings();
     let subject = s.subject;
     let body = s.body;
     const replacements: Record<string, string> = {
       SO_HOP_DONG: contract.id,
       TEN_KHACH_HANG: customer.name,
+      TEN_CONG_TY: appCfg.company_name || "Công ty",
       TONG_TIEN: formatVND(total),
       DA_THANH_TOAN: formatVND(paid),
       CON_PHAI_THU: formatVND(remaining),
@@ -201,8 +203,6 @@ export function ContractsPage() {
       subject = subject.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
       body = body.replace(new RegExp(`\\{\\{${k}\\}\\}`, "g"), v);
     }
-
-    const appCfg = getCachedSettings();
     const logId = genId(appCfg.email_prefix, appCfg.id_format);
     await db.from("email_logs").insert({
       id: logId,

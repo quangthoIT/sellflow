@@ -37,7 +37,7 @@ Chi tiết điều khoản và chứng từ đã được đính kèm trong tệ
 Nếu có bất kỳ thắc mắc nào, xin vui lòng phản hồi lại email này.
 
 Trân trọng,
-Đội ngũ SellFlow`,
+{{TEN_CONG_TY}}`,
   created_at: new Date().toISOString(),
 };
 
@@ -502,7 +502,7 @@ export function EmailPage() {
                 />
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <span className="text-[11px] text-muted-foreground font-medium">Gợi ý biến số:</span>
-                  {["{{SO_HOP_DONG}}", "{{TEN_KHACH_HANG}}", "{{TONG_TIEN}}", "{{DA_THANH_TOAN}}", "{{CON_PHAI_THU}}"].map((b) => (
+                  {["{{SO_HOP_DONG}}", "{{TEN_KHACH_HANG}}", "{{TEN_CONG_TY}}", "{{TONG_TIEN}}", "{{DA_THANH_TOAN}}", "{{CON_PHAI_THU}}"].map((b) => (
                     <Badge
                       key={b}
                       variant="secondary"
@@ -516,13 +516,28 @@ export function EmailPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium">Nội dung email mẫu</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium">Nội dung email mẫu</Label>
+                </div>
                 <Textarea
                   value={settings.body}
                   onChange={(e) => setSettings({ ...settings, body: e.target.value })}
                   rows={7}
                   className="font-sans text-sm leading-relaxed"
                 />
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[11px] text-muted-foreground font-medium">Chèn biến số:</span>
+                  {["{{TEN_KHACH_HANG}}", "{{SO_HOP_DONG}}", "{{TEN_CONG_TY}}", "{{TONG_TIEN}}", "{{DA_THANH_TOAN}}", "{{CON_PHAI_THU}}"].map((b) => (
+                    <Badge
+                      key={b}
+                      variant="secondary"
+                      className="cursor-pointer font-mono text-[11px] hover:bg-primary/20 hover:text-primary transition-colors"
+                      onClick={() => setSettings({ ...settings, body: settings.body + " " + b })}
+                    >
+                      + {b}
+                    </Badge>
+                  ))}
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 rounded-xl border bg-muted/20 gap-3">
