@@ -196,7 +196,7 @@ export function PaymentsPage() {
 
       <div className="flex items-center justify-between">
         <Select value={filterContract} onValueChange={(val) => { setFilterContract(val); setPaymentPreset(null); }}>
-          <SelectTrigger className="w-72"><SelectValue placeholder="Tất cả hợp đồng" /></SelectTrigger>
+          <SelectTrigger className="w-80 max-w-full"><SelectValue placeholder="Tất cả hợp đồng" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tất cả hợp đồng</SelectItem>
             {contracts.map((c) => <SelectItem key={c.id} value={c.id}>{c.id} — {customerName(c.customer_id)}</SelectItem>)}
@@ -592,7 +592,7 @@ function PaymentForm({
         <Label>Ghi chú đợt thu</Label>
         <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Nhập ghi chú hoặc nội dung chuyển khoản..." />
       </div>
-      <DialogFooter className="gap-2 sm:gap-0 pt-2">
+      <DialogFooter className="flex flex-row items-center justify-end gap-3 pt-3">
         <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
         <Button type="button" onClick={() => onSubmit(contractId, amount, date, method, note)} disabled={!contractId || amount <= 0} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
           Lưu & Ghi nhận thanh toán
