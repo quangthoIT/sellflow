@@ -347,6 +347,7 @@ export function PaymentsPage() {
             defaultContract={paymentPreset?.contractId || (filterContract === "all" ? "" : filterContract)}
             defaultAmount={paymentPreset?.amount || 0}
             defaultNote={paymentPreset?.note || ""}
+            disableContractSelect={!!paymentPreset?.contractId}
             onSubmit={handleAddPayment}
             onCancel={() => {
               setShowAdd(false);
@@ -497,6 +498,7 @@ function PaymentForm({
   defaultContract,
   defaultAmount = 0,
   defaultNote = "",
+  disableContractSelect = false,
   onSubmit,
   onCancel,
 }: {
@@ -506,6 +508,7 @@ function PaymentForm({
   defaultContract: string;
   defaultAmount?: number;
   defaultNote?: string;
+  disableContractSelect?: boolean;
   onSubmit: (contractId: string, amount: number, date: string, method: string, note: string) => void;
   onCancel: () => void;
 }) {
@@ -541,9 +544,9 @@ function PaymentForm({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label>Hợp đồng</Label>
-        <Select value={contractId} onValueChange={setContractId}>
-          <SelectTrigger><SelectValue placeholder="Chọn hợp đồng" /></SelectTrigger>
+        <Label>Hợp đồng {disableContractSelect && <span className="text-xs text-muted-foreground font-normal">(Cố định theo đợt đã chọn)</span>}</Label>
+        <Select value={contractId} onValueChange={setContractId} disabled={disableContractSelect}>
+          <SelectTrigger className={disableContractSelect ? "bg-muted/60 cursor-not-allowed opacity-90" : ""}><SelectValue placeholder="Chọn hợp đồng" /></SelectTrigger>
           <SelectContent>
             {contracts.filter((c) => ["Đã ký", "Đang thực hiện", "Hoàn thành"].includes(c.status)).map((c) => (
               <SelectItem key={c.id} value={c.id}>
@@ -570,11 +573,6 @@ function PaymentForm({
             placeholder="Nhập số tiền thu"
             className="font-semibold"
           />
-          {amount > 0 && (
-            <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
-              Bằng chữ: {formatVND(amount)}
-            </p>
-          )}
         </div>
         <div className="space-y-1.5">
           <Label>Ngày thanh toán</Label>
