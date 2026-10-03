@@ -32,6 +32,12 @@ export function PaymentsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [filterContract, setFilterContract] = useState<string>("all");
 
+  const [paymentPreset, setPaymentPreset] = useState<{
+    contractId: string;
+    amount: number;
+    note: string;
+  } | null>(null);
+
   const [debtSortKey, setDebtSortKey] = useState<string | null>(null);
   const [debtSortDir, setDebtSortDir] = useState<SortDir>(null);
   const [debtFilters, setDebtFilters] = useState<Record<string, string>>({});
@@ -142,9 +148,10 @@ export function PaymentsPage() {
     const { error } = await db.from("payments").insert({
       id, contract_id: contractId, date, amount, method, note,
     });
-    if (error) { toast.error("Lỗi ghi thanh toán"); return; }
-    toast.success("Đã ghi nhận thanh toán");
+    if (error) { toast.error("Lỗi ghi thanh toán: " + (error.message || "Vui lòng thử lại")); return; }
+    toast.success(`Đã ghi nhận thanh toán ${formatVND(amount)} thành công!`);
     setShowAdd(false);
+    setPaymentPreset(null);
     load();
   };
 
@@ -188,14 +195,14 @@ export function PaymentsPage() {
       </div>
 
       <div className="flex items-center justify-between">
-        <Select value={filterContract} onValueChange={setFilterContract}>
+        <Select value={filterContract} onValueChange={(val) => { setFilterContract(val); setPaymentPreset(null); }}>
           <SelectTrigger className="w-72"><SelectValue placeholder="Tất cả hợp đồng" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tất cả hợp đồng</SelectItem>
             {contracts.map((c) => <SelectItem key={c.id} value={c.id}>{c.id} — {customerName(c.customer_id)}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Button onClick={() => setShowAdd(true)}>
+        <Button onClick={() => { setPaymentPreset(null); setShowAdd(true); }}>
           <Plus className="size-4" /> Ghi thanh toán
         </Button>
       </div>
@@ -231,7 +238,17 @@ export function PaymentsPage() {
                 </TableRow>
               )}
               {sortedDebtRows.map(({ contract: c, customer, paid }) => (
-                <ContractDebtRow key={c.id} contract={c} customerName={customer} paid={paid} />
+                <ContractDebtRow
+                  key={c.id}
+                  contract={c}
+                  customerName={customer}
+                  paid={paid}
+                  onQuickPay={(contractId, amount, note) => {
+                    setFilterContract(contractId);
+                    setPaymentPreset({ contractId, amount, note });
+                    setShowAdd(true);
+                  }}
+                />
               ))}
             </TableBody>
           </Table>
@@ -309,7 +326,16 @@ export function PaymentsPage() {
       />
 
       {/* Add payment dialog */}
-      <Dialog open={showAdd} onOpenChange={(o) => { setShowAdd(o); if (!o) setFilterContract("all"); }}>
+      <Dialog
+        open={showAdd}
+        onOpenChange={(o) => {
+          setShowAdd(o);
+          if (!o) {
+            setFilterContract("all");
+            setPaymentPreset(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Ghi nhận thanh toán</DialogTitle>
@@ -318,9 +344,14 @@ export function PaymentsPage() {
             contracts={contracts}
             customers={customers}
             payments={payments}
-            defaultContract={filterContract === "all" ? "" : filterContract}
+            defaultContract={paymentPreset?.contractId || (filterContract === "all" ? "" : filterContract)}
+            defaultAmount={paymentPreset?.amount || 0}
+            defaultNote={paymentPreset?.note || ""}
             onSubmit={handleAddPayment}
-            onCancel={() => setShowAdd(false)}
+            onCancel={() => {
+              setShowAdd(false);
+              setPaymentPreset(null);
+            }}
           />
         </DialogContent>
       </Dialog>
@@ -328,10 +359,11 @@ export function PaymentsPage() {
   );
 }
 
-function ContractDebtRow({ contract, customerName, paid }: {
+function ContractDebtRow({ contract, customerName, paid, onQuickPay }: {
   contract: Contract;
   customerName: string;
   paid: number;
+  onQuickPay: (contractId: string, amount: number, note: string) => void;
 }) {
   const [total, setTotal] = useState(0);
   const [terms, setTerms] = useState<PaymentTerms | null>(null);
@@ -356,6 +388,7 @@ function ContractDebtRow({ contract, customerName, paid }: {
 
   // No installments → single lump-sum row
   if (!terms || !terms.installments || terms.installments.length === 0) {
+    const remaining = Math.max(0, total - paid);
     return (
       <TableRow>
         <TableCell className="font-mono text-xs">{contract.id}</TableCell>
@@ -363,8 +396,30 @@ function ContractDebtRow({ contract, customerName, paid }: {
         <TableCell className="text-muted-foreground">—</TableCell>
         <TableCell className="text-right">{formatVND(total)}</TableCell>
         <TableCell className="text-right text-chart-2">{formatVND(paid)}</TableCell>
-        <TableCell className="text-right font-bold text-destructive">{formatVND(Math.max(0, total - paid))}</TableCell>
-        <TableCell><Badge variant="secondary">{contract.status}</Badge></TableCell>
+        <TableCell className="text-right font-bold text-destructive">{formatVND(remaining)}</TableCell>
+        <TableCell>
+          {remaining === 0 ? (
+            <Badge variant="default" className="text-xs bg-blue-600 hover:bg-blue-600 text-white font-semibold">
+              Đã đủ
+            </Badge>
+          ) : (
+            <ActionTooltip label={`Bấm để ghi nhận thu ${formatVND(remaining)}`}>
+              <button
+                type="button"
+                onClick={() => onQuickPay(contract.id, remaining, `Thanh toán hợp đồng ${contract.id}`)}
+                className="inline-flex items-center gap-1 group cursor-pointer hover:scale-105 active:scale-95 transition-all outline-none"
+              >
+                <Badge
+                  variant={paid > 0 ? "secondary" : "outline"}
+                  className="text-xs font-medium group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all cursor-pointer shadow-2xs"
+                >
+                  {paid > 0 ? "Một phần" : "Chưa thu"}
+                  <Plus className="size-3 ml-0.5 opacity-60 group-hover:opacity-100" />
+                </Badge>
+              </button>
+            </ActionTooltip>
+          )}
+        </TableCell>
       </TableRow>
     );
   }
@@ -408,13 +463,25 @@ function ContractDebtRow({ contract, customerName, paid }: {
           <TableCell className="text-right font-medium text-destructive">{formatVND(it.remaining)}</TableCell>
           <TableCell>
             {it.remaining === 0 ? (
-              <Badge variant="default" className="text-xs">Đã đủ</Badge>
-            ) : it.paid > 0 ? (
-              <Badge variant="secondary" className="text-xs">Một phần</Badge>
-            ) : overdue(it.date) ? (
-              <Badge variant="destructive" className="text-xs">Quá hạn</Badge>
+              <Badge variant="default" className="text-xs bg-blue-600 hover:bg-blue-600 text-white font-semibold">
+                Đã đủ
+              </Badge>
             ) : (
-              <Badge variant="outline" className="text-xs">Chưa thu</Badge>
+              <ActionTooltip label={`Bấm để ghi nhận thu ${formatVND(it.remaining)} cho ${it.label || `Đợt ${idx + 1}`}`}>
+                <button
+                  type="button"
+                  onClick={() => onQuickPay(contract.id, it.remaining, `Thanh toán ${it.label || `Đợt ${idx + 1}`}`)}
+                  className="inline-flex items-center gap-1 group cursor-pointer hover:scale-105 active:scale-95 transition-all outline-none"
+                >
+                  <Badge
+                    variant={it.paid > 0 ? "secondary" : overdue(it.date) ? "destructive" : "outline"}
+                    className="text-xs font-medium group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all cursor-pointer shadow-2xs"
+                  >
+                    {it.paid > 0 ? "Một phần" : overdue(it.date) ? "Quá hạn" : "Chưa thu"}
+                    <Plus className="size-3 ml-0.5 opacity-60 group-hover:opacity-100" />
+                  </Badge>
+                </button>
+              </ActionTooltip>
             )}
           </TableCell>
         </TableRow>
@@ -423,20 +490,43 @@ function ContractDebtRow({ contract, customerName, paid }: {
   );
 }
 
-function PaymentForm({ contracts, customers, payments, defaultContract, onSubmit, onCancel }: {
+function PaymentForm({
+  contracts,
+  customers,
+  payments,
+  defaultContract,
+  defaultAmount = 0,
+  defaultNote = "",
+  onSubmit,
+  onCancel,
+}: {
   contracts: Contract[];
   customers: Customer[];
   payments: Payment[];
   defaultContract: string;
+  defaultAmount?: number;
+  defaultNote?: string;
   onSubmit: (contractId: string, amount: number, date: string, method: string, note: string) => void;
   onCancel: () => void;
 }) {
   const [contractId, setContractId] = useState(defaultContract);
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(defaultAmount);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [method, setMethod] = useState("Chuyển khoản");
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(defaultNote);
   const [contractTotal, setContractTotal] = useState(0);
+
+  useEffect(() => {
+    if (defaultContract) setContractId(defaultContract);
+  }, [defaultContract]);
+
+  useEffect(() => {
+    if (defaultAmount > 0) setAmount(defaultAmount);
+  }, [defaultAmount]);
+
+  useEffect(() => {
+    if (defaultNote) setNote(defaultNote);
+  }, [defaultNote]);
 
   useEffect(() => {
     if (!contractId) return;
@@ -464,7 +554,7 @@ function PaymentForm({ contracts, customers, payments, defaultContract, onSubmit
         </Select>
       </div>
       {contractId && (
-        <div className="grid grid-cols-3 gap-2 rounded-lg border p-3 text-sm">
+        <div className="grid grid-cols-3 gap-2 rounded-lg border p-3 text-sm bg-slate-50/50 dark:bg-slate-900/50">
           <div><span className="text-muted-foreground">Tổng HĐ:</span> <strong>{formatVND(contractTotal)}</strong></div>
           <div><span className="text-muted-foreground">Đã thu:</span> <strong className="text-chart-2">{formatVND(paid)}</strong></div>
           <div><span className="text-muted-foreground">Còn nợ:</span> <strong className="text-destructive">{formatVND(remaining)}</strong></div>
@@ -472,16 +562,27 @@ function PaymentForm({ contracts, customers, payments, defaultContract, onSubmit
       )}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Số tiền (đ)</Label>
-          <Input type="number" value={amount} onChange={(e) => setAmount(+e.target.value)} />
+          <Label>Số tiền ghi nhận (VND)</Label>
+          <Input
+            type="number"
+            value={amount || ""}
+            onChange={(e) => setAmount(+e.target.value)}
+            placeholder="Nhập số tiền thu"
+            className="font-semibold"
+          />
+          {amount > 0 && (
+            <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+              Bằng chữ: {formatVND(amount)}
+            </p>
+          )}
         </div>
         <div className="space-y-1.5">
-          <Label>Ngày</Label>
+          <Label>Ngày thanh toán</Label>
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Phương thức</Label>
+        <Label>Phương thức thanh toán</Label>
         <Select value={method} onValueChange={setMethod}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -490,13 +591,13 @@ function PaymentForm({ contracts, customers, payments, defaultContract, onSubmit
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>Ghi chú</Label>
-        <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
+        <Label>Ghi chú đợt thu</Label>
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Nhập ghi chú hoặc nội dung chuyển khoản..." />
       </div>
-      <DialogFooter>
+      <DialogFooter className="gap-2 sm:gap-0">
         <Button variant="outline" onClick={onCancel}>Hủy</Button>
-        <Button onClick={() => onSubmit(contractId, amount, date, method, note)} disabled={!contractId || amount <= 0}>
-          Ghi thanh toán
+        <Button onClick={() => onSubmit(contractId, amount, date, method, note)} disabled={!contractId || amount <= 0} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+          Lưu & Ghi nhận thanh toán
         </Button>
       </DialogFooter>
     </div>
