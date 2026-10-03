@@ -256,8 +256,8 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      {/* 1. TOP METRIC CARDS (5 Columns) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      {/* 1. TOP METRIC CARDS (4 Columns) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Card 1: Báo giá đang chờ */}
         <div
           onClick={() => navigate("quotes")}
@@ -338,26 +338,6 @@ export function DashboardPage() {
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400">{formatVND(kpis.outstanding)}</div>
-            <div className="mt-1 flex items-center justify-end">
-              <ChevronRight className="size-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: Lợi nhuận dự kiến */}
-        <div
-          className="group relative flex flex-col justify-between p-4 rounded-xl border bg-card shadow-2xs transition-all"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:bg-blue-500/20">
-                <TrendingUp className="size-4.5" />
-              </div>
-              <span className="text-xs font-medium text-muted-foreground">Lợi nhuận dự kiến</span>
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold tracking-tight text-blue-600 dark:text-blue-400">{formatVND(kpis.expectedProfit)}</div>
             <div className="mt-1 flex items-center justify-end">
               <ChevronRight className="size-4 text-muted-foreground/60 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
             </div>

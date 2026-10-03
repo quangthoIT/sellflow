@@ -17,15 +17,24 @@ type NavState = {
   navigate: (page: Page, params?: Record<string, string>) => void;
 };
 
+let globalRouter: any = null;
+
+export const setGlobalRouter = (router: any) => {
+  globalRouter = router;
+};
+
 export const useNav = create<NavState>((set) => ({
   page: "dashboard",
   params: {},
   navigate: (page, params = {}) => {
     set({ page, params });
-    if (typeof window !== "undefined") {
-      const targetPath = page === "email" ? "/emails" : page === "quotes" ? "/quotations" : `/${page}`;
+    const targetPath =
+      page === "email" ? "/emails" : page === "quotes" ? "/quotations" : `/${page}`;
+    if (globalRouter) {
+      globalRouter.push(targetPath);
+    } else if (typeof window !== "undefined") {
       if (window.location.pathname !== targetPath) {
-        window.history.pushState({}, "", targetPath);
+        window.location.href = targetPath;
       }
     }
   },

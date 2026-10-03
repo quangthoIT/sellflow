@@ -1,14 +1,21 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppHeader } from "@/components/app-header";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { LoginPage } from "@/views/login";
+import { setGlobalRouter } from "@/lib/nav";
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { session, loading } = useAuth();
+
+  useEffect(() => {
+    setGlobalRouter(router);
+  }, [router]);
 
   if (loading) {
     return (
