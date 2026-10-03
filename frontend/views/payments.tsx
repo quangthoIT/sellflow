@@ -546,7 +546,7 @@ function PaymentForm({
       <div className="space-y-1.5">
         <Label>Hợp đồng {disableContractSelect && <span className="text-xs text-muted-foreground font-normal">(Cố định theo đợt đã chọn)</span>}</Label>
         <Select value={contractId} onValueChange={setContractId} disabled={disableContractSelect}>
-          <SelectTrigger className={disableContractSelect ? "bg-muted/60 cursor-not-allowed opacity-90" : ""}><SelectValue placeholder="Chọn hợp đồng" /></SelectTrigger>
+          <SelectTrigger className={`w-full ${disableContractSelect ? "bg-muted/60 cursor-not-allowed opacity-90" : ""}`}><SelectValue placeholder="Chọn hợp đồng" /></SelectTrigger>
           <SelectContent>
             {contracts.filter((c) => ["Đã ký", "Đang thực hiện", "Hoàn thành"].includes(c.status)).map((c) => (
               <SelectItem key={c.id} value={c.id}>
@@ -582,7 +582,7 @@ function PaymentForm({
       <div className="space-y-1.5">
         <Label>Phương thức thanh toán</Label>
         <Select value={method} onValueChange={setMethod}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             {PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
           </SelectContent>
@@ -592,9 +592,9 @@ function PaymentForm({
         <Label>Ghi chú đợt thu</Label>
         <Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Nhập ghi chú hoặc nội dung chuyển khoản..." />
       </div>
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button variant="outline" onClick={onCancel}>Hủy</Button>
-        <Button onClick={() => onSubmit(contractId, amount, date, method, note)} disabled={!contractId || amount <= 0} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+      <DialogFooter className="gap-2 sm:gap-0 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>Hủy</Button>
+        <Button type="button" onClick={() => onSubmit(contractId, amount, date, method, note)} disabled={!contractId || amount <= 0} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold">
           Lưu & Ghi nhận thanh toán
         </Button>
       </DialogFooter>
