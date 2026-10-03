@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
     const inputEmail = (email || "").trim().toLowerCase();
     const cleanPassword = password || "";
     const apiBase = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api").trim().replace(/\/+$/, "");
@@ -101,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { error: null };
         }
         const errData = await res.json().catch(() => ({}));
-        return { error: errData.message || "Tài khoản hoặc mật khẩu không chính xác" };
+        return { error: String(errData.message || "Tài khoản hoặc mật khẩu không chính xác") };
       }
     } catch (apiErr) {
       console.warn("[Auth] Backend login request error, checking locally saved registered credentials:", apiErr);
