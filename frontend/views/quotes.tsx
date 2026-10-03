@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { db, type Product, type Customer, type Quote, type QuoteItem, type Template, type PaymentTerms, type PaymentTerm, loadSettings, getCachedSettings } from "@/lib/db";
+import { useRouter } from "next/navigation";
+import { db, type Product, type Customer, type Quote, type QuoteItem, type Template, type PaymentTerms, type PaymentTerm, type AppSettings, loadSettings, getCachedSettings } from "@/lib/db";
 import { formatVND, formatDate, genId, calcQuoteTotals } from "@/lib/format";
 import { useNav } from "@/lib/nav";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Trash2, FileText, Eye, FileSignature, Pencil, X, Download, FileType, User, Package, CreditCard, Calculator, HelpCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Trash2, FileText, Eye, FileSignature, Pencil, X, Download, FileType, User, Package, CreditCard, Calculator, HelpCircle, ArrowRight, CheckCircle2, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 import { downloadPdf, downloadWord } from "@/lib/download";
 import { EmptyState } from "@/components/empty-state";
@@ -27,6 +29,7 @@ import { cn } from "@/lib/utils";
 const QUOTE_STATUSES = ["Nháp", "Đã gửi", "Khách đồng ý", "Khách từ chối", "Hết hạn"];
 
 export function QuotesPage() {
+  const router = useRouter();
   const { params, navigate } = useNav();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -36,6 +39,7 @@ export function QuotesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [convertQuoteId, setConvertQuoteId] = useState<string | null>(null);
   const [allItems, setAllItems] = useState<QuoteItem[]>([]);
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
@@ -62,10 +66,10 @@ export function QuotesPage() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && (params.id.startsWith("BG-") || quotes.some((q) => q.id === params.id) || params.id === "__new__")) {
       setEditingId(params.id);
     }
-  }, [params.id]);
+  }, [params.id, quotes]);
 
   const customerName = (id: string | null) => customers.find((c) => c.id === id)?.name ?? "—";
 
@@ -126,41 +130,6 @@ export function QuotesPage() {
     load();
   };
 
-  const convertToContract = async (quoteId: string) => {
-    const s = await loadSettings();
-    const quote = quotes.find((q) => q.id === quoteId);
-    if (!quote) return;
-    const { data: items } = await db.from("quote_items").select("*").eq("quote_id", quoteId);
-    const contractId = genId(s.contract_prefix, s.id_format, 0, quote.customer_id ?? "");
-    const contractTemplate = templates.find((t) => t.type === "contract" && t.is_default);
-
-    const { error: cErr } = await db.from("contracts").insert({
-      id: contractId,
-      quote_id: quoteId,
-      customer_id: quote.customer_id,
-      date: new Date().toISOString().split("T")[0],
-      status: "Nháp",
-      template_id: contractTemplate?.id ?? null,
-      notes: quote.notes,
-      payment_terms: quote.payment_terms ?? null,
-    });
-    if (cErr) { toast.error("Lỗi tạo hợp đồng"); return; }
-
-    const cItems = (items ?? []).map((it: QuoteItem) => ({
-      contract_id: contractId,
-      product_id: it.product_id,
-      product_name: it.product_name,
-      qty: it.qty,
-      price: it.price,
-    }));
-    if (cItems.length > 0) {
-      await db.from("contract_items").insert(cItems);
-    }
-
-    toast.success(`Đã tạo hợp đồng ${contractId}`);
-    navigate("contracts", { id: contractId });
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
@@ -210,7 +179,7 @@ export function QuotesPage() {
                   onPreview={() => setPreviewId(quote.id)}
                   onDelete={() => setDeleteId(quote.id)}
                   onStatusChange={(s) => handleStatusChange(quote.id, s)}
-                  onConvert={() => convertToContract(quote.id)}
+                  onConvert={() => setConvertQuoteId(quote.id)}
                 />
               ))}
             </TableBody>
@@ -261,6 +230,20 @@ export function QuotesPage() {
           {previewId && <QuotePreview quoteId={previewId} customers={customers} templates={templates} products={products} />}
         </DialogContent>
       </Dialog>
+
+      {/* Convert to Contract Preview & Confirmation Dialog */}
+      <ConvertToContractDialog
+        quoteId={convertQuoteId}
+        customers={customers}
+        products={products}
+        onClose={() => setConvertQuoteId(null)}
+        onSuccess={(contractId) => {
+          setConvertQuoteId(null);
+          load();
+          navigate("contracts", { id: contractId });
+          router.push("/contracts");
+        }}
+      />
     </div>
   );
 }
@@ -1129,5 +1112,377 @@ function PaymentTermsEditor({ terms, total, onChange }: {
         </div>
       </div>
     </div>
+  );
+}
+
+function ConvertToContractDialog({
+  quoteId,
+  customers,
+  products,
+  onClose,
+  onSuccess,
+}: {
+  quoteId: string | null;
+  customers: Customer[];
+  products: Product[];
+  onClose: () => void;
+  onSuccess: (contractId: string) => void;
+}) {
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [items, setItems] = useState<QuoteItem[]>([]);
+  const [contractTemplates, setContractTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [contractDate, setContractDate] = useState(new Date().toISOString().split("T")[0]);
+  const [proposedContractId, setProposedContractId] = useState("");
+  const [notes, setNotes] = useState("");
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("preview");
+
+  useEffect(() => {
+    if (!quoteId) return;
+    setLoading(true);
+    (async () => {
+      const s = await loadSettings();
+      setSettings(s);
+      const [qRes, iRes, tRes] = await Promise.all([
+        db.from("quotes").select("*").eq("id", quoteId).maybeSingle(),
+        db.from("quote_items").select("*").eq("quote_id", quoteId),
+        db.from("templates").select("*").eq("type", "contract").order("name"),
+      ]);
+      const q = qRes.data as Quote | null;
+      const its = (iRes.data ?? []) as QuoteItem[];
+      const tpls = (tRes.data ?? []) as Template[];
+
+      if (q) {
+        setQuote(q);
+        setNotes(q.notes || "");
+        const gen = genId(s.contract_prefix, s.id_format, 0, q.customer_id ?? "");
+        setProposedContractId(gen);
+      }
+      setItems(its);
+      setContractTemplates(tpls);
+
+      const defaultTpl = tpls.find((t) => t.is_default) || tpls[0];
+      setSelectedTemplateId(defaultTpl?.id ?? "");
+      setLoading(false);
+    })();
+  }, [quoteId]);
+
+  if (!quoteId) return null;
+
+  const customer = customers.find((c) => c.id === quote?.customer_id);
+  const totals = quote ? calcQuoteTotals(items, quote.discount || 0, quote.vat_pct || 0, quote.shipping || 0) : { subtotal: 0, vat: 0, total: 0 };
+  const template = contractTemplates.find((t) => t.id === selectedTemplateId) || contractTemplates[0];
+
+  const productTable = `<table style="width:100%;border-collapse:collapse;margin:8px 0;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
+    <thead><tr style="background:#f1f5f9;font-weight:bold;">
+      <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">STT</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Sản phẩm / Dịch vụ</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">ĐVT</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Số lượng</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Đơn giá (đ)</th>
+      <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Thành tiền (đ)</th>
+    </tr></thead>
+    <tbody>
+      ${items.map((it, i) => {
+        const prod = products.find((p) => p.id === it.product_id);
+        const unit = prod?.unit || "cái";
+        return `<tr>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">${i + 1}</td>
+        <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${it.product_name}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:center;font-size:12pt;color:#000000;">${unit}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${it.qty}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(it.price)}</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(it.qty * it.price)}</td>
+      </tr>`;
+      }).join("")}
+    </tbody>
+    <tfoot>
+      <tr style="font-weight:bold;">
+        <td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tạm tính:</td>
+        <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(totals.subtotal)}</td>
+      </tr>
+      ${totals.vat > 0 ? `<tr style="font-weight:bold;"><td colspan="5" style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">VAT (${quote?.vat_pct}%):</td><td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(totals.vat)}</td></tr>` : ""}
+      <tr style="font-weight:bold;background:#f1f5f9;">
+        <td colspan="5" style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">TỔNG CỘNG THANH TOÁN:</td>
+        <td style="border:1px solid #000000;padding:7px;text-align:right;font-size:12pt;color:#000000;">${formatVND(totals.total)}</td>
+      </tr>
+    </tfoot>
+  </table>`;
+
+  const paymentTermsHtml = quote?.payment_terms && quote.payment_terms.installments.length > 0
+    ? `<div style="margin-top:10px;font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000000;">
+        <p style="font-size:12pt;margin-bottom:6px;color:#000000;">Phương thức: <strong>${quote.payment_terms.method === "cash" ? "Tiền mặt" : "Chuyển khoản"}</strong></p>
+        <table style="width:100%;border-collapse:collapse;font-size:12pt;color:#000000;">
+          <thead><tr style="background:#f1f5f9;font-weight:bold;">
+            <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Đợt</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Ngày</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Tỷ lệ (%)</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">Số tiền</th>
+            <th style="border:1px solid #000000;padding:6px;text-align:left;font-size:12pt;color:#000000;">Ghi chú</th>
+          </tr></thead>
+          <tbody>
+            ${quote.payment_terms.installments.map((it, idx) => `<tr>
+              <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${it.label === "Thanh toán 1 lần" ? "Đợt 1" : (it.label || `Đợt ${idx + 1}`)}</td>
+              <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${formatDate(it.date)}</td>
+              <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${it.percent || 0}%</td>
+              <td style="border:1px solid #000000;padding:6px;text-align:right;font-size:12pt;color:#000000;">${formatVND(it.amount)}</td>
+              <td style="border:1px solid #000000;padding:6px;font-size:12pt;color:#000000;">${it.note || ""}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`
+    : "Thanh toán theo tiến độ thỏa thuận";
+
+  let previewHtml = template?.content ?? "<p>Chưa có mẫu hợp đồng</p>";
+  const replacements: Record<string, string> = {
+    SO_HOP_DONG: proposedContractId,
+    SO_TAI_LIEU: proposedContractId,
+    SO_BAO_GIA: quote?.id ?? "",
+    NGAY: formatDate(contractDate),
+    TEN_CONG_TY: settings?.company_name || "CÔNG TY BÁN HÀNG",
+    DIA_CHI_CONG_TY: settings?.company_address || "",
+    SDT_CONG_TY: settings?.company_phone || "",
+    EMAIL_CONG_TY: settings?.company_email || "",
+    MST_CONG_TY: settings?.company_tax || "",
+    LOGO_CONG_TY: settings?.logo_url ? `<img src="${settings.logo_url}" alt="Logo" style="height:48px;max-width:150px;object-fit:contain;" />` : "",
+    TEN_KHACH_HANG: customer?.name ?? "",
+    DIA_CHI_KHACH_HANG: customer?.address ?? "",
+    MST_KHACH_HANG: customer?.tax ?? "",
+    SDT_KHACH_HANG: customer?.phone ?? "",
+    EMAIL_KHACH_HANG: customer?.email ?? "",
+    BANG_SAN_PHAM: productTable,
+    TAM_TINH: formatVND(totals.subtotal),
+    VAT: formatVND(totals.vat),
+    TONG_TIEN: formatVND(totals.total),
+    DA_THANH_TOAN: formatVND(0),
+    CON_PHAI_THU: formatVND(totals.total),
+    DIEU_KHOAN_THANH_TOAN: paymentTermsHtml,
+    GHI_CHU: notes || "",
+    CHU_KY_BEN_BAN: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN BÊN BÁN</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên & đóng dấu)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${settings?.company_name || "CÔNG TY BÁN HÀNG"}</strong></div>`,
+    CHU_KY_BEN_MUA: `<div style="text-align:center; padding:12px; margin-top:20px; font-family:'Times New Roman',Times,serif; font-size:12pt; color:#000000;"><strong>ĐẠI DIỆN BÊN MUA</strong><br/><em style="font-size:12pt;color:#000000;">(Ký, ghi rõ họ tên)</em><br/><br/><br/><br/><strong style="font-size:12pt;">${customer?.name || "KHÁCH HÀNG"}</strong></div>`,
+  };
+  for (const [k, v] of Object.entries(replacements)) {
+    previewHtml = previewHtml.replace(new RegExp(`\\{\\{\\s*${k}\\s*\\}\\}`, "gi"), v);
+  }
+
+  const handleConfirm = async () => {
+    if (!quote || !proposedContractId) return;
+    setSubmitting(true);
+    try {
+      const { error: cErr } = await db.from("contracts").insert({
+        id: proposedContractId,
+        quote_id: quote.id,
+        customer_id: quote.customer_id,
+        date: contractDate,
+        status: "Nháp",
+        template_id: selectedTemplateId || null,
+        notes: notes,
+        payment_terms: quote.payment_terms ?? null,
+      });
+      if (cErr) { toast.error("Lỗi tạo hợp đồng: " + cErr.message); setSubmitting(false); return; }
+
+      const cItems = items.map((it: QuoteItem) => ({
+        contract_id: proposedContractId,
+        product_id: it.product_id,
+        product_name: it.product_name,
+        qty: it.qty,
+        price: it.price,
+      }));
+      if (cItems.length > 0) {
+        await db.from("contract_items").insert(cItems);
+      }
+
+      await db.from("quotes").update({ status: "Khách đồng ý" }).eq("id", quote.id);
+      toast.success(`Đã tạo thành công hợp đồng ${proposedContractId}!`);
+      onSuccess(proposedContractId);
+    } catch (err: any) {
+      toast.error("Lỗi: " + (err.message || "Vui lòng thử lại"));
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={!!quoteId} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-5xl max-w-5xl w-[95vw] max-h-[92vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+              <FileSignature className="size-4.5" />
+            </div>
+            <div>
+              <DialogTitle className="text-base font-bold">
+                Xác nhận & Xem trước Hợp đồng từ Báo giá {quote?.id}
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Xem trước nội dung hợp đồng và xác nhận tạo hợp đồng kinh tế.
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="py-12 text-center text-muted-foreground text-sm">Đang nạp dữ liệu hợp đồng...</div>
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <div className="flex items-center justify-between border-b pb-2">
+              <TabsList className="bg-muted/60">
+                <TabsTrigger value="preview" className="text-xs gap-1.5 font-medium">
+                  <Eye className="size-3.5" /> Xem trước văn bản Hợp đồng
+                </TabsTrigger>
+                <TabsTrigger value="info" className="text-xs gap-1.5 font-medium">
+                  <FileText className="size-3.5" /> Thông tin & Đợt thanh toán ({quote?.payment_terms?.installments?.length || 1} đợt)
+                </TabsTrigger>
+              </TabsList>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="font-mono text-xs text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400">
+                  Mã HĐ: {proposedContractId}
+                </Badge>
+              </div>
+            </div>
+
+            <TabsContent value="preview" className="space-y-3 mt-0">
+              <div className="flex items-center justify-between gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border text-xs">
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs font-semibold shrink-0">Mẫu hợp đồng:</Label>
+                  <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                    <SelectTrigger className="h-8 w-60 text-xs bg-white dark:bg-slate-950">
+                      <SelectValue placeholder="Chọn mẫu hợp đồng" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contractTemplates.map((t) => (
+                        <SelectItem key={t.id} value={t.id} className="text-xs">
+                          {t.name} {t.is_default ? " (Mặc định)" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => downloadPdf(`Hop-dong-${proposedContractId}`, previewHtml)}>
+                    <Download className="size-3 mr-1" /> PDF
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => downloadWord(`Hop-dong-${proposedContractId}`, previewHtml)}>
+                    <FileType className="size-3 mr-1" /> Word
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border bg-white p-8 text-black shadow-2xs max-h-[50vh] overflow-y-auto" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            </TabsContent>
+
+            <TabsContent value="info" className="space-y-4 mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contract Meta Info */}
+                <Card className="p-4 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <User className="size-3.5 text-blue-600" /> Thông tin hợp đồng
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-muted-foreground">Khách hàng:</span>
+                      <strong className="text-foreground">{customer?.name ?? "—"}</strong>
+                    </div>
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-muted-foreground">Báo giá gốc:</span>
+                      <span className="font-mono">{quote?.id}</span>
+                    </div>
+                    <div className="space-y-1 pt-1">
+                      <Label className="text-xs font-medium">Ngày lập hợp đồng</Label>
+                      <Input type="date" value={contractDate} onChange={(e) => setContractDate(e.target.value)} className="h-8 text-xs" />
+                    </div>
+                    <div className="space-y-1 pt-1">
+                      <Label className="text-xs font-medium">Ghi chú hợp đồng</Label>
+                      <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="text-xs resize-none" placeholder="Ghi chú điều khoản bổ sung..." />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Financial Summary & Payment Terms */}
+                <Card className="p-4 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Calculator className="size-3.5 text-blue-600" /> Giá trị & Tiến độ thanh toán
+                  </h4>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-muted-foreground">Tạm tính:</span>
+                      <span>{formatVND(totals.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b">
+                      <span className="text-muted-foreground">Thuế VAT ({quote?.vat_pct}%):</span>
+                      <span>{formatVND(totals.vat)}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b text-chart-2">
+                      <span className="font-semibold">Tổng giá trị hợp đồng:</span>
+                      <strong className="text-sm">{formatVND(totals.total)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <span className="text-xs font-semibold text-muted-foreground block mb-1.5">Kế hoạch thu tiền ({quote?.payment_terms?.installments?.length || 1} đợt):</span>
+                    <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                      {(quote?.payment_terms?.installments ?? [{ label: "Đợt 1", percent: 100, amount: totals.total, date: contractDate }]).map((it, i) => (
+                        <div key={i} className="flex items-center justify-between text-xs p-2 rounded-md bg-muted/40 border">
+                          <span className="font-medium">{it.label || `Đợt ${i + 1}`} ({it.percent}%)</span>
+                          <span className="text-muted-foreground">{formatDate(it.date)}</span>
+                          <strong className="text-blue-600 dark:text-blue-400">{formatVND(it.amount)}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Products Table */}
+              <div className="rounded-lg border overflow-hidden">
+                <Table>
+                  <TableHeader className="bg-muted/40">
+                    <TableRow>
+                      <TableHead className="w-12 text-center text-xs">#</TableHead>
+                      <TableHead className="text-xs">Sản phẩm</TableHead>
+                      <TableHead className="w-20 text-right text-xs">SL</TableHead>
+                      <TableHead className="w-32 text-right text-xs">Đơn giá</TableHead>
+                      <TableHead className="w-36 text-right text-xs">Thành tiền</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((it, i) => (
+                      <TableRow key={i} className="text-xs">
+                        <TableCell className="text-center text-muted-foreground">{i + 1}</TableCell>
+                        <TableCell className="font-medium">{it.product_name}</TableCell>
+                        <TableCell className="text-right">{it.qty}</TableCell>
+                        <TableCell className="text-right">{formatVND(it.price)}</TableCell>
+                        <TableCell className="text-right font-semibold">{formatVND(it.qty * it.price)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
+
+        <DialogFooter className="flex flex-row items-center justify-end gap-3 pt-3 border-t">
+          <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+            Hủy
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirm}
+            disabled={loading || submitting}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-1.5"
+          >
+            {submitting ? "Đang tạo..." : (
+              <>
+                <FileSignature className="size-4" />
+                Xác nhận tạo Hợp đồng {proposedContractId}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

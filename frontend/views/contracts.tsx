@@ -62,7 +62,9 @@ export function ContractsPage() {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    if (params.id) setEditingId(params.id);
+    if (params.id) {
+      setPreviewId(params.id);
+    }
   }, [params.id]);
 
   const customerName = (id: string | null) => customers.find((c) => c.id === id)?.name ?? "—";
